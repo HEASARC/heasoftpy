@@ -1,1 +1,11 @@
-This repository will house the Python interface for HEASoft.
+This repository currently contains two test versions of Python interfaces to HEAsoft.
+
+One version generates the interfacing functions "on the fly"; in other words, at the time the function is called. This version exists in the directory named "onthefly" and is imported via:
+
+import heasoft.onthefly
+
+The other version generates the functions once - the first time the module is imported. This is imported via:
+
+import heasoft.writ_fns
+
+Tests are under development.
