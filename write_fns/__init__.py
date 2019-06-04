@@ -34,28 +34,42 @@ THIS_MODULE = sys.modules[__name__]
 THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 
-def pdocstring(task):
+def pdocstring(task, verbose=False):
     """
     Creates a docstring from a HEASoft .par file for a specified task
 
     :param task: HEASoft task
     returns: array of parameters and descriptions in docstring format
     """
-    pdir = os.environ['PFILES'].split(';')[-1]
-
-    with open(os.path.join(pdir, '{0}.par'.format(task)), 'r') as f:
-        ll = f.readlines()
-
+    skipit = False
+    parfile = os.path.join(PFILES_DIR, '{0}.par'.format(task))
     pdarr = []
-    #:param DGDdir: directory containing the downloaded DGD files
-    for l in ll:
-        p = l.strip().split(',')
-        desc = l.strip().split('"')[-2]
-        default = ''
-        if p[3]:
-            default = "(default = {0})".format(p[3])
-        pstr = ':param {0}: {1} {2}'.format(p[0], desc, default)
-        pdarr.append(pstr)
+    try:
+       with open(parfile, 'r') as f:
+           ll = f.readlines()
+    except Exception as errmsg:
+        skipit = True
+        print('Problem reading {0} ({1})'.format(parfile,errmsg))
+    if not skipit:
+        for l in ll:
+            skipit = False
+            p = l.strip().split(',')
+            pstr = ''
+            try:
+                desc = l.strip().split('"')[-2]
+            except Exception as errmsg:
+                skipit = True
+                if verbose:
+                    print('Problem parsing parameter file for {0}'.format(task))
+            if not skipit:
+                default = ''
+                try:
+                    if p[3]:
+                        default = "(default = {0})".format(p[3])
+                except Exception:
+                    pass
+                pstr = ':param {0}: {1} {2}'.format(p[0], desc, default)
+            pdarr.append(pstr)
     return pdarr
 
 
