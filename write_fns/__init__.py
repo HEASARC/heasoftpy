@@ -42,7 +42,7 @@ def pdocstring(task):
     returns: array of parameters and descriptions in docstring format
     """
     pdir = os.environ['PFILES'].split(';')[-1]
-    task = 'fverify'
+
     with open(os.path.join(pdir, '{0}.par'.format(task)), 'r') as f:
         ll = f.readlines()
 
