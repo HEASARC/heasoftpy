@@ -1,6 +1,20 @@
-This repository currently contains two test versions of Python interfaces to HEAsoft.
+This repository holds the (development) version of the heasoftpy tools.
 
-One version generates the interfacing functions "on the fly"; in other words, at the time the function is called. This version exists in the directory named "onthefly" and is imported via:
+After you've cloned the repository, add the heasoftpy directory to your PYTHONPATH and import with
+
+import heasoftpy
+
+The first time this is imported, files will be written into the heasoftpy directory which contain functions correpsonding the tasks/program in the heasoft software suite. The should be callable via something like:
+
+heasoftpy.TASK(ARGUMENTS)
+
+For example, if you want to run ftlist on test.fit:
+
+heasoftpy.ftlist(infile='test.fit')
+
+-------------------------------------------------------------------------------
+
+Currently this director contains two other versions of the Python interfaces to HEAsoft. These are (for the time being) being kept for archival/reference purpose. One version generates the interfacing functions "on the fly"; in other words, at the time the function is called. This version exists in the directory named "onthefly" and is imported via:
 
 import heasoft.onthefly
 
