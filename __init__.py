@@ -59,7 +59,7 @@ def create_function(task_name):
     function_str += '    task_out, _ = task_proc.communicate()\n'
     function_str += '    if isinstance(task_out, bytes):\n'
     function_str += '        task_out = task_out.decode()\n'
-    function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_proc.stderr, None, None)\n'
+    function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out)\n'
     function_str += '    return task_res\n'
 #    function_str += '    '
     LOGGER.debug('At end of create_function(), function_str:\n%s', function_str)
