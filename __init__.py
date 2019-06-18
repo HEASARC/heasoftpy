@@ -31,6 +31,45 @@ HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
 THIS_MODULE = sys.modules[__name__]
 THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
+def pdocstring(task, verbose=False):
+    """
+    Creates a docstring from a HEASoft .par file for a specified task
+
+    :param task: HEASoft task
+    returns: array of parameters and descriptions in docstring format
+    """
+    skipit = False
+    parfile = os.path.join(PFILES_DIR, '{0}.par'.format(task))
+    pdarr = []
+    try:
+       with open(parfile, 'r') as f:
+           ll = f.readlines()
+    except Exception as errmsg:
+        skipit = True
+        print('Problem reading {0} ({1})'.format(parfile,errmsg))
+    if not skipit:
+        for l in ll:
+            skipit = False
+            p = l.strip().split(',')
+            pstr = ''
+            try:
+                desc = l.strip().split('"')[-2]
+            except Exception as errmsg:
+                skipit = True
+                if verbose:
+                    print('Problem parsing parameter file for {0}'.format(task))
+            if not skipit:
+                default = ''
+                try:
+                    if p[3]:
+                        default = "(default = {0})".format(p[3])
+                except Exception:
+                    pass
+                pstr = ':param {0}: {1} {2}'.format(p[0], desc, default)
+            pdarr.append(pstr)
+    return pdarr
+
+
 def create_function(task_name):
     """ function to create a function (see module docstring for more) """
     LOGGER.debug('Entering create_function, task_name: %s', task_name)
@@ -47,6 +86,10 @@ def create_function(task_name):
     function_str = 'def {0}(**kwargs):\n'.format(task_name)
     # Create body of function (command line creation, subprocess call)
     fn_docstring = '    """ Automatically generated function for running the HTools task {} """\n'.format(task_name)
+    pdarr = pdocstring(task_name)
+    for par in pdarr:
+        fn_docstring += "    {0}\n".format(par)
+    fn_docstring += '    """ \n\n'
     function_str += fn_docstring
     function_str += '    import sys\n'
     function_str += '    import subprocess\n'
