@@ -53,15 +53,21 @@ def create_function(task_name):
     function_str += '    import heasoftpy.result as hsp_res\n'
     function_str += '    args = [\'{}\']\n'.format(task_name)
     function_str += '    for kwa in kwargs:\n'
-    function_str += '        args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
-    function_str += '    task_proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)\n'
-#    function_str += '    task_proc = subprocess.Popen(args)\n'
-    function_str += '    task_out, _ = task_proc.communicate()\n'
+    function_str += '        if not kwa == \'stderr\':\n'
+    function_str += '            args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
+    function_str += '    stderr_dest = subprocess.STDOUT\n'
+    function_str += '    if (\'stderr\' in kwargs):\n'
+    function_str += '        if kwargs[\'stderr\']:\n'
+    function_str += '            stderr_dest = subprocess.PIPE\n'
+    function_str += '    task_proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
+    function_str += '    task_out, task_err = task_proc.communicate()\n'
     function_str += '    if isinstance(task_out, bytes):\n'
     function_str += '        task_out = task_out.decode()\n'
-    function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out)\n'
+    function_str += '    if isinstance(task_err, bytes):\n'
+    function_str += '        task_err = task_err.decode()\n'
+    function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err)\n'
     function_str += '    return task_res\n'
-#    function_str += '    '
+#    function_str += '    \n'
     LOGGER.debug('At end of create_function(), function_str:\n%s', function_str)
     return function_str
 
