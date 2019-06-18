@@ -35,6 +35,7 @@ class TestTasks(unittest.TestCase):
         self.test_file = 'my_rate.fit'
         if os.path.exists('copy_of_my_rate.fit'):
             os.remove('copy_of_my_rate.fit')
+        self.maxDiff = 1000
 
     def tearDown(self):
         """ Currently a placeholder """
@@ -83,7 +84,7 @@ HDU 2   RATE               BinTable     3 cols x 5371 rows
         """ Tests the ftverify program """
         expected_out = \
 """ 
-               ftverify 4.19 (CFITSIO V3.470)               
+               ftverify 4.20 (CFITSIO V3.470)               
                ------------------------------               
  
 HEASARC conventions are being checked.
@@ -117,9 +118,19 @@ File: my_rate.fit
  
 **** Verification found 0 warning(s) and 0 error(s). ****
 """
-        test_out = heasoftpy.ftverify(infile=self.test_file).stdout
+        test_result = heasoftpy.ftverify(infile=self.test_file, stderr=True)
+        test_out = test_result.stdout
+        test_err = test_result.stderr
         if isinstance(test_out, bytes):
             test_out = test_out.decode()
+        if isinstance(test_err, bytes):
+            test_out = test_err.decode()
+#        print('\n')
+#        print('expected_out: {}'.format(expected_out))
+#        print('-----')
+#        print('stdout: {}'.format(test_out))
+#        print('-----')
+#        print('stderr: {}'.format(test_result.stderr))
         self.assertEqual(test_out, expected_out)
 
 
