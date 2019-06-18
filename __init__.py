@@ -85,7 +85,8 @@ def create_function(task_name):
 
     function_str = 'def {0}(**kwargs):\n'.format(task_name)
     # Create body of function (command line creation, subprocess call)
-    fn_docstring = '    """ Automatically generated function for running the HTools task {} """\n'.format(task_name)
+    fn_docstring = '    """ '
+    fn_docstring += 'Automatically generated function for running the HTools task {0}\n'.format(task_name)
     pdarr = pdocstring(task_name)
     for par in pdarr:
         fn_docstring += "    {0}\n".format(par)
