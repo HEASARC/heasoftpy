@@ -118,8 +118,9 @@ def create_function(task_name):
 #for task_name in ['ftlist.par', 'ftcopy.par', 'fhelp.par', 'fthelp.par']:
 for par_file in os.listdir(PFILES_DIR):
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
-    new_module_path = os.path.join(THIS_MODULE_DIR, task_name + '.py')
-    if not os.path.exists(os.path.join(THIS_MODULE_DIR, task_name + '.py')):
+    new_module_path = os.path.join(THIS_MODULE_DIR, 'defs', task_name + '.py')
+    #if not os.path.exists(os.path.join(THIS_MODULE_DIR, task_name + '.py')):
+    if not os.path.isfile(new_module_path):
         func_str = create_function(task_name)
         with open(new_module_path, 'wt') as out_file:
             out_file.write(func_str)
