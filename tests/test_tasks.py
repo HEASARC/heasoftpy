@@ -83,8 +83,8 @@ HDU 2   RATE               BinTable     3 cols x 5371 rows
     def test_ftverify(self):
         """ Tests the ftverify program """
         expected_out = \
-""" 
-               ftverify 4.20 (CFITSIO V3.470)               
+"""
+               ftverify \d\.\d\d \(CFITSIO V\d\.\d\d\d\)               
                ------------------------------               
  
 HEASARC conventions are being checked.
@@ -103,20 +103,27 @@ File: my_rate.fit
  
  52 header keywords
  
- RATE  (3 columns x 5371 rows)
+ RATE  \(3 columns x 5371 rows\)
  
- Col# Name (Units)       Format
-   1 TIME (d)             D         
-   2 RATE (counts/s)      E         
-   3 ERROR (counts/s)     E         
+ Col# Name \(Units\)       Format
+   1 TIME \(d\)             D         
+   2 RATE \(counts\/s\)      E         
+   3 ERROR \(counts\/s\)     E         
  
-++++++++++++++++++++++ Error Summary  ++++++++++++++++++++++
+\+* Error Summary  \+*
  
- HDU#  Name (version)       Type             Warnings  Errors
+ HDU#  Name \(version\)       Type             Warnings  Errors
  1                          Primary Array    0         0     
  2     RATE                 Binary Table     0         0     
  
-**** Verification found 0 warning(s) and 0 error(s). ****
+\** Verification found 0 warning\(s\) and 0 error\(s\)\. \**
+"""
+
+        holder = \
+"""
+\. 
+\** Verification found 0 warning(s) and 0 error(s). \**
+ 
 """
         test_result = heasoftpy.ftverify(infile=self.test_file, stderr=True)
         test_out = test_result.stdout
@@ -131,7 +138,9 @@ File: my_rate.fit
 #        print('stdout: {}'.format(test_out))
 #        print('-----')
 #        print('stderr: {}'.format(test_result.stderr))
-        self.assertEqual(test_out, expected_out)
+
+#        self.assertEqual(test_out, expected_out)
+        self.assertRegex(test_out, expected_out)
 
 
 if __name__ == '__main__':
