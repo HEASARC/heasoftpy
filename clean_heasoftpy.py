@@ -19,6 +19,7 @@ CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 HEADAS_DIR = os.environ['HEADAS']
 HEASOFTPY_DIR = CUR_DIR # os.path.join(CUR_DIR, 'heasoftpy')
 
+DEFS_DIR = os.path.join(HEASOFTPY_DIR, 'defs')
 #HEASOFTPY_DIR = os.path.join(CUR_DIR, 'write_fns') # from comparison vs "onthefly"
 
 HOLDING_DIR = '/tmp/heapy_holding_{}'.format(NOW_STR)
@@ -32,8 +33,8 @@ def main():
                         level=logging.INFO, format=log_format)
     logger = logging.getLogger('heasoftpy cleanup')
     pfiles_list = os.listdir(PFILES_DIR)
-    print('__file__:   "{0}"\nCUR_DIR:    "{1}"\nHEASOFTPY_DIR:  "{2}"\nPFILES_DIR: "{3}"'\
-          .format(__file__, CUR_DIR, HEASOFTPY_DIR, PFILES_DIR))
+    print('__file__:   "{0}"\nCUR_DIR:    "{1}"\nDEFS_DIR:  "{2}"\nPFILES_DIR: "{3}"'\
+          .format(__file__, CUR_DIR, DEFS_DIR, PFILES_DIR))
 
     if os.path.exists(HOLDING_DIR):
         if not os.path.isdir(HOLDING_DIR):
@@ -43,14 +44,16 @@ def main():
         os.mkdir(HOLDING_DIR)
     # Loop through the par files, deleting the corresponding Python file
     file_count = 0
+    pyc_file_count = 0
     for pfile in pfiles_list:
         # rstrip() didn't work below; it removed stuff that should have stayed
         task_name = os.path.basename(pfile).rsplit('.')[0]
         task_file = '.'.join([task_name, 'py'])
+
         # Since Python doesn't allow a dash ('-') in a function name, the
         # file/function names will have an underscore ('_') where the par file
         # has a  dash.
-        task_file_path = os.path.join(HEASOFTPY_DIR, task_file.replace('-', '_'))
+        task_file_path = os.path.join(DEFS_DIR, task_file.replace('-', '_'))
         log_msg = 'pfile: {0}, task_name: {1}, task_file: {2}, task_file_path: {3}'.\
                   format(pfile, task_name, task_file, task_file_path)
         logger.info(log_msg)
@@ -63,8 +66,28 @@ def main():
             file_count += 1
         else:
             logger.info('Error! File "{}" not found.'.format(task_file_path))
+
+        pycache_file_path = os.path.join(DEFS_DIR, '__pycache__', 
+                                         task_file.replace('-', '_') + 'c')
+        if os.path.exists(pycache_file_path):
+            os.remove(pycache_file_path)
+            logger.info('Deleted {}'.format(pycache_file_path))
+            pyc_file_count += 1
+        else:
+            pycache_file_path = os.path.join(DEFS_DIR, '__pycache__', 
+                                             task_name.replace('-', '_') + '.cpython-36.pyc')
+            if os.path.exists(pycache_file_path):
+                os.remove(pycache_file_path)
+                logger.info('Deleted {}'.format(pycache_file_path))
+                pyc_file_count += 1
+            else:
+                logger.info('Unable to find {}'.format(pycache_file_path))
     print('{} files were moved'.format(file_count))
+    print('{} pyc files were deleted'.format(pyc_file_count))
     return 0
 
 if __name__ == '__main__':
     sys.exit(main())
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+
