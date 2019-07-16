@@ -7,16 +7,31 @@ Heasoft task.
 
 import collections
 import csv
+
+import datetime
+
 import importlib
 import inspect
 import logging
 import os
 import sys
 
-logging.basicConfig(filename='create_function_test.log',
+import time
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
+log_name = ''.join(['create_function_test_', logfile_datetime, '.log'])
+logging.basicConfig(filename=log_name, 
                     filemode='a', level=logging.DEBUG)
 LOGGER = logging.getLogger('create_function')
-LOGGER.debug('Entering create_function module')
+log_dt_lst = list(logfile_datetime)
+log_dt_lst.insert(15, ':')
+log_dt_lst.insert(13, ':')
+
+dbg_msg = 'Entering create_function module at {}'.\
+          format(''.join(log_dt_lst).replace('_', ' '))
+LOGGER.debug(dbg_msg)
 
 PERMITTED_MODES = {'a' : 'a', 'A' : 'a', 'auto' : 'a',
                    'h' : 'h', 'H' : 'h', 'hidden' : 'h',
@@ -30,6 +45,8 @@ HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'prompt'])
 THIS_MODULE = sys.modules[__name__]
 THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
 def pdocstring(task, verbose=False):
     """
@@ -118,7 +135,8 @@ def create_function(task_name):
 #for task_name in ['ftlist.par', 'ftcopy.par', 'fhelp.par', 'fthelp.par']:
 for par_file in os.listdir(PFILES_DIR):
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
-    new_module_path = os.path.join(THIS_MODULE_DIR, 'defs', task_name + '.py')
+    new_module_path = os.path.join(DEFS_DIR, task_name + '.py')
+
     #if not os.path.exists(os.path.join(THIS_MODULE_DIR, task_name + '.py')):
     if not os.path.isfile(new_module_path):
         func_str = create_function(task_name)
@@ -126,11 +144,12 @@ for par_file in os.listdir(PFILES_DIR):
             out_file.write(func_str)
 
     # The following was found at:
-    #https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+    #   https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
     # Note that this shouldn't work for Python < 3.5 and 2
     spec = importlib.util.spec_from_file_location(task_name, new_module_path)
     func_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(func_module)
     #func_module = importlib.import_module(task_name)
 
+#    setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
     setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
