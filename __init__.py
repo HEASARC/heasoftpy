@@ -132,6 +132,9 @@ def create_function(task_name):
     LOGGER.debug('At end of create_function(), function_str:\n%s', function_str)
     return function_str
 
+if not os.path.exists(DEFS_DIR):
+    os.mkdir(DEFS_DIR)
+
 #for task_name in ['ftlist.par', 'ftcopy.par', 'fhelp.par', 'fthelp.par']:
 for par_file in os.listdir(PFILES_DIR):
     task_name = os.path.splitext(par_file)[0].replace('-', '_')

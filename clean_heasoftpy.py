@@ -13,7 +13,6 @@ import sys
 
 KEEP_FILES = []
 
-
 NOW_STR = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 HEADAS_DIR = os.environ['HEADAS']
@@ -24,6 +23,8 @@ DEFS_DIR = os.path.join(HEASOFTPY_DIR, 'defs')
 
 HOLDING_DIR = '/tmp/heapy_holding_{}'.format(NOW_STR)
 PFILES_DIR = os.path.join(HEADAS_DIR, 'syspfiles')
+
+
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 def main():
@@ -67,7 +68,14 @@ def main():
         else:
             logger.info('Error! File "{}" not found.'.format(task_file_path))
 
-        pycache_file_path = os.path.join(DEFS_DIR, '__pycache__', 
+        pycache_dir = os.path.join(DEFS_DIR, '__pycache__')
+
+        if os.path.exists(pycache_dir) and os.path.isdir(pycache_dir):
+            pass
+        else:
+            pycache_dir = defs_dir
+
+        pycache_file_path = os.path.join(pycache_dir,
                                          task_file.replace('-', '_') + 'c')
         if os.path.exists(pycache_file_path):
             os.remove(pycache_file_path)
