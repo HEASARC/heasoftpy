@@ -70,9 +70,7 @@ def main():
 
         pycache_dir = os.path.join(DEFS_DIR, '__pycache__')
 
-        if os.path.exists(pycache_dir) and os.path.isdir(pycache_dir):
-            pass
-        else:
+        if not (os.path.exists(pycache_dir) and os.path.isdir(pycache_dir)):
             pycache_dir = defs_dir
 
         pycache_file_path = os.path.join(pycache_dir,
