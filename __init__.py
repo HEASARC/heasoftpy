@@ -48,7 +48,7 @@ THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.curren
 
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
-def pdocstring(task, verbose=False):
+def read_par_file(task, verbose=False):
     """
     Creates a docstring from a HEASoft .par file for a specified task
 
@@ -59,11 +59,11 @@ def pdocstring(task, verbose=False):
     parfile = os.path.join(PFILES_DIR, '{0}.par'.format(task))
     pdarr = []
     try:
-       with open(parfile, 'r') as f:
-           ll = f.readlines()
+       with open(parfile, 'r') as par_hndl:
+           ll = par_hndl.readlines()
     except Exception as errmsg:
         skipit = True
-        print('Problem reading {0} ({1})'.format(parfile,errmsg))
+        print('Problem reading {0} ({1})'.format(parfile, errmsg))
     if not skipit:
         for l in ll:
             skipit = False
@@ -92,7 +92,7 @@ def create_function(task_name):
     LOGGER.debug('Entering create_function, task_name: %s', task_name)
 
     function_str = ''
-    keyword_pairs = {}
+    #keyword_pairs = {}
     # Create the path to the par file we want
     pfile_path = os.path.join(PFILES_DIR, task_name + '.par')
     if os.path.exists(pfile_path) and os.path.isfile(pfile_path):
@@ -104,7 +104,7 @@ def create_function(task_name):
     # Create body of function (command line creation, subprocess call)
     fn_docstring = '    """ '
     fn_docstring += 'Automatically generated function for running the HTools task {0}\n'.format(task_name)
-    pdarr = pdocstring(task_name)
+    pdarr = read_par_file(task_name)
     for par in pdarr:
         fn_docstring += "    {0}\n".format(par)
     fn_docstring += '    """ \n\n'
@@ -156,3 +156,4 @@ for par_file in os.listdir(PFILES_DIR):
 
 #    setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
     setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
