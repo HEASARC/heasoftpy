@@ -48,64 +48,121 @@ THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.curren
 
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
-def read_par_file(par_path, verbose=False):
+def _make_function_docstring(task_name, par_dict):
     """
-    Creates a docstring from a HEASoft .par file for a specified task
+    Create a string (expected to be used as the docstring for an automagically
+    created function) listing the parameters of the function named in task_name,
+    and as contained in par_dict.
+    """
+    docstr_lines = list()
+    docstr_lines.append('    """')
+    docstr_lines.append('    Automatically generated function for the HTools task {}.'.\
+                        format(task_name))
+    docstr_lines.append('')
+    for param_key in par_dict.keys():
+        docstr_lines.append('    :param {0}: {1} (default = "{2}")'.\
+                            format(param_key, par_dict[param_key]['prompt'],
+                                   par_dict[param_key]['default']))
+    docstr_lines.append('    """')
+    fn_docstr = '\n'.join(docstr_lines)
+    return fn_docstr
 
-    :param task: HEASoft task
-    returns: array of parameters and descriptions in docstring format
+#def read_par_file(par_path, verbose=False):
+#    """
+#    Creates a docstring from a HEASoft .par file for a specified task
+#
+#    :param task: HEASoft task
+#    returns: array of parameters and descriptions in docstring format
+#    """
+#    param_dict = dict()
+#    skipit = False
+#    parfile = par_path #os.path.join(PFILES_DIR, '{0}.par'.format(task))
+#    pdarr = []
+#    try:
+#        with open(parfile, 'r') as par_hndl:
+#            ll = par_hndl.readlines()
+#    except Exception as errmsg:
+#        skipit = True
+#        print('Problem reading {0} ({1})'.format(parfile, errmsg))
+#        print('exception parts:')
+#        for ep in sys.exc_info():
+#            print('   {}'.format(ep))
+#    if not skipit:
+#        for l in ll:
+#            skipit = False
+#            if l.strip().startswith('#'):
+#                skipit = True
+#            p = l.strip().split(',')
+#            pstr = ''
+#            try:
+#                desc = l.strip().split('"')[-2]
+#            except Exception as errmsg:
+#                skipit = True
+#                if verbose:
+#                    print('Problem parsing parameter file for {0}'.format(task))
+#            if not skipit:
+#                default = ''
+#                try:
+#                    if p[3]:
+#                        default = "(default = {0})".format(p[3])
+#                except Exception:
+#                    pass
+#                pstr = ':param {0}: {1} {2}'.format(p[0], desc, default)
+#                min_val = None
+#                max_val = None
+#                prompt = None
+#                if len(p) > 4:
+#                    try:
+#                        min_val = float(p[4])
+#                    except ValueError:
+#                        pass
+#                    try:
+#                        max_val = float(p[5])
+#                    except ValueError:
+#                        pass
+#                param_dict[p[0]] = {'type': p[1], 'mode': p[2], 'default': p[3],
+#                                    'min': min_val, 'max': max_val,
+#                                    'prompt': p[6]}
+#            pdarr.append(pstr)
+#    return pdarr, param_dict
+#
+
+
+def read_par_file(par_path):
     """
-    param_dict = dict()
-    skipit = False
-    parfile = par_path #os.path.join(PFILES_DIR, '{0}.par'.format(task))
-    pdarr = []
+    Reads a par file, returning the contents as a dictionary with the parameter
+    names as keys.
+    """
+    par_contents = dict()     # list()
     try:
-        with open(parfile, 'r') as par_hndl:
-            ll = par_hndl.readlines()
-    except Exception as errmsg:
-        skipit = True
-        print('Problem reading {0} ({1})'.format(parfile, errmsg))
-        print('exception parts:')
-        for ep in sys.exc_info():
-            print('   {}'.format(ep))
-    if not skipit:
-        for l in ll:
-            skipit = False
-            if l.strip().startswith('#'):
-                skipit = True
-            p = l.strip().split(',')
-            pstr = ''
-            try:
-                desc = l.strip().split('"')[-2]
-            except Exception as errmsg:
-                skipit = True
-                if verbose:
-                    print('Problem parsing parameter file for {0}'.format(task))
-            if not skipit:
-                default = ''
-                try:
-                    if p[3]:
-                        default = "(default = {0})".format(p[3])
-                except Exception:
-                    pass
-                pstr = ':param {0}: {1} {2}'.format(p[0], desc, default)
-                min_val = None
-                max_val = None
-                prompt = None
-                if len(p) > 4:
+        with open(par_path, 'rt') as par_hndl:
+            par_reader = csv.reader(par_hndl, delimiter=',', quotechar='"', \
+                                    quoting=csv.QUOTE_ALL, \
+                                    skipinitialspace=True)
+            for param in par_reader:
+                if len(param) > 1 and not param[0].strip().startswith('#'):
+                    param_dict = dict()
                     try:
-                        min_val = float(p[4])
-                    except ValueError:
-                        pass
-                    try:
-                        max_val = float(p[5])
-                    except ValueError:
-                        pass
-                param_dict[p[0]] = {'type': p[1], 'mode': p[2], 'default': p[3],
-                                    'min': min_val, 'max': max_val,
-                                    'prompt': p[6]}
-            pdarr.append(pstr)
-    return pdarr, param_dict
+                        param_dict = {'type':     param[1], 'mode':     param[2],
+                                      'default':  param[3].strip(),
+                                      'min':      param[4], 'max':      param[5],
+                                      'prompt':   param[6]}
+                    except IndexError:
+                        print('Error processing {}.'.format(par_path))
+        
+                    par_contents[param[0].strip()] = param_dict
+    except FileNotFoundError:
+        err_msg = 'Error! Par file {} could not be found.'.format(par_path)
+        sys.exit(err_msg)
+    except PermissionError:
+        err_msg = 'Error! A permission error was encountered reading {}.'.format(par_path)
+        sys.exit(err_msg)
+    except IsADirectoryError:
+        err_msg = 'Error! {} is a directory, not a file.'.format(par_path)
+        sys.exit(err_msg)
+
+    return par_contents
+
 
 
 def create_function(task_nm, par_name):
@@ -128,9 +185,10 @@ def create_function(task_nm, par_name):
     # Create body of function (command line creation, subprocess call)
     fn_docstring = '    """ '
     fn_docstring += 'Automatically generated function for running the HTools task {0}\n'.format(task_nm)
-    pdarr, param_dict = read_par_file(par_path)
-    for par in pdarr:
-        fn_docstring += "    {0}\n".format(par)
+#    pdarr, param_dict = read_par_file(par_path)
+    param_dict = read_par_file(par_path)
+    #for par in pdarr:
+    #    fn_docstring += "    {0}\n".format(par)
     fn_docstring += '    """ \n\n'
     function_str += fn_docstring
     function_str += '    import sys\n'
@@ -138,16 +196,16 @@ def create_function(task_nm, par_name):
     function_str += '    import heasoftpy.result as hsp_res\n'
     function_str += '    param_dict = dict()\n'
 
-    print('task:', task_nm)
+#    print('task:', task_nm)
     for param_key in param_dict.keys():
-        print ('  ', param_key)
+#        print ('  ', param_key)
         param_key = param_key.strip() 
         if param_key == 'prompt':
-            print('    processing prompt!')
+#            print('    processing prompt!')
             # Quotation marks are part of the prompt value, and we don't want to have two sets.
             function_str += "    param_dict[{0}] = {1}\n".format(param_key, param_dict[param_key])
         else:
-            print('  processing {}'.format(param_key))
+#            print('  processing {}'.format(param_key))
             function_str += "    param_dict['{0}'] = {1}\n".format(param_key, param_dict[param_key])
 #        function_str += "    param_dict['{0}'] = {{'{1}' : '{0}'}}\n".format(param_key, param_dict[param_key])
     function_str += '    args = [\'{}\']\n'.format(task_nm)
