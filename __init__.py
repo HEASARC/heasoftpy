@@ -29,7 +29,7 @@ log_dt_lst = list(logfile_datetime)
 log_dt_lst.insert(15, ':')
 log_dt_lst.insert(13, ':')
 
-dbg_msg = 'Entering create_function module at {}'.\
+dbg_msg = 'Entering heasoftpy module at {}'.\
           format(''.join(log_dt_lst).replace('_', ' '))
 LOGGER.debug(dbg_msg)
 
@@ -63,7 +63,7 @@ def _make_function_docstring(task_name, par_dict):
         docstr_lines.append('    :param {0}: {1} (default = "{2}")'.\
                             format(param_key, par_dict[param_key]['prompt'],
                                    par_dict[param_key]['default']))
-    docstr_lines.append('    """')
+    docstr_lines.append('    """\n')    # join() doesn't put a \n at the end of the string.
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
 
@@ -128,7 +128,7 @@ def _make_function_docstring(task_name, par_dict):
 #
 
 
-def read_par_file(par_path):
+def _read_par_file(par_path):
     """
     Reads a par file, returning the contents as a dictionary with the parameter
     names as keys.
@@ -163,8 +163,6 @@ def read_par_file(par_path):
 
     return par_contents
 
-
-
 def create_function(task_nm, par_name):
     """ function to create a function (see module docstring for more) """
     LOGGER.debug('Entering create_function, task_nm: %s', task_nm)
@@ -183,13 +181,14 @@ def create_function(task_nm, par_name):
 
     function_str = 'def {0}(**kwargs):\n'.format(task_nm)
     # Create body of function (command line creation, subprocess call)
-    fn_docstring = '    """ '
-    fn_docstring += 'Automatically generated function for running the HTools task {0}\n'.format(task_nm)
+#    fn_docstring = '    """\n'
+#    fn_docstring += 'Automatically generated function for running the HTools task {0}\n'.format(task_nm)
 #    pdarr, param_dict = read_par_file(par_path)
-    param_dict = read_par_file(par_path)
+    param_dict = _read_par_file(par_path)
     #for par in pdarr:
     #    fn_docstring += "    {0}\n".format(par)
-    fn_docstring += '    """ \n\n'
+#    fn_docstring += '    """\n\n'
+    fn_docstring = _make_function_docstring(task_nm, param_dict)
     function_str += fn_docstring
     function_str += '    import sys\n'
     function_str += '    import subprocess\n'
