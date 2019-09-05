@@ -21,10 +21,10 @@ import time
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 
 logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
-log_name = ''.join(['create_function_test_', logfile_datetime, '.log'])
-logging.basicConfig(filename=log_name,
+LOG_NAME = ''.join(['heasoftpy_initialization_', logfile_datetime, '.log'])
+logging.basicConfig(filename=LOG_NAME,
                     filemode='a', level=logging.DEBUG)
-LOGGER = logging.getLogger('create_function')
+LOGGER = logging.getLogger('heasoftpy_initialization')
 log_dt_lst = list(logfile_datetime)
 log_dt_lst.insert(15, ':')
 log_dt_lst.insert(13, ':')
@@ -48,16 +48,28 @@ THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.curren
 
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
-def _make_function_docstring(task_name, par_dict):
+def _ask_for_param(p_name, p_dict):
+    if p_dict['prompt']:
+        query_msg = 'No value found for {0}.\n{1}'.format(p_name, p_dict['prompt'])
+    else:
+        query_msg = 'No value found for {0}.\n{1}'.format(p_name, p_dict['prompt'])
+    usr_inp = ''
+    while not usr_inp:
+        try:
+            usr_inp = input(query_msg)
+        except EOFError:
+            sys.exit('\nKeyboard interrupt received, program stopping.')
+
+def _make_function_docstring(tsk_nm, par_dict):
     """
     Create a string (expected to be used as the docstring for an automagically
-    created function) listing the parameters of the function named in task_name,
+    created function) listing the parameters of the function named in tsk_nm,
     and as contained in par_dict.
     """
     docstr_lines = list()
     docstr_lines.append('    """')
     docstr_lines.append('    Automatically generated function for the HTools task {}.'.\
-                        format(task_name))
+                        format(tsk_nm))
     docstr_lines.append('')
     for param_key in par_dict.keys():
         docstr_lines.append('    :param {0}: {1} (default = "{2}")'.\
@@ -149,7 +161,7 @@ def _read_par_file(par_path):
                                       'prompt':   param[6]}
                     except IndexError:
                         print('Error processing {}.'.format(par_path))
-        
+
                     par_contents[param[0].strip()] = param_dict
     except FileNotFoundError:
         err_msg = 'Error! Par file {} could not be found.'.format(par_path)
@@ -163,9 +175,9 @@ def _read_par_file(par_path):
 
     return par_contents
 
-def create_function(task_nm, par_name):
+def _create_function(task_nm, par_name):
     """ function to create a function (see module docstring for more) """
-    LOGGER.debug('Entering create_function, task_nm: %s', task_nm)
+    LOGGER.debug('Entering _create_function, task_nm: %s', task_nm)
 
     function_str = ''
     #keyword_pairs = {}
@@ -198,7 +210,7 @@ def create_function(task_nm, par_name):
 #    print('task:', task_nm)
     for param_key in param_dict.keys():
 #        print ('  ', param_key)
-        param_key = param_key.strip() 
+        param_key = param_key.strip()
         if param_key == 'prompt':
 #            print('    processing prompt!')
             # Quotation marks are part of the prompt value, and we don't want to have two sets.
@@ -211,6 +223,26 @@ def create_function(task_nm, par_name):
     function_str += '    for kwa in kwargs:\n'
     function_str += '        if not kwa == \'stderr\':\n'
     function_str += '            args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
+
+    # Debugging code - delete when done with it:
+    function_str += '    print(\'task: ' + task_nm + '\')\n'
+    function_str += '    print(\'kwargs: {}\'.format(kwargs))\n'
+
+    function_str += '    params_not_specified = []\n'
+    function_str += '    for param in param_dict:\n'
+
+    # Debugging code - delete when done with it:
+    function_str += '        print(\'checking {0}, mode: {1}\'.format(param, param_dict[param][\'mode\']))\n'
+
+    function_str += '        if not param in kwargs:\n'
+    function_str += '            if param_dict[param][\'mode\'].find(\'h\') == -1 and param_dict[param][\'mode\'].find(\'a\') == -1:\n'
+    function_str += '                params_not_specified.append(param)\n'
+
+    function_str += '    if len(params_not_specified) > 0:\n'
+
+    # Debugging code - delete when done with it:
+    function_str += '        print(\'For ' + task_nm + ', params_not_specified: {}.\'.format(params_not_specified))\n'
+
     function_str += '    stderr_dest = subprocess.STDOUT\n'
     function_str += '    if (\'stderr\' in kwargs):\n'
     function_str += '        if kwargs[\'stderr\']:\n'
@@ -224,7 +256,7 @@ def create_function(task_nm, par_name):
     function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err)\n'
     function_str += '    return task_res\n'
 #    function_str += '    \n'
-    LOGGER.debug('At end of create_function(), function_str:\n%s', function_str)
+    LOGGER.debug('At end of _create_function(), function_str:\n%s', function_str)
     return function_str
 
 if not os.path.exists(DEFS_DIR):
@@ -237,7 +269,7 @@ for par_file in os.listdir(PFILES_DIR):
 
     #if not os.path.exists(os.path.join(THIS_MODULE_DIR, task_name + '.py')):
     if not os.path.isfile(new_module_path):
-        func_str = create_function(task_name, par_file)
+        func_str = _create_function(task_name, par_file)
         with open(new_module_path, 'wt') as out_file:
             out_file.write(func_str)
 
