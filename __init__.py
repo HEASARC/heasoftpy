@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Prototyping a function to use a par file to create a function to run a
-Heasoft task.
+Creates a Python interface to the FTools/HTools package.
+
+If there is not already a file containing a function to run a given FTools program, this will create one upon import. It uses the appropriate paramter file to do this.
 """
 
 import collections
@@ -191,60 +192,42 @@ def _create_function(task_nm, par_name):
         if not os.path.isfile(par_path):
             LOGGER.debug('%s is not a regular file', par_path)
 
-    function_str = 'def {0}(**kwargs):\n'.format(task_nm)
+    function_str = '"""\n'
+    function_str += 'Automatically created file containing ' + task_nm + '\n'
+    function_str += 'function. This is expected to be imported into (and be\n'
+    function_str += 'part of) the heasoftpy module.\n'
+    function_str += '"""\n\n'
+    function_str += 'import sys\n'
+    function_str += 'import subprocess\n'
+    function_str += 'import heasoftpy.result as hsp_res\n\n'
+    function_str += 'def {0}(**kwargs):\n'.format(task_nm)
     # Create body of function (command line creation, subprocess call)
-#    fn_docstring = '    """\n'
-#    fn_docstring += 'Automatically generated function for running the HTools task {0}\n'.format(task_nm)
-#    pdarr, param_dict = read_par_file(par_path)
     param_dict = _read_par_file(par_path)
-    #for par in pdarr:
-    #    fn_docstring += "    {0}\n".format(par)
-#    fn_docstring += '    """\n\n'
     fn_docstring = _make_function_docstring(task_nm, param_dict)
     function_str += fn_docstring
-    function_str += '    import sys\n'
-    function_str += '    import subprocess\n'
-    function_str += '    import heasoftpy.result as hsp_res\n'
     function_str += '    param_dict = dict()\n'
-
-#    print('task:', task_nm)
     for param_key in param_dict.keys():
-#        print ('  ', param_key)
         param_key = param_key.strip()
         if param_key == 'prompt':
-#            print('    processing prompt!')
             # Quotation marks are part of the prompt value, and we don't want to have two sets.
             function_str += "    param_dict[{0}] = {1}\n".format(param_key, param_dict[param_key])
         else:
-#            print('  processing {}'.format(param_key))
             function_str += "    param_dict['{0}'] = {1}\n".format(param_key, param_dict[param_key])
-#        function_str += "    param_dict['{0}'] = {{'{1}' : '{0}'}}\n".format(param_key, param_dict[param_key])
     function_str += '    args = [\'{}\']\n'.format(task_nm)
     function_str += '    for kwa in kwargs:\n'
     function_str += '        if not kwa == \'stderr\':\n'
     function_str += '            args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
-
-    # Debugging code - delete when done with it:
-    function_str += '    print(\'task: ' + task_nm + '\')\n'
-    function_str += '    print(\'kwargs: {}\'.format(kwargs))\n'
-
     function_str += '    params_not_specified = []\n'
     function_str += '    for param in param_dict:\n'
-
-    # Debugging code - delete when done with it:
-    function_str += '        print(\'checking {0}, mode: {1}\'.format(param, param_dict[param][\'mode\']))\n'
-
     function_str += '        if not param in kwargs:\n'
-    function_str += '            if param_dict[param][\'mode\'].find(\'h\') == -1 and param_dict[param][\'mode\'].find(\'a\') == -1:\n'
+    function_str += '            if param_dict[param][\'mode\'].find(\'h\') == -1:\n'
     function_str += '                params_not_specified.append(param)\n'
-
-    function_str += '    if len(params_not_specified) > 0:\n'
-
-    # Debugging code - delete when done with it:
-    function_str += '        print(\'For ' + task_nm + ', params_not_specified: {}.\'.format(params_not_specified))\n'
+    function_str += '    for missing_param in params_not_specified:\n'
+    function_str += '        param_val = heasoftpy._ask_for_param(missing_param, param_dict)\n'
+    function_str += '        args.append(\'{0}={1}\'.format(missing_param, param_val))\n'
 
     function_str += '    stderr_dest = subprocess.STDOUT\n'
-    function_str += '    if (\'stderr\' in kwargs):\n'
+    function_str += '    if \'stderr\' in kwargs:\n'
     function_str += '        if kwargs[\'stderr\']:\n'
     function_str += '            stderr_dest = subprocess.PIPE\n'
     function_str += '    task_proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
