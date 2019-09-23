@@ -3,14 +3,13 @@
 """
 Creates a Python interface to the FTools/HTools package.
 
-If there is not already a file containing a function to run a given FTools program, this will create one upon import. It uses the appropriate paramter file to do this.
+If there is not already a file containing a function to run a given FTools program,
+this will create one upon import. It uses the appropriate paramter file to do this.
 """
 
 import collections
 import csv
-
 import datetime
-
 import importlib
 import inspect
 import logging
@@ -18,8 +17,6 @@ import os
 import sys
 
 import time
-
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
 
 logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', logfile_datetime, '.log'])
@@ -49,18 +46,6 @@ THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.curren
 
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
-def _ask_for_param(p_name, p_dict):
-    if p_dict['prompt']:
-        query_msg = 'No value found for {0}.\n{1}'.format(p_name, p_dict['prompt'])
-    else:
-        query_msg = 'No value found for {0}.\n{1}'.format(p_name, p_dict['prompt'])
-    usr_inp = ''
-    while not usr_inp:
-        try:
-            usr_inp = input(query_msg)
-        except EOFError:
-            sys.exit('\nKeyboard interrupt received, program stopping.')
-
 def _make_function_docstring(tsk_nm, par_dict):
     """
     Create a string (expected to be used as the docstring for an automagically
@@ -79,67 +64,6 @@ def _make_function_docstring(tsk_nm, par_dict):
     docstr_lines.append('    """\n')    # join() doesn't put a \n at the end of the string.
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
-
-#def read_par_file(par_path, verbose=False):
-#    """
-#    Creates a docstring from a HEASoft .par file for a specified task
-#
-#    :param task: HEASoft task
-#    returns: array of parameters and descriptions in docstring format
-#    """
-#    param_dict = dict()
-#    skipit = False
-#    parfile = par_path #os.path.join(PFILES_DIR, '{0}.par'.format(task))
-#    pdarr = []
-#    try:
-#        with open(parfile, 'r') as par_hndl:
-#            ll = par_hndl.readlines()
-#    except Exception as errmsg:
-#        skipit = True
-#        print('Problem reading {0} ({1})'.format(parfile, errmsg))
-#        print('exception parts:')
-#        for ep in sys.exc_info():
-#            print('   {}'.format(ep))
-#    if not skipit:
-#        for l in ll:
-#            skipit = False
-#            if l.strip().startswith('#'):
-#                skipit = True
-#            p = l.strip().split(',')
-#            pstr = ''
-#            try:
-#                desc = l.strip().split('"')[-2]
-#            except Exception as errmsg:
-#                skipit = True
-#                if verbose:
-#                    print('Problem parsing parameter file for {0}'.format(task))
-#            if not skipit:
-#                default = ''
-#                try:
-#                    if p[3]:
-#                        default = "(default = {0})".format(p[3])
-#                except Exception:
-#                    pass
-#                pstr = ':param {0}: {1} {2}'.format(p[0], desc, default)
-#                min_val = None
-#                max_val = None
-#                prompt = None
-#                if len(p) > 4:
-#                    try:
-#                        min_val = float(p[4])
-#                    except ValueError:
-#                        pass
-#                    try:
-#                        max_val = float(p[5])
-#                    except ValueError:
-#                        pass
-#                param_dict[p[0]] = {'type': p[1], 'mode': p[2], 'default': p[3],
-#                                    'min': min_val, 'max': max_val,
-#                                    'prompt': p[6]}
-#            pdarr.append(pstr)
-#    return pdarr, param_dict
-#
-
 
 def _read_par_file(par_path):
     """
@@ -181,7 +105,6 @@ def _create_function(task_nm, par_name):
     LOGGER.debug('Entering _create_function, task_nm: %s', task_nm)
 
     function_str = ''
-    #keyword_pairs = {}
     # Create the path to the par file we want
     par_path = os.path.join(PFILES_DIR, par_name)
     if os.path.exists(par_path) and os.path.isfile(par_path):
@@ -192,21 +115,19 @@ def _create_function(task_nm, par_name):
         if not os.path.isfile(par_path):
             LOGGER.debug('%s is not a regular file', par_path)
 
-    function_str = '"""\n'
-    function_str += 'Automatically created file containing ' + task_nm + '\n'
-    function_str += 'function. This is expected to be imported into (and be\n'
-    function_str += 'part of) the heasoftpy module.\n'
-    function_str += '"""\n\n'
+    function_str = '"""\nAutomatically created file containing ' + task_nm + ' function. This is\n'
+    function_str += 'expected to be imported into (and be part of) the heasoftpy module.\n"""\n\n'
     function_str += 'import sys\n'
     function_str += 'import subprocess\n'
-    function_str += 'import heasoftpy.result as hsp_res\n\n'
+    function_str += 'import heasoftpy.result as hsp_res\n'
+    function_str += 'import heasoftpy.utils as hsp_utils\n\n'
     function_str += 'def {0}(**kwargs):\n'.format(task_nm)
     # Create body of function (command line creation, subprocess call)
     param_dict = _read_par_file(par_path)
     fn_docstring = _make_function_docstring(task_nm, param_dict)
-    function_str += fn_docstring
+    function_str += fn_docstring + '\n'
     function_str += '    param_dict = dict()\n'
-    for param_key in param_dict.keys():
+    for param_key in param_dict:
         param_key = param_key.strip()
         if param_key == 'prompt':
             # Quotation marks are part of the prompt value, and we don't want to have two sets.
@@ -220,10 +141,11 @@ def _create_function(task_nm, par_name):
     function_str += '    params_not_specified = []\n'
     function_str += '    for param in param_dict:\n'
     function_str += '        if not param in kwargs:\n'
-    function_str += '            if param_dict[param][\'mode\'].find(\'h\') == -1:\n'
+    function_str += '            if param_dict[param][\'mode\'].find(\'h\') == -1 and\\\n'
+    function_str += '              param_dict[param][\'default\'] == \'\':\n'
     function_str += '                params_not_specified.append(param)\n'
     function_str += '    for missing_param in params_not_specified:\n'
-    function_str += '        param_val = heasoftpy._ask_for_param(missing_param, param_dict)\n'
+    function_str += '        param_val = hsp_utils._ask_for_param(missing_param, param_dict)\n'
     function_str += '        args.append(\'{0}={1}\'.format(missing_param, param_val))\n'
 
     function_str += '    stderr_dest = subprocess.STDOUT\n'
@@ -245,7 +167,6 @@ def _create_function(task_nm, par_name):
 if not os.path.exists(DEFS_DIR):
     os.mkdir(DEFS_DIR)
 
-#for task_name in ['ftlist.par', 'ftcopy.par', 'fhelp.par', 'fthelp.par']:
 for par_file in os.listdir(PFILES_DIR):
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
     new_module_path = os.path.join(DEFS_DIR, task_name + '.py')
@@ -262,8 +183,6 @@ for par_file in os.listdir(PFILES_DIR):
     spec = importlib.util.spec_from_file_location(task_name, new_module_path)
     func_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(func_module)
-    #func_module = importlib.import_module(task_name)
 
-#    setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
     setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
