@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
+__version__ = '0.1.1'
+
 """
 Creates a Python interface to the FTools/HTools package.
 
 If there is not already a file containing a function to run a given FTools program,
 this will create one upon import. It uses the appropriate paramter file to do this.
+
+Version 0.1 ME : initial version
+Version 0.1.1 MFC: corrects identification of prompting for required, missing parameters
+
 """
 
 import collections
