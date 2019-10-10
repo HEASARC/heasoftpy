@@ -12,7 +12,7 @@ try:
     import heasoftpy.result
 except ModuleNotFoundError:
     # A kludge to get the import to work, assuming the heasoftpy directory is
-    # 1 level above the test directory.
+    # one level above the test directory.
     cur_file_dir = os.path.dirname(os.path.abspath(__file__))
     dir_parts = cur_file_dir.split(os.sep)
     package_dir = os.sep.join(dir_parts[:-2])
@@ -36,54 +36,14 @@ class TestTasks(unittest.TestCase):
         if os.path.exists('copy_of_my_rate.fit'):
             os.remove('copy_of_my_rate.fit')
         self.maxDiff = 1000
-
-    def tearDown(self):
-        """ Currently a placeholder """
-        pass
-
-    def test_ftcopy(self):
-        """
-        Test the ftcopy program by copying the test file to a new file
-        named "copy_of_"NAMEOFTESTFILE." Note that the file will be deleted
-        when the test run is finished.
-        """
-        copy_name = 'copy_of_' + self.test_file
-        test_out = heasoftpy.ftcopy(infile=self.test_file, outfile=copy_name)
-#        print('Press <Enter>')
-#        input()
-        self.assertTrue(os.path.exists(copy_name))
-
-#    @unittest.skip('skipping help')
-    def test_fthelp(self):
-        """
-        Test the fthelp program by retrieving the help for ftlist.
-        """
-        help_out = heasoftpy.fthelp(task='ftlist')
-        #string_out = byte_out.decode()
-        test_out = []
-        for test_line in help_out.stdout.split('\n'):
-            test_out.append(test_line)
-        self.assertTrue(test_out[0].strip() == 'NAME' and test_out[1].strip() == '' and
-                        test_out[2].strip() == 'ftlist - List the contents of the input file.')
-
-#    @unittest.skip('skipping ftlist')
-    def test_ftlist(self):
-        """ Test the ftlist program """
-        expected_out = \
-"""
+        # Define expected outputs here to keep the tests cleaner.
+        self.ftlist_exp_out = """
         Name               Type       Dimensions
         ----               ----       ----------
 HDU 1   Primary Array      Null Array                               
 HDU 2   RATE               BinTable     3 cols x 5371 rows          
 """
-        test_out = heasoftpy.ftlist(infile=self.test_file, option='H').stdout
-        self.assertEqual(test_out, expected_out)
-
-#    @unittest.skip('Skipping ftverify')
-    def test_ftverify(self):
-        """ Tests the ftverify program """
-        expected_out = \
-"""
+        self.ftverify_exp_out="""
                ftverify \d\.\d\d \(CFITSIO V\d\.\d\d\d\)               
                ------------------------------               
  
@@ -119,28 +79,54 @@ File: my_rate.fit
 \** Verification found 0 warning\(s\) and 0 error\(s\)\. \**
 """
 
-        holder = \
-"""
-\. 
-\** Verification found 0 warning(s) and 0 error(s). \**
- 
-"""
-        test_result = heasoftpy.ftverify(infile=self.test_file, stderr=True)
+
+    def tearDown(self):
+        """ Currently a placeholder """
+        pass
+
+    def test_ftcopy(self):
+        """
+        Test the ftcopy program by copying the test file to a new file
+        named "copy_of_NAMEOFTESTFILE." Note that the file will be deleted
+        when the test run is finished.
+        """
+        copy_name = 'copy_of_' + self.test_file
+        test_out = heasoftpy.ftcopy(infile=self.test_file, outfile=copy_name)
+        self.assertTrue(os.path.exists(copy_name))
+
+#    @unittest.skip('skipping help')
+    def test_fthelp(self):
+        """
+        Test the fthelp program by retrieving the help for ftlist.
+        """
+        help_out = heasoftpy.fthelp(task='ftlist')
+        #string_out = byte_out.decode()
+        test_out = []
+        for test_line in help_out.stdout.split('\n'):
+            test_out.append(test_line)
+        self.assertTrue(test_out[0].strip() == 'NAME' and test_out[1].strip() == '' and
+                        test_out[2].strip() == 'ftlist - List the contents of the input file.')
+
+#    @unittest.skip('skipping ftlist')
+    def test_ftlist(self):
+        """ Test the ftlist program """
+        test_out = heasoftpy.ftlist(infile=self.test_file, option='H').stdout
+        self.assertEqual(test_out, self.ftlist_exp_out)
+
+#    @unittest.skip('Skipping ftverify')
+    def test_ftverify(self):
+        """ Tests the ftverify program """
+        test_result = heasoftpy.ftverify(infile=self.test_file, 
+                                         numerrs=0, numwrns=0,
+                                         stderr=True)
         test_out = test_result.stdout
         test_err = test_result.stderr
         if isinstance(test_out, bytes):
             test_out = test_out.decode()
         if isinstance(test_err, bytes):
             test_out = test_err.decode()
-#        print('\n')
-#        print('expected_out: {}'.format(expected_out))
-#        print('-----')
-#        print('stdout: {}'.format(test_out))
-#        print('-----')
-#        print('stderr: {}'.format(test_result.stderr))
-
 #        self.assertEqual(test_out, expected_out)
-        self.assertRegex(test_out, expected_out)
+        self.assertRegex(test_out, self.ftverify_exp_out)
 
 
 if __name__ == '__main__':

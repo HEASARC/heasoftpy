@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
-__version__ = '0.1.1'
-
 """
 Creates a Python interface to the FTools/HTools package.
 
 If there is not already a file containing a function to run a given FTools program,
 this will create one upon import. It uses the appropriate paramter file to do this.
 
-Version 0.1 ME : initial version
+Version 0.1 ME: initial version
 Version 0.1.1 MFC: corrects identification of prompting for required, missing parameters
+Version 0.1.2 ME: Added Error classes and handling errors when the underlying program
+                  encounters an error.
 
+ME = Matt Elliott
+MFC = Mike Corcoran
 """
 
 import collections
@@ -21,8 +23,9 @@ import inspect
 import logging
 import os
 import sys
-
 import time
+
+__version__ = '0.1.2'
 
 logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', logfile_datetime, '.log'])
@@ -123,6 +126,7 @@ def _create_function(task_nm, par_name):
 
     function_str = '"""\nAutomatically created file containing ' + task_nm + ' function. This is\n'
     function_str += 'expected to be imported into (and be part of) the heasoftpy module.\n"""\n\n'
+    function_str += 'import heasoftpy.errors as hsp_err\n'
     function_str += 'import sys\n'
     function_str += 'import subprocess\n'
     function_str += 'import heasoftpy.result as hsp_res\n'
@@ -164,6 +168,8 @@ def _create_function(task_nm, par_name):
     function_str += '    if isinstance(task_err, bytes):\n'
     function_str += '        task_err = task_err.decode()\n'
     function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err)\n'
+    function_str += '    if task_res.returncode:\n'
+    function_str += '        raise hsp_err.HeasoftpyExecutionError(args[0], task_res)\n'
     function_str += '    return task_res\n'
 #    function_str += '    \n'
     LOGGER.debug('At end of _create_function(), function_str:\n%s', function_str)
