@@ -133,30 +133,32 @@ def _create_function(task_nm, par_name):
     function_str += 'import heasoftpy.utils as hsp_utils\n\n'
     function_str += 'def {0}(**kwargs):\n'.format(task_nm)
     # Create body of function (command line creation, subprocess call)
-    param_dict = _read_par_file(par_path)
-    fn_docstring = _make_function_docstring(task_nm, param_dict)
+    parfile_dict = _read_par_file(par_path)
+    fn_docstring = _make_function_docstring(task_nm, parfile_dict)
     function_str += fn_docstring + '\n'
-    function_str += '    param_dict = dict()\n'
-    for param_key in param_dict:
+    function_str += '    parfile_dict = dict()\n'
+    for param_key in parfile_dict:
         param_key = param_key.strip()
         if param_key == 'prompt':
             # Quotation marks are part of the prompt value, and we don't want to have two sets.
-            function_str += "    param_dict[{0}] = {1}\n".format(param_key, param_dict[param_key])
+            function_str += "    parfile_dict[{0}] = {1}\n".format(param_key, parfile_dict[param_key])
         else:
-            function_str += "    param_dict['{0}'] = {1}\n".format(param_key, param_dict[param_key])
+            function_str += "    parfile_dict['{0}'] = {1}\n".format(param_key, parfile_dict[param_key])
     function_str += '    args = [\'{}\']\n'.format(task_nm)
+    function_str += '    task_params = dict()\n'
     function_str += '    for kwa in kwargs:\n'
     function_str += '        if not kwa == \'stderr\':\n'
     function_str += '            args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
+    function_str += '            task_params[kwa] = kwargs[kwa]\n'
     function_str += '    params_not_specified = []\n'
-    function_str += '    for param in param_dict:\n'
-    function_str += '        if not param in kwargs:\n'
-    function_str += '            if hsp_utils._check_query_param(param, param_dict):\n'
-    function_str += '                params_not_specified.append(param)\n'
+    function_str += '    for entry in parfile_dict:\n'
+    function_str += '        if not entry in kwargs:\n'
+    function_str += '            if hsp_utils.check_query_param(entry, parfile_dict):\n'
+    function_str += '                params_not_specified.append(entry)\n'
     function_str += '    for missing_param in params_not_specified:\n'
-    function_str += '        param_val = hsp_utils._ask_for_param(missing_param, param_dict)\n'
+    function_str += '        param_val = hsp_utils.ask_for_param(missing_param, parfile_dict)\n'
     function_str += '        args.append(\'{0}={1}\'.format(missing_param, param_val))\n'
-
+    function_str += '        task_params[missing_param] = param_val\n'
     function_str += '    stderr_dest = subprocess.STDOUT\n'
     function_str += '    if \'stderr\' in kwargs:\n'
     function_str += '        if kwargs[\'stderr\']:\n'
@@ -167,7 +169,7 @@ def _create_function(task_nm, par_name):
     function_str += '        task_out = task_out.decode()\n'
     function_str += '    if isinstance(task_err, bytes):\n'
     function_str += '        task_err = task_err.decode()\n'
-    function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err)\n'
+    function_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
     function_str += '    if task_res.returncode:\n'
     function_str += '        raise hsp_err.HeasoftpyExecutionError(args[0], task_res)\n'
     function_str += '    return task_res\n'
