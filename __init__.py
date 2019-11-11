@@ -10,6 +10,8 @@ Version 0.1 ME: initial version
 Version 0.1.1 MFC: corrects identification of prompting for required, missing parameters
 Version 0.1.2 ME: Added Error classes and handling errors when the underlying program
                   encounters an error.
+Version 0.1.3 ME: Added checks of function versions and replacement of functions that
+                  are outdated.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -25,7 +27,13 @@ import os
 import sys
 import time
 
-__version__ = '0.1.2'
+THIS_MODULE = sys.modules[__name__]
+
+#print('THIS_MODULE: {}'.format(THIS_MODULE))
+
+utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
+
+__version__ = '0.1.3'
 
 logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', logfile_datetime, '.log'])
@@ -50,10 +58,12 @@ HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'mode', 'default', \
                                                              'min', 'max', \
                                                              'prompt'])
-THIS_MODULE = sys.modules[__name__]
+
 THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
+
+THIS_MOD_VER = utils.ProgramVersion(__version__)
 
 def _make_function_docstring(tsk_nm, par_dict):
     """
@@ -109,7 +119,7 @@ def _read_par_file(par_path):
 
     return par_contents
 
-def _create_function(task_nm, par_name):
+def _create_function(task_nm, par_name, func_mod_path):
     """ function to create a function (see module docstring for more) """
     LOGGER.debug('Entering _create_function, task_nm: %s', task_nm)
 
@@ -131,6 +141,7 @@ def _create_function(task_nm, par_name):
     function_str += 'import subprocess\n'
     function_str += 'import heasoftpy.result as hsp_res\n'
     function_str += 'import heasoftpy.utils as hsp_utils\n\n'
+    function_str += '__version__ = \'{}\'\n\n'.format(__version__)
     function_str += 'def {0}(**kwargs):\n'.format(task_nm)
     # Create body of function (command line creation, subprocess call)
     parfile_dict = _read_par_file(par_path)
@@ -175,27 +186,39 @@ def _create_function(task_nm, par_name):
     function_str += '    return task_res\n'
 #    function_str += '    \n'
     LOGGER.debug('At end of _create_function(), function_str:\n%s', function_str)
-    return function_str
+    with open(func_mod_path, 'wt') as out_file:
+        out_file.write(function_str)
+#    return function_str
+
+def _import_func_module(task_name, new_module_path):
+    # The following was found at:
+    #   https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+    # Note: This shouldn't work for Python < 3.5 (including versions of Python 2)
+    spec = importlib.util.spec_from_file_location(task_name, new_module_path)
+    func_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(func_module)
+    return func_module, spec
+
+################################################################################
 
 if not os.path.exists(DEFS_DIR):
     os.mkdir(DEFS_DIR)
 
 for par_file in os.listdir(PFILES_DIR):
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
-    new_module_path = os.path.join(DEFS_DIR, task_name + '.py')
+    func_module_path = os.path.join(DEFS_DIR, task_name + '.py')
 
-    #if not os.path.exists(os.path.join(THIS_MODULE_DIR, task_name + '.py')):
-    if not os.path.isfile(new_module_path):
-        func_str = _create_function(task_name, par_file)
-        with open(new_module_path, 'wt') as out_file:
-            out_file.write(func_str)
-
-    # The following was found at:
-    #   https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
-    # Note that this shouldn't work for Python < 3.5 and 2
-    spec = importlib.util.spec_from_file_location(task_name, new_module_path)
-    func_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(func_module)
+    if os.path.isfile(func_module_path):
+#        print('Found {}, checking version'.format(func_module_path))
+        (func_module, spec) = _import_func_module(task_name, func_module_path)
+        if '__version__' in func_module.__dict__:
+            func_mod_ver = utils.ProgramVersion(func_module.__version__)
+            if func_mod_ver < THIS_MOD_VER:
+                print('Updating the function {0} ({1}), which is out-dated.'.format(func_module.__name__, func_module_path))
+                os.remove(func_module_path)
+                _create_function(task_name, par_file, func_module_path)
+    else:
+        _create_function(task_name, par_file, func_module_path)
+        (func_module, spec) = _import_func_module(task_name, func_module_path)
 
     setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
