@@ -157,6 +157,8 @@ def _create_function(task_nm, par_name, func_mod_path):
             function_str += "    parfile_dict['{0}'] = {1}\n".format(param_key, parfile_dict[param_key])
     function_str += '    args = [\'{}\']\n'.format(task_nm)
     function_str += '    task_params = dict()\n'
+    function_str += '    for par_key in parfile_dict.keys():\n'
+    function_str += '        task_params[par_key] = parfile_dict[par_key][\'default\']\n'
     function_str += '    for kwa in kwargs:\n'
     function_str += '        if not kwa == \'stderr\':\n'
     function_str += '            args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
