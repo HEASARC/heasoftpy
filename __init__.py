@@ -12,6 +12,10 @@ Version 0.1.2 ME: Added Error classes and handling errors when the underlying pr
                   encounters an error.
 Version 0.1.3 ME: Added checks of function versions and replacement of functions that
                   are outdated.
+Version 0.1.4 ME: Pre-populate the results.params field in a generated function 
+                  so that all values used by the corresponding FTool are in the
+                  params field (which later has user-specified values replace
+                  the defaults where appropriate).
 
 ME = Matt Elliott
 MFC = Mike Corcoran
