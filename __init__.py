@@ -16,6 +16,7 @@ Version 0.1.4 ME: Pre-populate the results.params field in a generated function
                   so that all values used by the corresponding FTool are in the
                   params field (which later has user-specified values replace
                   the defaults where appropriate).
+Version 0.1.5 ME: Open par files using utf-8 encoding
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -37,7 +38,7 @@ THIS_MODULE = sys.modules[__name__]
 
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.3'
+__version__ = '0.1.5'
 
 logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', logfile_datetime, '.log'])
@@ -95,7 +96,7 @@ def _read_par_file(par_path):
     """
     par_contents = dict()     # list()
     try:
-        with open(par_path, 'rt') as par_hndl:
+        with open(par_path, 'rt', encoding='utf-8') as par_hndl:
             par_reader = csv.reader(par_hndl, delimiter=',', quotechar='"', \
                                     quoting=csv.QUOTE_ALL, \
                                     skipinitialspace=True)
