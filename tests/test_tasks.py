@@ -10,7 +10,8 @@ import unittest
 try:
     import heasoftpy
     import heasoftpy.result
-except ModuleNotFoundError:
+#except ModuleNotFoundError:
+except ImportError:
     # A kludge to get the import to work, assuming the heasoftpy directory is
     # one level above the test directory.
     cur_file_dir = os.path.dirname(os.path.abspath(__file__))
