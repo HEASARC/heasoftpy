@@ -10,8 +10,7 @@ import unittest
 try:
     import heasoftpy
     import heasoftpy.result
-#except ModuleNotFoundError:
-except ImportError:
+except ModuleNotFoundError:
     # A kludge to get the import to work, assuming the heasoftpy directory is
     # one level above the test directory.
     cur_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -85,6 +84,19 @@ File: my_rate.fit
         """ Currently a placeholder """
         pass
 
+#    @unittest.skip('skipping fhelp')
+    def test_fhelp(self):
+        """
+        Test the fthelp program by retrieving the help for ftlist.
+        """
+        help_out = heasoftpy.fhelp(task='ftlist')
+        #string_out = byte_out.decode()
+        test_out = []
+        for test_line in help_out.stdout.split('\n'):
+            test_out.append(test_line)
+        self.assertTrue(test_out[0].strip() == 'NAME' and test_out[1].strip() == '' and
+                        test_out[2].strip() == 'ftlist - List the contents of the input file.')
+
     def test_ftcopy(self):
         """
         Test the ftcopy program by copying the test file to a new file
@@ -95,7 +107,7 @@ File: my_rate.fit
         test_out = heasoftpy.ftcopy(infile=self.test_file, outfile=copy_name)
         self.assertTrue(os.path.exists(copy_name))
 
-#    @unittest.skip('skipping help')
+#    @unittest.skip('skipping fthelp')
     def test_fthelp(self):
         """
         Test the fthelp program by retrieving the help for ftlist.
@@ -129,6 +141,20 @@ File: my_rate.fit
 #        self.assertEqual(test_out, expected_out)
         self.assertRegex(test_out, self.ftverify_exp_out)
 
+#    @unittest.skip('Skipping ftverify_single_arg')
+    def test_ftverify_single_arg(self):
+        """ Tests the ftverify program using only one (positional) argument"""
+        test_result = heasoftpy.ftverify(self.test_file)
+        test_out = test_result.stdout
+        with open('ftverify_single.out', 'wt') as mf:
+            mf.write(test_out)
+        test_err = test_result.stderr
+        if isinstance(test_out, bytes):
+            test_out = test_out.decode()
+        if isinstance(test_err, bytes):
+            test_out = test_err.decode()
+#        self.assertEqual(test_out, expected_out)
+        self.assertRegex(test_out, self.ftverify_exp_out)
 
 if __name__ == '__main__':
     unittest.main()

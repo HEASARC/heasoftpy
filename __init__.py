@@ -28,14 +28,15 @@ Version 0.1.5 ME:  Added help, including putting fhelp contents into the
 Version 0.1.6 ME:  Split creation of functions so that those that can accept
                    a single (positional) argument can do so with that required
                    argument (often the input file) as the default.
-
+Version 0.1.7 ME:  Re-read parameter file after subprocess call to underlying program
+                   and load into result.params. Moved _read_par_file function to utils
+                   and renamed it read_par_file.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
 """
 
 import collections
-import csv
 import datetime
 import importlib
 import inspect
@@ -52,20 +53,20 @@ THIS_MODULE = sys.modules[__name__]
 
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
-logfile_datetime = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
-LOG_NAME = ''.join(['heasoftpy_initialization_', logfile_datetime, '.log'])
+LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
+LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
 logging.basicConfig(filename=LOG_NAME,
                     filemode='a', level=logging.DEBUG)
 
 LOGGER = logging.getLogger('heasoftpy_initialization')
-log_dt_lst = list(logfile_datetime)
-log_dt_lst.insert(15, ':')
-log_dt_lst.insert(13, ':')
+LOG_DT_LST = list(LOGFILE_DATETIME)
+LOG_DT_LST.insert(15, ':')
+LOG_DT_LST.insert(13, ':')
 
 DBG_MSG = 'Entering heasoftpy module at {}'.\
-          format(''.join(log_dt_lst).replace('_', ' '))
+          format(''.join(LOG_DT_LST).replace('_', ' '))
 LOGGER.debug(DBG_MSG)
 
 HEADAS_DIR = os.environ['HEADAS']
@@ -111,6 +112,7 @@ def _create_function_docstring(tsk_nm, par_dict):
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
 
+# Seems to be deprecated
 def _create_function_start(par_file_dict, task_nm):
     fn_start_str = ''
     indent_lvl = '    '
@@ -180,7 +182,7 @@ def _create_task_file_header(task_nm):
     return hdr_str
 
 
-def _create_fn_start(par_file_dict, task_nm):
+def _create_fn_start(par_path, par_file_dict, task_nm):
     fn_start_str = ''
     indent_lvl = '    '
     num_req_param = _get_num_req_param(par_file_dict)
@@ -189,6 +191,7 @@ def _create_fn_start(par_file_dict, task_nm):
     if num_req_param == 1:
         fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
         fn_start_str += fn_docstring + '\n'
+        fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
         fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
         fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
         fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
@@ -202,6 +205,7 @@ def _create_fn_start(par_file_dict, task_nm):
         indent_lvl += indent_lvl
     else:
         fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
+        fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
         fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
         fn_start_str += fn_docstring + '\n'
 
@@ -211,8 +215,8 @@ def _create_fn_start(par_file_dict, task_nm):
 def _create_task_function(task_nm, par_path):
 
     # Create body of function (command line creation, subprocess call)
-    parfile_dict = _read_par_file(par_path)
-    start_str, indent_lvl = _create_fn_start(parfile_dict, task_nm)
+    parfile_dict = utils.read_par_file(par_path)
+    start_str, indent_lvl = _create_fn_start(par_path, parfile_dict, task_nm)
     fn_str = start_str
     fn_str += ''.join([indent_lvl, 'parfile_dict = dict()\n'])
     for param_key in parfile_dict:
@@ -251,6 +255,9 @@ def _create_task_function(task_nm, par_path):
     fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
     fn_str += '    if task_res.returncode:\n'
     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
+    fn_str += '    else:\n'
+    fn_str += '        updated_par_contents = hsp_utils.read_par_file(par_path)\n'
+    fn_str += '        task_res.params = updated_par_contents\n'
     fn_str += '    return task_res\n'
     return fn_str
 
@@ -258,7 +265,7 @@ def _old_create_task_function(task_nm, par_path):
     fn_str = ''
     # Create body of function (command line creation, subprocess call)
     fn_str += 'def {0}(**kwargs):\n'.format(task_nm)
-    parfile_dict = _read_par_file(par_path)
+    parfile_dict = hsp_utils.read_par_file(par_path)
     fn_docstring = _create_function_docstring(task_nm, parfile_dict)
     fn_str += fn_docstring + '\n'
     fn_str += '    parfile_dict = dict()\n'
@@ -340,56 +347,22 @@ def _create_task_help():
     hlp_str += '    pass\n'
     return hlp_str
 
-def _read_par_file(par_path):
-    """
-    Reads a par file, returning the contents as a dictionary with the parameter
-    names as keys.
-    """
-    par_contents = dict()     # list()
-    try:
-        with open(par_path, 'rt') as par_hndl:
-            par_reader = csv.reader(par_hndl, delimiter=',', quotechar='"', \
-                                    quoting=csv.QUOTE_ALL, \
-                                    skipinitialspace=True)
-            for param in par_reader:
-                if len(param) > 1 and not param[0].strip().startswith('#'):
-                    param_dict = dict()
-                    try:
-                        param_dict = {'type':     param[1], 'mode':     param[2],
-                                      'default':  param[3].strip(),
-                                      'min':      param[4], 'max':      param[5],
-                                      'prompt':   param[6]}
-                    except IndexError:
-                        print('Error processing {}.'.format(par_path))
 
-                    par_contents[param[0].strip()] = param_dict
-    except FileNotFoundError:
-        err_msg = 'Error! Par file {} could not be found.'.format(par_path)
-        sys.exit(err_msg)
-    except PermissionError:
-        err_msg = 'Error! A permission error was encountered reading {}.'.format(par_path)
-        sys.exit(err_msg)
-    except IsADirectoryError:
-        err_msg = 'Error! {} is a directory, not a file.'.format(par_path)
-        sys.exit(err_msg)
-
-    return par_contents
-
-def help(*args):
-    """
-    Provide a help facility for the module.
-
-    If args is empty, provide the help message for the facility. If args
-    contains the name of a function/task, run fhelp for that task to get the
-    help message to be printed.
-    """
-    #print('in help()')
-    if args:
-        print('help for: {} would be printed here'.format(args[0]))
-        help_str = _get_task_fhelp(args[0])
-        print(help_str)
-    else:
-        print(pydoc.render_doc(__package__))
+#def help(*args):
+#    """
+#    Provide a help facility for the module.
+#
+#    If args is empty, provide the help message for the facility. If args
+#   contains the name of a function/task, run fhelp for that task to get the
+#   help message to be printed.
+#   """
+#   #print('in help()')
+#   if args:
+#       print('help for: {} would be printed here'.format(args[0]))
+#       help_str = _get_task_fhelp(args[0])
+#       print(help_str)
+#   else:
+#       print(pydoc.render_doc(__package__))
         #print('version: {}'.format(__version__))
         #print('Help for heasoftpy:')
 
