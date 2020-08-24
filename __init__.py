@@ -175,8 +175,8 @@ def _create_task_file_header(task_nm):
     hdr_str += 'expected to be imported into (and be part of) the heasoftpy module.\n"""\n\n'
     hdr_str += 'import sys\n'
     hdr_str += 'import subprocess\n'
-    hdr_str += 'import heasoftpy.errors as hsp_err\n'
-    hdr_str += 'import heasoftpy.result as hsp_res\n'
+    hdr_str += 'import heasoftpy.core.errors as hsp_err\n'
+    hdr_str += 'import heasoftpy.core.result as hsp_res\n'
     hdr_str += 'import heasoftpy.utils as hsp_utils\n\n'
     hdr_str += '__version__ = \'{}\'\n\n'.format(__version__)
     return hdr_str
