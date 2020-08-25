@@ -31,6 +31,8 @@ Version 0.1.6 ME:  Split creation of functions so that those that can accept
 Version 0.1.7 ME:  Re-read parameter file after subprocess call to underlying program
                    and load into result.params. Moved _read_par_file function to utils
                    and renamed it read_par_file.
+Version 0.1.8 ME:  Cleaned up code, removed debugging messages and restructured
+                   directories in preparation for release
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -49,11 +51,10 @@ import time
 
 THIS_MODULE = sys.modules[__name__]
 
-#print('THIS_MODULE: {}'.format(THIS_MODULE))
-
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
+hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.6'
+__version__ = '0.1.8'
 
 LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
@@ -158,7 +159,7 @@ def _create_task_file(task_nm, par_name, func_mod_path):
         if not os.path.isfile(par_path):
             LOGGER.debug('%s is not a regular file', par_path)
     task_file_str = _create_task_file_header(task_nm)
-    task_file_str += _create_task_help()
+#    task_file_str += _create_task_help()
     task_file_str += _create_task_function(task_nm, par_path)
 #    task_file_str += '    \n'
     LOGGER.debug('At end of _create_task_file().') #, task_file_str:\n%s', task_file_str)
@@ -175,6 +176,7 @@ def _create_task_file_header(task_nm):
     hdr_str += 'expected to be imported into (and be part of) the heasoftpy module.\n"""\n\n'
     hdr_str += 'import sys\n'
     hdr_str += 'import subprocess\n'
+    hdr_str += 'import heasoftpy.ape as hsp_ape\n'
     hdr_str += 'import heasoftpy.core.errors as hsp_err\n'
     hdr_str += 'import heasoftpy.core.result as hsp_res\n'
     hdr_str += 'import heasoftpy.utils as hsp_utils\n\n'
@@ -215,7 +217,7 @@ def _create_fn_start(par_path, par_file_dict, task_nm):
 def _create_task_function(task_nm, par_path):
 
     # Create body of function (command line creation, subprocess call)
-    parfile_dict = utils.read_par_file(par_path)
+    parfile_dict = hsp_ape.read_par_file(par_path)
     start_str, indent_lvl = _create_fn_start(par_path, parfile_dict, task_nm)
     fn_str = start_str
     fn_str += ''.join([indent_lvl, 'parfile_dict = dict()\n'])
@@ -256,56 +258,17 @@ def _create_task_function(task_nm, par_path):
     fn_str += '    if task_res.returncode:\n'
     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
     fn_str += '    else:\n'
-    fn_str += '        updated_par_contents = hsp_utils.read_par_file(par_path)\n'
+    fn_str += '        updated_par_contents = hsp_ape.read_par_file(par_path)\n'
     fn_str += '        task_res.params = updated_par_contents\n'
     fn_str += '    return task_res\n'
     return fn_str
 
-def _old_create_task_function(task_nm, par_path):
-    fn_str = ''
-    # Create body of function (command line creation, subprocess call)
-    fn_str += 'def {0}(**kwargs):\n'.format(task_nm)
-    parfile_dict = hsp_utils.read_par_file(par_path)
-    fn_docstring = _create_function_docstring(task_nm, parfile_dict)
-    fn_str += fn_docstring + '\n'
-    fn_str += '    parfile_dict = dict()\n'
-    for param_key in parfile_dict:
-        param_key = param_key.strip()
-        if param_key == 'prompt':
-            # Quotation marks are part of the prompt value, and we don't want to have two sets.
-            fn_str += "    parfile_dict[{0}] = {1}\n".format(param_key, parfile_dict[param_key])
-        else:
-            fn_str += "    parfile_dict['{0}'] = {1}\n".format(param_key, parfile_dict[param_key])
-    fn_str += '    args = [\'{}\']\n'.format(task_nm)
-    fn_str += '    task_params = dict()\n'
-    fn_str += '    for kwa in kwargs:\n'
-    fn_str += '        if not kwa == \'stderr\':\n'
-    fn_str += '            args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'
-    fn_str += '            task_params[kwa] = kwargs[kwa]\n'
-    fn_str += '    params_not_specified = []\n'
-    fn_str += '    for entry in parfile_dict:\n'
-    fn_str += '        if not entry in kwargs:\n'
-    fn_str += '            if hsp_utils.check_query_param(entry, parfile_dict):\n'
-    fn_str += '                params_not_specified.append(entry)\n'
-    fn_str += '    for missing_param in params_not_specified:\n'
-    fn_str += '        param_val = hsp_utils.ask_for_param(missing_param, parfile_dict)\n'
-    fn_str += '        args.append(\'{0}={1}\'.format(missing_param, param_val))\n'
-    fn_str += '        task_params[missing_param] = param_val\n'
-    fn_str += '    stderr_dest = subprocess.STDOUT\n'
-    fn_str += '    if \'stderr\' in kwargs:\n'
-    fn_str += '        if kwargs[\'stderr\']:\n'
-    fn_str += '            stderr_dest = subprocess.PIPE\n'
-    fn_str += '    task_proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
-    fn_str += '    task_out, task_err = task_proc.communicate()\n'
-    fn_str += '    if isinstance(task_out, bytes):\n'
-    fn_str += '        task_out = task_out.decode()\n'
-    fn_str += '    if isinstance(task_err, bytes):\n'
-    fn_str += '        task_err = task_err.decode()\n'
-    fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
-    fn_str += '    if task_res.returncode:\n'
-    fn_str += '        raise hsp_err.HeasoftpyExecutionError(args[0], task_res)\n'
-    fn_str += '    return task_res\n'
-    return fn_str
+#def _create_task_help():
+#    hlp_str = ''
+#    hlp_str += 'def help():\n'
+#    hlp_str += '    pass\n'
+#    return hlp_str
+#
 
 def _get_num_req_param(param_dict):
     """
@@ -324,29 +287,21 @@ def _get_task_fhelp(task_nm):
     help_cmd = os.path.join(BIN_DIR, 'fhelp')
     try:
         task_str = ''.join(['task=', task_nm])
-        help_proc = subprocess.Popen([help_cmd, task_str], stdout=subprocess.PIPE)
+        help_proc = subprocess.Popen([help_cmd, task_str], stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_nm == 'attitude':
-            fhelp_out, err = task_proc.communicate(input=b'task\n')
+            fhelp_out, err = help_proc.communicate(input=b'task\n')
         else:
             fhelp_out, err = help_proc.communicate()
         # Convert to string (from a bytes object)
         fhelp_str = fhelp_out.decode().replace('"""', '').replace('\\x', 'esc-x')
-        if fhelps_str.startswith('Sorry, could not find help'):
+        if fhelp_str.startswith('Sorry, could not find help') or \
+           err.startswith('No help found for'):
             fhelp_str = '    No help available via fhelp for {}.'.format(task_nm)
     except:
         err_msg = 'Error finding help for {}.'.format(task_nm)
-        print(err_msg)
-#        print('\n start of sys.exc_info():')
-#        print(sys.exc_info())
-#        print('end of sys.exc_info()\n')
+        LOGGER.info(err_msg)
     return fhelp_str
-
-def _create_task_help():
-    hlp_str = ''
-    hlp_str += 'def help():\n'
-    hlp_str += '    pass\n'
-    return hlp_str
-
 
 #def help(*args):
 #    """
@@ -385,7 +340,6 @@ for par_file in os.listdir(PFILES_DIR):
     func_module_path = os.path.join(DEFS_DIR, task_name + '.py')
 
     if os.path.isfile(func_module_path):
-#        print('Found {}, checking version'.format(func_module_path))
         (func_module, spec) = _import_func_module(task_name, func_module_path)
         if '__version__' in func_module.__dict__:
             func_mod_ver = utils.ProgramVersion(func_module.__version__)
