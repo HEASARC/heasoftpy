@@ -2,3 +2,6 @@
 *.log
 *.out
 *.*~
+*pycache*
+*.pyc
+.DS_Store
