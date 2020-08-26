@@ -114,33 +114,32 @@ def _create_function_docstring(tsk_nm, par_dict):
     return fn_docstr
 
 # Seems to be deprecated
-def _create_function_start(par_file_dict, task_nm):
-    fn_start_str = ''
-    indent_lvl = '    '
-    num_req_param = _get_num_req_param(par_file_dict)
-    fn_docstring = _create_function_docstring(task_nm, par_file_dict)
-
-    if num_req_param == 1:
-        fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
-        fn_start_str += fn_docstring + '\n'
-        fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
-        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-        fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
-        fn_start_str += ''.join([indent_lvl, '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
-        fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
-        fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
-        fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile\', args[0]))\n'])
-        fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
-        fn_start_str += ''.join([indent_lvl, 'else:\n'])
-        fn_start_str += '\n'
-        indent_lvl += indent_lvl
-    else:
-        fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
-        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-        fn_start_str += fn_docstring + '\n'
-
-    return fn_start_str, indent_lvl
-
+#def _create_function_start(par_file_dict, task_nm):
+#    fn_start_str = ''
+#    indent_lvl = '    '
+#    num_req_param = _get_num_req_param(par_file_dict)
+#    fn_docstring = _create_function_docstring(task_nm, par_file_dict)
+#
+#    if num_req_param == 1:
+#        fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
+#        fn_start_str += fn_docstring + '\n'
+#        fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
+#        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
+#        fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
+#        fn_start_str += ''.join([indent_lvl, '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
+#        fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
+#        fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
+#        fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile\', args[0]))\n'])
+#        fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
+#        fn_start_str += ''.join([indent_lvl, 'else:\n'])
+#        fn_start_str += '\n'
+#        indent_lvl += indent_lvl
+#    else:
+#        fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
+#        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
+#        fn_start_str += fn_docstring + '\n'
+#
+#    return fn_start_str, indent_lvl
 
 def _create_task_file(task_nm, par_name, func_mod_path):
     """
@@ -207,9 +206,9 @@ def _create_fn_start(par_path, par_file_dict, task_nm):
         indent_lvl += indent_lvl
     else:
         fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
+        fn_start_str += fn_docstring + '\n'
         fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
         fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-        fn_start_str += fn_docstring + '\n'
 
     return fn_start_str, indent_lvl
 
