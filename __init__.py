@@ -58,7 +58,8 @@ __version__ = '0.1.8'
 
 LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
-logging.basicConfig(filename=LOG_NAME,
+LOG_PATH = os.path.join('/tmp', LOG_NAME)
+logging.basicConfig(filename=LOG_PATH,
                     filemode='a', level=logging.DEBUG)
 
 LOGGER = logging.getLogger('heasoftpy_initialization')
@@ -113,34 +114,6 @@ def _create_function_docstring(tsk_nm, par_dict):
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
 
-# Seems to be deprecated
-#def _create_function_start(par_file_dict, task_nm):
-#    fn_start_str = ''
-#    indent_lvl = '    '
-#    num_req_param = _get_num_req_param(par_file_dict)
-#    fn_docstring = _create_function_docstring(task_nm, par_file_dict)
-#
-#    if num_req_param == 1:
-#        fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
-#        fn_start_str += fn_docstring + '\n'
-#        fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
-#        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-#        fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
-#        fn_start_str += ''.join([indent_lvl, '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
-#        fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
-#        fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
-#        fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile\', args[0]))\n'])
-#        fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
-#        fn_start_str += ''.join([indent_lvl, 'else:\n'])
-#        fn_start_str += '\n'
-#        indent_lvl += indent_lvl
-#    else:
-#        fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
-#        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-#        fn_start_str += fn_docstring + '\n'
-#
-#    return fn_start_str, indent_lvl
-
 def _create_task_file(task_nm, par_name, func_mod_path):
     """
     Creates a file containing the function to run an FTools task (program).
@@ -158,7 +131,7 @@ def _create_task_file(task_nm, par_name, func_mod_path):
         if not os.path.isfile(par_path):
             LOGGER.debug('%s is not a regular file', par_path)
     task_file_str = _create_task_file_header(task_nm)
-#    task_file_str += _create_task_help()
+#    task_file_str += _create_task_help()           # MAY add this at some point
     task_file_str += _create_task_function(task_nm, par_path)
 #    task_file_str += '    \n'
     LOGGER.debug('At end of _create_task_file().') #, task_file_str:\n%s', task_file_str)
@@ -181,7 +154,6 @@ def _create_task_file_header(task_nm):
     hdr_str += 'import heasoftpy.utils as hsp_utils\n\n'
     hdr_str += '__version__ = \'{}\'\n\n'.format(__version__)
     return hdr_str
-
 
 def _create_fn_start(par_path, par_file_dict, task_nm):
     fn_start_str = ''
@@ -302,6 +274,10 @@ def _get_task_fhelp(task_nm):
         LOGGER.info(err_msg)
     return fhelp_str
 
+# This has been commented out so that the code does not create a conflict with
+# Python's builtin help facility. It is kept here in case it is later decided
+# to add this back into the module. It should be noted that help can be obtained
+# using fhelp via heasoftpy.fhelp(TASK_NAME)
 #def help(*args):
 #    """
 #    Provide a help facility for the module.
@@ -317,8 +293,8 @@ def _get_task_fhelp(task_nm):
 #       print(help_str)
 #   else:
 #       print(pydoc.render_doc(__package__))
-        #print('version: {}'.format(__version__))
-        #print('Help for heasoftpy:')
+#       print('version: {}'.format(__version__))
+#       print('Help for heasoftpy:')
 
 def _import_func_module(task_nm, new_module_path):
     # The following was found at:
