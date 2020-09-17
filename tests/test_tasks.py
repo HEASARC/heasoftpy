@@ -144,6 +144,19 @@ File: my_rate.fit
         self.assertTrue(test_out[0].strip() == 'NAME' and test_out[1].strip() == '' and
                         test_out[2].strip() == 'ftlist - List the contents of the input file.')
 
+        #    @unittest.skip('skipping fhelp')
+    def test_fhelp_pos_arg(self):
+        """
+        Test the fthelp program by retrieving the help for ftlist.
+        """
+        help_out = heasoftpy.fhelp('ftlist')
+        #string_out = byte_out.decode()
+        test_out = []
+        for test_line in help_out.stdout.split('\n'):
+            test_out.append(test_line)
+        self.assertTrue(test_out[0].strip() == 'NAME' and test_out[1].strip() == '' and
+                        test_out[2].strip() == 'ftlist - List the contents of the input file.')
+
     def test_ftcopy(self):
         """
         Test the ftcopy program by copying the test file to a new file
