@@ -6,7 +6,6 @@ Custom Error classes for heasoftpy.
 
 class HeasoftpyError(Exception):
     """ Base Error Class for the module """
-    pass
 
 class HeasoftpyExecutionError(HeasoftpyError):
     """

@@ -4,7 +4,7 @@ Define a data structure for holding results from FTools runs via the
 heasoftpy interface.
 """
 
-# The nametuple approach did not work once it became necessary to change
+# The namedtuple approach did not work once it became necessary to change
 # the values after a Result was instantiated.
 #
 #import collections
@@ -17,6 +17,7 @@ heasoftpy interface.
 
 
 class Result:
+    """ Container for data returned from heasoftpy call to a HEAsoft tool """
     def __init__(self, ret_code, std_out, std_err=None, parms=None, custm=None):
         self.returncode = ret_code
         self.stdout = std_out

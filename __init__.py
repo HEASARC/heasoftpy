@@ -33,6 +33,8 @@ Version 0.1.7 ME:  Re-read parameter file after subprocess call to underlying pr
                    and renamed it read_par_file.
 Version 0.1.8 ME:  Cleaned up code, removed debugging messages and restructured
                    directories in preparation for release
+Version 0.1.9 ME:  Modified how a parameter can be considered required, so that "q"
+                   (query) mode is considered.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -51,16 +53,20 @@ import time
 
 THIS_MODULE = sys.modules[__name__]
 
+DEBUG = False
+#DEBUG = True
+
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
+hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.8'
+__version__ = '0.1.9'
 
 LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
 LOG_PATH = os.path.join('/tmp', LOG_NAME)
 logging.basicConfig(filename=LOG_PATH,
-                    filemode='a', level=logging.DEBUG)
+                    filemode='a', level=logging.INFO)
 
 LOGGER = logging.getLogger('heasoftpy_initialization')
 LOG_DT_LST = list(LOGFILE_DATETIME)
@@ -118,8 +124,9 @@ def _create_task_file(task_nm, par_name, func_mod_path):
     """
     Creates a file containing the function to run an FTools task (program).
     """
-    LOGGER.debug('Entering _create_task_file, task_nm: %s', task_nm)
-
+    LOGGER.info('Creating function file: %s', task_nm)
+    if DEBUG:
+        print('Creating function file:', task_nm)
     task_file_str = ''
     # Create the path to the par file we want
     par_path = os.path.join(PFILES_DIR, par_name)
@@ -156,27 +163,17 @@ def _create_task_file_header(task_nm):
     return hdr_str
 
 def _create_fn_start(par_path, par_file_dict, task_nm):
-    fn_start_str = ''
-    indent_lvl = '    '
     num_req_param = _get_num_req_param(par_file_dict)
+    ### Remove after debugging:
+#    if task_nm.find('fhelp') != -1:
+#        print('for {}, num_req_param = {}'.format(task_nm, num_req_param))
     fn_docstring = _create_function_docstring(task_nm, par_file_dict)
-
     if num_req_param == 1:
-        fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
-        fn_start_str += fn_docstring + '\n'
-        fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
-        fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
-        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-        fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
-        fn_start_str += ''.join([indent_lvl, '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
-        fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
-        fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
-        fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile\', args[0]))\n'])
-        fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
-        fn_start_str += ''.join([indent_lvl, 'else:\n'])
-        fn_start_str += '\n'
-        indent_lvl += indent_lvl
+        fn_start_str, indent_lvl = _create_positional_arg_function_start(fn_docstring, par_path,
+                                                                         par_file_dict, task_nm)
     else:
+        indent_lvl = '    '
+        fn_start_str = ''
         fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
         fn_start_str += fn_docstring + '\n'
         fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
@@ -184,6 +181,25 @@ def _create_fn_start(par_path, par_file_dict, task_nm):
 
     return fn_start_str, indent_lvl
 
+def _create_positional_arg_function_start(fn_docstring, par_path, param_dict, task_nm):
+    indent_lvl = '    '
+    fn_start_str = ''
+    fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
+    fn_start_str += fn_docstring + '\n'
+    fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
+    fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
+    fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
+    fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
+    fn_start_str += ''.join([indent_lvl, '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
+    fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
+    fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
+    fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'', list(param_dict)[0], '\', args[0]))\n'])
+#    fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile'\', args[0]))\n'])
+    fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
+    fn_start_str += ''.join([indent_lvl, 'else:\n'])
+    fn_start_str += '\n'
+    indent_lvl += indent_lvl
+    return fn_start_str, indent_lvl
 
 def _create_task_function(task_nm, par_path):
 
@@ -239,7 +255,6 @@ def _create_task_function(task_nm, par_path):
 #    hlp_str += 'def help():\n'
 #    hlp_str += '    pass\n'
 #    return hlp_str
-#
 
 def _get_num_req_param(param_dict):
     """
@@ -249,7 +264,8 @@ def _get_num_req_param(param_dict):
     if isinstance(param_dict, dict):
         req_param = 0
         for param_key in param_dict:
-            if param_dict[param_key]['mode'] == 'a' and param_dict[param_key]['default'] == '':
+            if (param_dict[param_key]['mode'] == 'a' or param_dict[param_key]['mode'] == 'q') and param_dict[param_key]['default'] == '':
+#            if param_dict[param_key]['mode'] == 'a' and param_dict[param_key]['default'] == '':
                 req_param += 1
     return req_param
 
@@ -264,14 +280,30 @@ def _get_task_fhelp(task_nm):
             fhelp_out, err = help_proc.communicate(input=b'task\n')
         else:
             fhelp_out, err = help_proc.communicate()
-        # Convert to string (from a bytes object)
-        fhelp_str = fhelp_out.decode().replace('"""', '').replace('\\x', 'esc-x')
-        if fhelp_str.startswith('Sorry, could not find help') or \
-           err.startswith('No help found for'):
-            fhelp_str = '    No help available via fhelp for {}.'.format(task_nm)
     except:
         err_msg = 'Error finding help for {}.'.format(task_nm)
+    try:
+        # Convert to string (from a bytes object)
+        if not err:
+            fhelp_str = fhelp_out.decode()
+            fhelp_str = fhelp_str.replace('"""', '').replace('\\x', 'esc-x')
+        else:
+            fhelp_str = err.decode()
+        # With some of the encodings in the help messages, using .startswith
+        # was leading to problems.
+        #if (fhelp_str[:26] == 'Sorry, could not find help') or \
+        #   (err[:17] == 'No help found for'):
+        #    fhelp_str = '    No help available via fhelp for {}.'.format(task_nm)
+    except:# TypeError as te:
+        exc_info = sys.exc_info()
+        err_msg = 'Error decoding help for {}.'.format(task_nm)
+        LOGGER.info('type(fhelp_out): %s', type(fhelp_out))
+        LOGGER.info('type(fhelp_str): %s', type(fhelp_str))
         LOGGER.info(err_msg)
+        LOGGER.info('   type: %s', exc_info[0])
+        LOGGER.info('   value: %s', exc_info[1])
+        LOGGER.info('   traceback: %s', exc_info[2])
+        #LOGGER.info('   te.args: %s', te.args)
     return fhelp_str
 
 # This has been commented out so that the code does not create a conflict with
@@ -297,13 +329,14 @@ def _get_task_fhelp(task_nm):
 #       print('Help for heasoftpy:')
 
 def _import_func_module(task_nm, new_module_path):
+    """ Imports a function module pointed to by task_nm and new_module_path. """
     # The following was found at:
     #   https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
     # Note: This shouldn't work for Python < 3.5 (including versions of Python 2)
-    spec = importlib.util.spec_from_file_location(task_nm, new_module_path)
-    fn_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(fn_module)
-    return fn_module, spec
+    module_spec = importlib.util.spec_from_file_location(task_nm, new_module_path)
+    fn_module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(fn_module)
+    return fn_module, module_spec
 
 ################################################################################
 
@@ -319,7 +352,7 @@ for par_file in os.listdir(PFILES_DIR):
         if '__version__' in func_module.__dict__:
             func_mod_ver = utils.ProgramVersion(func_module.__version__)
             if func_mod_ver < THIS_MOD_VER:
-                print('Updating the function {0} ({1}), which is out-dated.'.format(func_module.__name__, func_module_path))
+                LOGGER.INFO('Updating the function {0} ({1}), which is out-dated.'.format(func_module.__name__, func_module_path))
                 os.remove(func_module_path)
                 _create_task_file(task_name, par_file, func_module_path)
     else:

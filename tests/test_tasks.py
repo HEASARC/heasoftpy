@@ -209,7 +209,7 @@ File: my_rate.fit
         print(re.match(FTVERIFY_EXP_OUT, test_out))
         self.assertRegex(test_out, FTVERIFY_EXP_OUT)
 
-    #@unittest.skip('Skipping ftverify_single_arg')
+    @unittest.skip('Skipping ftverify_single_arg')
     def test_ftverify_single_arg(self):
         """ Tests the ftverify program using only one (positional) argument"""
         test_result = heasoftpy.ftverify(self.test_filepath)

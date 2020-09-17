@@ -1,7 +1,7 @@
 """
 Python interface for HEAsoft's All-purpose Parameter Environment
 """
-
+import collections
 import csv
 import sys
 
@@ -10,7 +10,7 @@ def read_par_file(par_path):
     Reads a par file, returning the contents as a dictionary with the parameter
     names as keys.
     """
-    par_contents = dict()     # list()
+    par_contents = collections.OrderedDict()     # list()
     try:
         with open(par_path, 'rt') as par_hndl:
             par_reader = csv.reader(par_hndl, delimiter=',', quotechar='"', \
