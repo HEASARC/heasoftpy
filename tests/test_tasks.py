@@ -8,15 +8,16 @@ import re
 import sys
 import unittest
 
+CUR_FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+DIR_PARTS = CUR_FILE_DIR.split(os.sep)
+PACKAGE_DIR = os.sep.join(DIR_PARTS[:-2])
+
 try:
     import heasoftpy
     import heasoftpy.core.result
 except ModuleNotFoundError:
     # A kludge to get the import to work, assuming the heasoftpy directory is
     # one level above the test directory.
-    cur_file_dir = os.path.dirname(os.path.abspath(__file__))
-    dir_parts = cur_file_dir.split(os.sep)
-    PACKAGE_DIR = os.sep.join(dir_parts[:-2])
     sys.path.append(PACKAGE_DIR)
     import heasoftpy
     import heasoftpy.core.result
@@ -195,7 +196,7 @@ File: my_rate.fit
     @unittest.skip('Skipping ftverify')
     def test_ftverify(self):
         """ Tests the ftverify program """
-        test_result = heasoftpy.ftverify(infile=self.test_filepath, 
+        test_result = heasoftpy.ftverify(infile=self.test_filepath,
                                          numerrs=0, numwrns=0,
                                          stderr=True)
         test_out = test_result.stdout
