@@ -1,25 +1,29 @@
-This repository holds the (development) version of the heasoftpy tools.
+This directory contains the heasoftpy code.
 
-After you have cloned the repository, add the heasoftpy directory to your PYTHONPATH and import with:
+After you have installed the software, add the heasoftpy directory to your PYTHONPATH and import with:
 
 import heasoftpy
 
-The first time this is imported, files will be written into the heasoftpy directory which contain functions correpsonding the tasks/program in the heasoft software suite. The should be callable via something like:
+The first time this is imported, files will be written into the heasoftpy/defs directory which contain functions correpsonding the tasks/program in the heasoft software suite. Those functions should be callable via something like:
 
-heasoftpy.TASK(ARGUMENTS)
+    heasoftpy.TASK(ARGUMENTS)
 
 For example, if you want to run ftlist on test.fit:
 
-heasoftpy.ftlist(infile='test.fit')
+    heasoftpy.ftlist(infile='test.fit')
 
--------------------------------------------------------------------------------
+If you import the software using "as" and an alias, such as:
 
-Currently this directory contains two other versions of the Python interfaces to HEAsoft. These are (for the time being) being kept for archival/reference purpose. One version generates the interfacing functions "on the fly"; in other words, at the time the function is called. This version exists in the directory named "onthefly" and is imported via:
+    import heasoftpy as hsp
 
-import heasoft.onthefly
+then you can run ftlist with:
 
-The other version generates the functions once - the first time the module is imported. This is imported via:
+    hsp.ftlist(infile='test.fit')
 
-import heasoft.write_fns
+If you use the from form of import:
 
-A few tests are available in tests/test_tasks.py.
+    from heasoftpy import ftlist
+
+you can run ftlist using:
+    ftlist(infile='test.fit')
+

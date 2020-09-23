@@ -58,7 +58,7 @@ DEBUG = False
 
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
-hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
+#hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
 __version__ = '0.1.9'
 
