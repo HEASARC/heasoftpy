@@ -1,29 +1,76 @@
-This directory contains the heasoftpy code.
+HEASoftPy [Beta]: A Python interface to HEASoft
 
-After you have installed the software, add the heasoftpy directory to your PYTHONPATH and import with:
+Before installing HEASoftPy, you should have already installed a Python interpreter (version 2 or 3) and HEASoft itself.  To install Python, use a package installer from your operating system, or other third-party Python packages.  To install HEASoft, please visit the download page at:
 
-import heasoftpy
+ https://heasarc.gsfc.nasa.gov/lheasoft/download.html
 
-The first time this is imported, files will be written into the heasoftpy/defs directory which contain functions correpsonding the tasks/program in the heasoft software suite. Those functions should be callable via something like:
+In order to use HEASoftPy, it will need to be available in a directory path included in your PYTHONPATH environment variable.  This can be done automatically when initializing HEASoft using the following instructions:
 
-    heasoftpy.TASK(ARGUMENTS)
+(For an alternative approach see the footnote at the bottom of this file *)
+
+First make sure that your HEASoft installation includes a "python" directory underneath the installed "lib" directory, for example:
+
+  heasoft-6.28/x86_64-pc-linux-gnu-libc2.30/lib/python
+
+If your copy of HEASoft is already initialized, this equates to $HEADAS/lib/python.  This directory may already exist (if you installed e.g. PyXspec with HEASoft), but if not, create it and 'cd' into it:
+
+  > cd heasoft-6.28/x86_64-pc-linux-gnu-libc2.30/lib   [cd $HEADAS/lib]
+  > mkdir python
+  > cd python
+
+Unpack the HEASoftPy tar file (heasoftpy.tar) here, for example:
+
+  > tar xf ~/Downloads/heasoftpy.tar
+
+You should now have this folder:
+
+  heasoft-6.28/x86_64-pc-linux-gnu-libc2.30/lib/python/heasoftpy
+  [i.e. $HEADAS/lib/python/heasoftpy]
+
+Continuing to use this example directory path, initialize (or re-initialize) HEASoft in the standard way, i.e.
+
+  For Bourne shell variants:
+  > export HEADAS="/path/to/heasoft-6.28/x86_64-pc-linux-gnu-libc2.30"
+  > source $HEADAS/headas-init.sh
+
+or
+
+  For C-shell variants:
+  > setenv HEADAS "/path/to/heasoft-6.28/x86_64-pc-linux-gnu-libc2.30"
+  > source $HEADAS/headas-init.csh
+
+At this point, you can check that PYTHONPATH includes $HEADAS/lib/python:
+
+  > echo $PYTHONPATH
+
+If it does, you can start up Python and import heasoftpy:
+
+  > python
+  >>> import heasoftpy
+
+The first time HEASoftPy is imported, files will be written into the heasoftpy/defs directory which contain functions correpsonding to tasks in the HEASoft suite.  Those functions should be callable using the following method:
+
+  >>> heasoftpy.TASK(ARGUMENTS)
 
 For example, if you want to run ftlist on test.fit:
 
-    heasoftpy.ftlist(infile='test.fit')
+  >>> heasoftpy.ftlist(infile='test.fit')
 
-If you import the software using "as" and an alias, such as:
+If you import the software using "as" an alias, such as
 
-    import heasoftpy as hsp
+  >>> import heasoftpy as hsp
 
 then you can run ftlist with:
 
-    hsp.ftlist(infile='test.fit')
+  >>> hsp.ftlist(infile='test.fit')
 
-If you use the from form of import:
+If you use the "from" form of import:
 
-    from heasoftpy import ftlist
+  >>> from heasoftpy import ftlist
 
 you can run ftlist using:
-    ftlist(infile='test.fit')
 
+  >>> ftlist(infile='test.fit')
+
+
+* Note that if you prefer to set up HEASoftPy independently of your HEASoft installation, just unpack the HEASoftPy tar file in a location of your choosing and make sure that location is in your PYTHONPATH environment variable (and that HEASoft has been initialized) before running Python.
