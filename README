@@ -1,6 +1,6 @@
 HEASoftPy [Beta]: A Python interface to HEASoft
 
-Before installing HEASoftPy, you should have already installed a Python interpreter (version 2 or 3) and HEASoft itself.  To install Python, use a package installer from your operating system, or other third-party Python packages.  To install HEASoft, please visit the download page at:
+Before installing HEASoftPy, you should have already installed Python 3 and HEASoft itself.  To install Python, use a package installer from your operating system, or other third-party Python packages.  To install HEASoft, please visit the download page at:
 
  https://heasarc.gsfc.nasa.gov/lheasoft/download.html
 
