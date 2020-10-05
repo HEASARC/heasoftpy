@@ -1,76 +1,93 @@
-HEASoftPy [Beta]: A Python interface to HEASoft
+HEASoftPy: A Python interface to HEASoft
 
-Before installing HEASoftPy, you should have already installed Python 3 and HEASoft itself.  To install Python, use a package installer from your operating system, or other third-party Python packages.  To install HEASoft, please visit the download page at:
+What is HEASoftPy?:
+============================================================
 
- https://heasarc.gsfc.nasa.gov/lheasoft/download.html
+HEASoftPy is a Python 3 package that allows users to more
+easily integrate HEASoft tools into their Python workflow.
+HEASoftPy provides Python wrappers to the HEASoft tools
+(and so requires a HEASoft installation of course).
 
-In order to use HEASoftPy, it will need to be available in a directory path included in your PYTHONPATH environment variable.  This can be done automatically when initializing HEASoft using the following instructions:
+Note that HEASoftPy does NOT provide Python native versions
+of HEASoft tools.
 
-(For an alternative approach see the footnote at the bottom of this file *)
+Please note that this initial release is a BETA release, so
+some functionality may be missing, and improvements may be
+forthcoming.
 
-First make sure that your HEASoft installation includes a "python" directory underneath the installed "lib" directory, for example:
+Installation:
+============================================================
 
-  heasoft-6.28/x86_64-pc-linux-gnu-libc2.30/lib/python
+Installation of HEASoftPy is simple.  Assuming you have
+HEASoft initialized and the environment variable $HEADAS
+is defined, you should: 
 
-If your copy of HEASoft is already initialized, this equates to $HEADAS/lib/python.  This directory may already exist (if you installed e.g. PyXspec with HEASoft), but if not, create it and 'cd' into it:
+1) Download the heasoftpy tar file to $HEADAS/lib/python
+   (if $HEADAS/lib/python doesn't exist, please create it).
 
-  > cd heasoft-6.28/x86_64-pc-linux-gnu-libc2.30/lib   [cd $HEADAS/lib]
-  > mkdir python
-  > cd python
+2) Untar the file.
 
-Unpack the HEASoftPy tar file (heasoftpy.tar) here, for example:
+This will create a "heasoftpy" subdirectory in
+$HEADAS/lib/python.  To make sure that $HEADAS/lib/python
+is in your PYTHONPATH environment variable, you may
+need to re-initialize HEASoft by sourcing the
+$HEADAS/headas-init.sh[.csh] file.
 
-  > tar xf ~/Downloads/heasoftpy.tar
+Using HEASoftPy:
+============================================================
 
-You should now have this folder:
+The first time HEASoftPy is imported, Python functions
+corresponding to tasks in the HEASoft suite will be written
+into the $HEADAS/lib/python/heasoftpy/defs directory.
+(This process may take a while.)
 
-  heasoft-6.28/x86_64-pc-linux-gnu-libc2.30/lib/python/heasoftpy
-  [i.e. $HEADAS/lib/python/heasoftpy]
+The heasoftpy functions in $HEADAS/lib/python/heasoftpy/defs
+are wrappers to whatever HEASoft tools you currently have
+installed (this could be all HEASoft tasks or some subset
+of the full distribution, depending on which package choices
+you made when downloading).
+  
+The heasoftpy functions run HEASoft tools and return a
+RESULT object.  The RESULT object is a container for data
+returned from heasoftpy call to a HEAsoft tool, and has the
+following attributes:
 
-Continuing to use this example directory path, initialize (or re-initialize) HEASoft in the standard way, i.e.
+ ret_code  (status; equals 0 if no errors occurred)
+  std_out  (captures STDOUT)
+  std_err  (captures STDERR, default = None)
+    parms  (a dictionary of the parmeter list for the
+            specified tool, default = None)
+   custom  (default = None)
 
-  For Bourne shell variants:
-  > export HEADAS="/path/to/heasoft-6.28/x86_64-pc-linux-gnu-libc2.30"
-  > source $HEADAS/headas-init.sh
+Some Usage Examples:
+============================================================
 
-or
+Importing and using heasoftpy in a Python 3 session is
+simple:
 
-  For C-shell variants:
-  > setenv HEADAS "/path/to/heasoft-6.28/x86_64-pc-linux-gnu-libc2.30"
-  > source $HEADAS/headas-init.csh
+% ipython
+In [1]: import heasoftpy as hsp
+In [2]: hsp? # get help on the heasoftpy package
+In [3]: myfitsfile = 'Test.fits'
+In [4]: hsp_result = hsp.ftverify(myfitsfile)
+In [5]: print(hsp_result.stdout)
+In [6]: output = hsp_result.stdout.split('\n')
+in [7]: verification =  [x for x in output if 'Verification found' in x]  # list of the verification strings in the output
 
-At this point, you can check that PYTHONPATH includes $HEADAS/lib/python:
+To find the effective area for NICER, you could do this:
 
-  > echo $PYTHONPATH
-
-If it does, you can start up Python and import heasoftpy:
-
-  > python
-  >>> import heasoftpy
-
-The first time HEASoftPy is imported, files will be written into the heasoftpy/defs directory which contain functions correpsonding to tasks in the HEASoft suite.  Those functions should be callable using the following method:
-
-  >>> heasoftpy.TASK(ARGUMENTS)
-
-For example, if you want to run ftlist on test.fit:
-
-  >>> heasoftpy.ftlist(infile='test.fit')
-
-If you import the software using "as" an alias, such as
-
-  >>> import heasoftpy as hsp
-
-then you can run ftlist with:
-
-  >>> hsp.ftlist(infile='test.fit')
-
-If you use the "from" form of import:
-
-  >>> from heasoftpy import ftlist
-
-you can run ftlist using:
-
-  >>> ftlist(infile='test.fit')
-
-
-* Note that if you prefer to set up HEASoftPy independently of your HEASoft installation, just unpack the HEASoftPy tar file in a location of your choosing and make sure that location is in your PYTHONPATH environment variable (and that HEASoft has been initialized) before running Python.
+In [1]: import heasoftpy as hsp
+In [2]: hsp_result = hsp.quzcif() # heasoftpy will prompt you for unspecified required parameters
+Name of Mission> nicer
+Name of Instrument> xti
+Name of Detector (- if not required)> -
+Name of Filter (- if not required)> -
+Calibration Dataset Codename> SPECRESP
+Requested Date in yyyy-mm-dd format> now
+Requested Time in hh:mm:ss format> now
+Boolean selection expression for Boundary params(- if not required)> -
+In [3]: hsp_result.stdout
+Out[3]: 'https://heasarc.gsfc.nasa.gov/FTP/caldb/data/nicer/xti/cpf/arf/nixtiaveonaxis20170601v004.arf   1\n'
+In [4]: arf = hsp_result.stdout.split()[0]
+In [5]: print('The current NICER ARF is {0}'.format(arf))
+The current NICER ARF is https://heasarc.gsfc.nasa.gov/FTP/caldb/data/nicer/xti/cpf/arf/nixtiaveonaxis20170601v004.arf
