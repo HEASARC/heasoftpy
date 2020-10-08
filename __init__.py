@@ -35,6 +35,7 @@ Version 0.1.8 ME:  Cleaned up code, removed debugging messages and restructured
                    directories in preparation for release
 Version 0.1.9 ME:  Modified how a parameter can be considered required, so that "q"
                    (query) mode is considered.
+Version 0.1.10 ME: Preparations for beta release
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -60,7 +61,7 @@ utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.9'
+__version__ = '0.1.10'
 
 LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
