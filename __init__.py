@@ -36,6 +36,9 @@ Version 0.1.8 ME:  Cleaned up code, removed debugging messages and restructured
 Version 0.1.9 ME:  Modified how a parameter can be considered required, so that "q"
                    (query) mode is considered.
 Version 0.1.10 ME: Preparations for beta release
+Version 0.1.11 ME: Extract the system pfiles directory from the PFILES environment variable
+                   (instead of concatenating syspfiles to contents of $HEADAS env variable -
+                   needed for users who will use bot CIAO and heasoftpy).
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -54,14 +57,14 @@ import time
 
 THIS_MODULE = sys.modules[__name__]
 
-DEBUG = False
-#DEBUG = True
-
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.10'
+__version__ = '0.1.11'
+
+DEBUG = False
+#DEBUG = True
 
 LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
 LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
@@ -78,6 +81,7 @@ DBG_MSG = 'Entering heasoftpy module at {}'.\
           format(''.join(LOG_DT_LST).replace('_', ' '))
 LOGGER.debug(DBG_MSG)
 
+ENV_PFILES = os.environ['PFILES']
 HEADAS_DIR = os.environ['HEADAS']
 BIN_DIR = os.path.join(HEADAS_DIR, 'bin')
 PERMITTED_MODES = {'a' : 'a', 'A' : 'a', 'auto' : 'a',
@@ -85,7 +89,23 @@ PERMITTED_MODES = {'a' : 'a', 'A' : 'a', 'auto' : 'a',
                    'l' : 'l', 'L' : 'l', 'learn' : 'l',
                    'q' : 'q', 'Q' : 'q', 'query' : 'q'}
 PERMITTED_TYPES = ['b', 'i', 'r', 's', 'f']
-PFILES_DIR = os.path.join(HEADAS_DIR, 'syspfiles')
+
+def _get_pfiles_dir():
+    pfiles_var = os.environ['PFILES']
+    pfiles_parts = pfiles_var.split(';')
+    if len(pfiles_parts) == 1:
+        pfiles_dir = pfiles_var
+    else:
+        pfiles_dir_fnd = False
+        for pf_part in pfiles_parts:
+            if (pf_part.find('heasoft') != -1) and (pf_part.find('syspfiles') != -1):
+                pfiles_dir = pf_part
+                pfiles_dir_fnd = True
+        if not pfiles_dir_fnd:
+            sys.exit('Error! Could not locate syspfiles directory.')
+    return pfiles_dir
+
+PFILES_DIR = _get_pfiles_dir()
 
 HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'mode', 'default', \
