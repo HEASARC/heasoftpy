@@ -193,6 +193,12 @@ File: my_rate.fit
         test_out = heasoftpy.ftlist(infile=self.test_filepath, option='H').stdout
         self.assertEqual(test_out, FTLIST_EXP_OUT)
 
+#    @unittest.skip('skipping ftlist_dot_output')
+    def test_ftlist_dot_output(self):
+        """ Test the ftlist program """
+        test_out = heasoftpy.ftlist(infile=self.test_filepath, option='H').output
+        self.assertEqual(test_out, FTLIST_EXP_OUT.split('\n'))
+
     @unittest.skip('Skipping ftverify')
     def test_ftverify(self):
         """ Tests the ftverify program """

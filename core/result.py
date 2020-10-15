@@ -24,3 +24,4 @@ class Result:
         self.stderr = std_err
         self.params = parms
         self.custom = custm
+        self.output = std_out.split('\n')
