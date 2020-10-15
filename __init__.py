@@ -39,6 +39,7 @@ Version 0.1.10 ME: Preparations for beta release
 Version 0.1.11 ME: Extract the system pfiles directory from the PFILES environment variable
                    (instead of concatenating syspfiles to contents of $HEADAS env variable -
                    needed for users who will use bot CIAO and heasoftpy).
+Version 0.1.12 ME: Added informational message about the creation of files.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -61,7 +62,7 @@ utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.11'
+__version__ = '0.1.12'
 
 DEBUG = False
 #DEBUG = True
@@ -364,7 +365,11 @@ def _import_func_module(task_nm, new_module_path):
 if not os.path.exists(DEFS_DIR):
     os.mkdir(DEFS_DIR)
 
-for par_file in os.listdir(PFILES_DIR):
+par_file_list = os.listdir(PFILES_DIR)
+num_files = len(par_file_list)
+remaining_files = num_files
+print('Processing {0} files, {1} remaining.'.format(num_files, remaining_files), end='\r')
+for par_file in par_file_list:
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
     func_module_path = os.path.join(DEFS_DIR, task_name + '.py')
 
@@ -381,3 +386,6 @@ for par_file in os.listdir(PFILES_DIR):
         (func_module, spec) = _import_func_module(task_name, func_module_path)
 
     setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
+    remaining_files -= 1
+    print('Processing {0} files, {1} remaining.     '.format(num_files, remaining_files), end='\r')
+print()
