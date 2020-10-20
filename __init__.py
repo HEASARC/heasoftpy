@@ -40,6 +40,7 @@ Version 0.1.11 ME: Extract the system pfiles directory from the PFILES environme
                    (instead of concatenating syspfiles to contents of $HEADAS env variable -
                    needed for users who will use bot CIAO and heasoftpy).
 Version 0.1.12 ME: Added informational message about the creation of files.
+Version 0.1.13 ME: Modified the informational message.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -62,7 +63,7 @@ utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.12'
+__version__ = '0.1.13'
 
 DEBUG = False
 #DEBUG = True
@@ -91,7 +92,7 @@ PERMITTED_MODES = {'a' : 'a', 'A' : 'a', 'auto' : 'a',
                    'q' : 'q', 'Q' : 'q', 'query' : 'q'}
 PERMITTED_TYPES = ['b', 'i', 'r', 's', 'f']
 
-def _get_pfiles_dir():
+def _get_syspfiles_dir():
     pfiles_var = os.environ['PFILES']
     pfiles_parts = pfiles_var.split(';')
     if len(pfiles_parts) == 1:
@@ -106,7 +107,7 @@ def _get_pfiles_dir():
             sys.exit('Error! Could not locate syspfiles directory.')
     return pfiles_dir
 
-PFILES_DIR = _get_pfiles_dir()
+PFILES_DIR = _get_syspfiles_dir()
 
 HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'mode', 'default', \
@@ -368,6 +369,8 @@ if not os.path.exists(DEFS_DIR):
 par_file_list = os.listdir(PFILES_DIR)
 num_files = len(par_file_list)
 remaining_files = num_files
+print('Importing heasoftpy. Full initialization involves creation of {} files containing the heasoftpy functions.\nThis only occurs on first import and when a new version is installed.'.format(num_files))
+print('')
 print('Processing {0} files, {1} remaining.'.format(num_files, remaining_files), end='\r')
 for par_file in par_file_list:
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
