@@ -38,9 +38,11 @@ Version 0.1.9 ME:  Modified how a parameter can be considered required, so that 
 Version 0.1.10 ME: Preparations for beta release
 Version 0.1.11 ME: Extract the system pfiles directory from the PFILES environment variable
                    (instead of concatenating syspfiles to contents of $HEADAS env variable -
-                   needed for users who will use bot CIAO and heasoftpy).
-Version 0.1.12 ME: Added informational message about the creation of files.
-Version 0.1.13 ME: Modified the informational message.
+                   needed for users who will use both CIAO and heasoftpy).
+Version 0.1.12 ME: Added informational message about the creation of files. (GitLab issue #9)
+Version 0.1.13 ME: Modified the informational message. (GitLab issue #9)
+Version 0.1.14 ME: Replaced LOGGER.INFO with LOGGER.info (GitLab issue #16)
+                   Fixed the re-reading of par files after running the FTool. (GitLab issue #3)
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -63,7 +65,7 @@ utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.13'
+__version__ = '0.1.14'
 
 DEBUG = False
 #DEBUG = True
@@ -93,8 +95,12 @@ PERMITTED_MODES = {'a' : 'a', 'A' : 'a', 'auto' : 'a',
 PERMITTED_TYPES = ['b', 'i', 'r', 's', 'f']
 
 def _get_syspfiles_dir():
-    pfiles_var = os.environ['PFILES']
-    pfiles_parts = pfiles_var.split(';')
+    """
+    Searches the PFILES environment variable and returns the path for the system 
+    pfiles directory
+    """
+#    pfiles_var = os.environ['PFILES']
+    pfiles_parts = ENV_PFILES.split(';')        #pfiles_var.split(';')
     if len(pfiles_parts) == 1:
         pfiles_dir = pfiles_var
     else:
@@ -107,8 +113,13 @@ def _get_syspfiles_dir():
             sys.exit('Error! Could not locate syspfiles directory.')
     return pfiles_dir
 
-PFILES_DIR = _get_syspfiles_dir()
+# Don't want  a one line function, but keeping this code in case more is needed
+#def _get_user_pfiles_dir():
+#    user_pfiles_dir = os.path.join(os.path.expanduser('~'), 'pfiles')
+#    return user_pfiles_dir
 
+SYS_PFILES_DIR = _get_syspfiles_dir()
+USER_PFILES_DIR = os.path.join(os.path.expanduser('~'), 'pfiles')
 HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'mode', 'default', \
                                                              'min', 'max', \
@@ -152,7 +163,11 @@ def _create_task_file(task_nm, par_name, func_mod_path):
         print('Creating function file:', task_nm)
     task_file_str = ''
     # Create the path to the par file we want
-    par_path = os.path.join(PFILES_DIR, par_name)
+    user_pfile_path = os.path.join(USER_PFILES_DIR, par_name)
+    if os.path.exists(user_pfile_path):
+        par_path = user_pfile_path
+    else:
+        par_path = os.path.join(SYS_PFILES_DIR, par_name)
     if os.path.exists(par_path) and os.path.isfile(par_path):
         LOGGER.debug('%s is a good path', par_path)
     else:
@@ -269,7 +284,11 @@ def _create_task_function(task_nm, par_path):
     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
     fn_str += '    else:\n'
     fn_str += '        updated_par_contents = hsp_ape.read_par_file(par_path)\n'
-    fn_str += '        task_res.params = updated_par_contents\n'
+    fn_str += '        par_dict = dict()\n'
+    fn_str += '        for parm_key in updated_par_contents:\n'
+    fn_str += '            par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
+#    fn_str += '\n'
+    fn_str += '        task_res.params = par_dict\n'
     fn_str += '    return task_res\n'
     return fn_str
 
@@ -366,7 +385,7 @@ def _import_func_module(task_nm, new_module_path):
 if not os.path.exists(DEFS_DIR):
     os.mkdir(DEFS_DIR)
 
-par_file_list = os.listdir(PFILES_DIR)
+par_file_list = os.listdir(SYS_PFILES_DIR)
 num_files = len(par_file_list)
 remaining_files = num_files
 print('Importing heasoftpy. Full initialization involves creation of {} files containing the heasoftpy functions.\nThis only occurs on first import and when a new version is installed.'.format(num_files))
@@ -381,7 +400,7 @@ for par_file in par_file_list:
         if '__version__' in func_module.__dict__:
             func_mod_ver = utils.ProgramVersion(func_module.__version__)
             if func_mod_ver < THIS_MOD_VER:
-                LOGGER.INFO('Updating the function {0} ({1}), which is out-dated.'.format(func_module.__name__, func_module_path))
+                LOGGER.info('Updating the function {0} ({1}), which is out-dated.'.format(func_module.__name__, func_module_path))
                 os.remove(func_module_path)
                 _create_task_file(task_name, par_file, func_module_path)
     else:
