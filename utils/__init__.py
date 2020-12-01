@@ -4,6 +4,7 @@ not called by users.
 """
 
 import csv
+import os
 import sys
 
 class ProgramVersion():
@@ -103,3 +104,14 @@ def check_query_param(p_name, p_dict):
     if 'q' in p_dict[p_name]['mode']:
         ans = True
     return ans
+
+def read_version(module_dir):
+    """
+    Returns a string containing the version, as read from the version file.
+    """
+    ver_str = None
+    ver_path = os.path.join(module_dir, 'version')
+    if os.path.exists(ver_path):
+        with open(ver_path, 'rt') as ver_file:
+            ver_str = str(ver_file.read())
+    return ver_str

@@ -43,6 +43,8 @@ Version 0.1.12 ME: Added informational message about the creation of files. (Git
 Version 0.1.13 ME: Modified the informational message. (GitLab issue #9)
 Version 0.1.14 ME: Replaced LOGGER.INFO with LOGGER.info (GitLab issue #16)
                    Fixed the re-reading of par files after running the FTool. (GitLab issue #3)
+Version 0.1.15 ME: Extracted the actual creation of the function files for the HTools/FTools
+                   programs into an install script, removing that functionality from this file.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -63,9 +65,8 @@ THIS_MODULE = sys.modules[__name__]
 
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
-#hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = '0.1.14'
+__version__ = utils.read_version('.').rstrip()
 
 DEBUG = False
 #DEBUG = True
@@ -96,7 +97,7 @@ PERMITTED_TYPES = ['b', 'i', 'r', 's', 'f']
 
 def _get_syspfiles_dir():
     """
-    Searches the PFILES environment variable and returns the path for the system 
+    Searches the PFILES environment variable and returns the path for the system
     pfiles directory
     """
 #    pfiles_var = os.environ['PFILES']
@@ -126,9 +127,7 @@ HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'prompt'])
 
 THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
-
 THIS_MOD_VER = utils.ProgramVersion(__version__)
 
 def _create_function_docstring(tsk_nm, par_dict):
@@ -232,7 +231,6 @@ def _create_positional_arg_function_start(fn_docstring, par_path, param_dict, ta
     fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
     fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
     fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'', list(param_dict)[0], '\', args[0]))\n'])
-#    fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile'\', args[0]))\n'])
     fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
     fn_start_str += ''.join([indent_lvl, 'else:\n'])
     fn_start_str += '\n'
@@ -307,7 +305,6 @@ def _get_num_req_param(param_dict):
         req_param = 0
         for param_key in param_dict:
             if (param_dict[param_key]['mode'] == 'a' or param_dict[param_key]['mode'] == 'q') and param_dict[param_key]['default'] == '':
-#            if param_dict[param_key]['mode'] == 'a' and param_dict[param_key]['default'] == '':
                 req_param += 1
     return req_param
 
@@ -386,28 +383,10 @@ if not os.path.exists(DEFS_DIR):
     os.mkdir(DEFS_DIR)
 
 par_file_list = os.listdir(SYS_PFILES_DIR)
-num_files = len(par_file_list)
-remaining_files = num_files
-print('Importing heasoftpy. Full initialization involves creation of {} files containing the heasoftpy functions.\nThis only occurs on first import and when a new version is installed.'.format(num_files))
-print('')
-print('Processing {0} files, {1} remaining.'.format(num_files, remaining_files), end='\r')
 for par_file in par_file_list:
     task_name = os.path.splitext(par_file)[0].replace('-', '_')
     func_module_path = os.path.join(DEFS_DIR, task_name + '.py')
-
     if os.path.isfile(func_module_path):
         (func_module, spec) = _import_func_module(task_name, func_module_path)
-        if '__version__' in func_module.__dict__:
-            func_mod_ver = utils.ProgramVersion(func_module.__version__)
-            if func_mod_ver < THIS_MOD_VER:
-                LOGGER.info('Updating the function {0} ({1}), which is out-dated.'.format(func_module.__name__, func_module_path))
-                os.remove(func_module_path)
-                _create_task_file(task_name, par_file, func_module_path)
-    else:
-        _create_task_file(task_name, par_file, func_module_path)
-        (func_module, spec) = _import_func_module(task_name, func_module_path)
-
     setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
-    remaining_files -= 1
-    print('Processing {0} files, {1} remaining.     '.format(num_files, remaining_files), end='\r')
 print()
