@@ -45,6 +45,8 @@ Version 0.1.14 ME: Replaced LOGGER.INFO with LOGGER.info (GitLab issue #16)
                    Fixed the re-reading of par files after running the FTool. (GitLab issue #3)
 Version 0.1.15 ME: Extracted the actual creation of the function files for the HTools/FTools
                    programs into an install script, removing that functionality from this file.
+Version 0.1.16 ME: Moved the setattr inside the check for the corresponding file and added
+                   message if the file doesn't exist.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
@@ -388,5 +390,7 @@ for par_file in par_file_list:
     func_module_path = os.path.join(DEFS_DIR, task_name + '.py')
     if os.path.isfile(func_module_path):
         (func_module, spec) = _import_func_module(task_name, func_module_path)
-    setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
+        setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
+    else:
+        print('Module {} not found.'.format(task_name))
 print()
