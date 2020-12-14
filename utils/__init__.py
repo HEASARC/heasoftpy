@@ -109,9 +109,17 @@ def read_version(module_dir):
     """
     Returns a string containing the version, as read from the version file.
     """
+    full_module_dir = os.path.abspath(module_dir)
     ver_str = None
-    ver_path = os.path.join(module_dir, 'version')
+    ver_path = os.path.join(full_module_dir, 'version')
     if os.path.exists(ver_path):
         with open(ver_path, 'rt') as ver_file:
-            ver_str = str(ver_file.read())
+            try:
+                ver_str = str(ver_file.read())
+            except:
+                err_msg = 'Error! Could not read file "version" in the {} directory.'.format(full_module_dir)
+                sys.exit(err_msg)
+    else:
+        err_msg = 'Error! Could not locate file "version" in the {} directory.'.format(full_module_dir)
+        sys.exit(err_msg)
     return ver_str
