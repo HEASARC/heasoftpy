@@ -30,7 +30,7 @@ THIS_MODULE = sys.modules[__name__]
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
 hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 
-__version__ = utils.read_version('.').rstrip()
+__version__ = utils.read_version(os.path.dirname(__file__)).rstrip()
 
 DEBUG = False
 #DEBUG = True

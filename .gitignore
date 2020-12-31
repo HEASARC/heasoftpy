@@ -1,7 +1,11 @@
-*.py~
+#*.py~
 *.log
 *.out
 *.*~
-*pycache*
+**/__pycache__/
 *.pyc
 .DS_Store
+*.sh
+*.bash
+*.bak
+core/__pycache__/errors.cpython-38.pyc

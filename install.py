@@ -30,7 +30,7 @@ import utils
 #hsp_ape = importlib.import_module('.ape', package=THIS_MODULE)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = utils.read_version('.').rstrip()
+__version__ = utils.read_version(os.path.dirname(__file__)).rstrip()
 
 DEBUG = False
 #DEBUG = True
