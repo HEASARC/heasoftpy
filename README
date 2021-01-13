@@ -6,14 +6,15 @@ What is HEASoftPy?:
 HEASoftPy is a Python 3 package that allows users to more
 easily integrate HEASoft tools into their Python workflow.
 HEASoftPy provides Python wrappers to the HEASoft tools
-(and so requires a HEASoft installation of course).
+(and thus requires a HEASoft installation of course).
 
 Note that HEASoftPy does NOT provide Python native versions
 of HEASoft tools.
 
-Please note that this initial release is a BETA release, so
-some functionality may be missing, and improvements may be
+Please note that this is a BETA release, so some
+functionality may be missing, and improvements may be
 forthcoming.
+
 
 Installation:
 ============================================================
@@ -27,19 +28,27 @@ is defined, you should:
 
 2) Untar the file.
 
+3) Run the installer from the command line:
+   $ python3 install.py
+
+(This process may take a while.)
+
 This will create a "heasoftpy" subdirectory in
-$HEADAS/lib/python.  To make sure that $HEADAS/lib/python
+$HEADAS/lib/python.  Python functions corresponding to
+tasks in the HEASoft suite will be written into the
+$HEADAS/lib/python/heasoftpy/defs directory. If you add
+new HEASoft tasks/programs to your installation and want
+heasoftpy access to them, you will need to install.py
+again.
+
+To make sure that $HEADAS/lib/python
 is in your PYTHONPATH environment variable, you may
 need to re-initialize HEASoft by sourcing the
 $HEADAS/headas-init.sh[.csh] file.
 
+
 Using HEASoftPy:
 ============================================================
-
-The first time HEASoftPy is imported, Python functions
-corresponding to tasks in the HEASoft suite will be written
-into the $HEADAS/lib/python/heasoftpy/defs directory.
-(This process may take a while.)
 
 The heasoftpy functions in $HEADAS/lib/python/heasoftpy/defs
 are wrappers to whatever HEASoft tools you currently have
@@ -48,9 +57,9 @@ of the full distribution, depending on which package choices
 you made when downloading).
   
 The heasoftpy functions run HEASoft tools and return a
-RESULT object.  The RESULT object is a container for data
-returned from heasoftpy call to a HEAsoft tool, and has the
-following attributes:
+Result object.  The Result object is a container for data
+returned from a heasoftpy call to a HEAsoft tool, and has
+the following attributes:
 
  ret_code  (status; equals 0 if no errors occurred)
   std_out  (captures STDOUT)
