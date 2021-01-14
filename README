@@ -26,25 +26,29 @@ is defined, you should:
 1) Download the heasoftpy tar file to $HEADAS/lib/python
    (if $HEADAS/lib/python doesn't exist, please create it).
 
-2) Untar the file.
+2) Untar the file (creates a "heasoftpy" directory)
 
 3) Run the installer from the command line:
+
+   $ cd heasoftpy
    $ python3 install.py
 
 (This process may take a while.)
 
-This will create a "heasoftpy" subdirectory in
-$HEADAS/lib/python.  Python functions corresponding to
-tasks in the HEASoft suite will be written into the
-$HEADAS/lib/python/heasoftpy/defs directory. If you add
-new HEASoft tasks/programs to your installation and want
-heasoftpy access to them, you will need to install.py
-again.
+Python functions corresponding to tools in the HEASoft suite
+will be written into the $HEADAS/lib/python/heasoftpy/defs
+directory. If you add new HEASoft tools to your installation
+and want heasoftpy access to them, you will need to run
+install.py again.
 
-To make sure that $HEADAS/lib/python
-is in your PYTHONPATH environment variable, you may
-need to re-initialize HEASoft by sourcing the
-$HEADAS/headas-init.sh[.csh] file.
+Lastly, to make sure that $HEADAS/lib/python is included in
+your PYTHONPATH environment variable, you may need to re-
+initialize HEASoft by sourcing the standard HEASoft setup
+script:
+
+   $ source $HEADAS/headas-init.sh  (Bourne shell variants)
+     Or
+   $ source $HEADAS/headas-init.csh (C-shell variants)
 
 
 Using HEASoftPy:
@@ -52,7 +56,7 @@ Using HEASoftPy:
 
 The heasoftpy functions in $HEADAS/lib/python/heasoftpy/defs
 are wrappers to whatever HEASoft tools you currently have
-installed (this could be all HEASoft tasks or some subset
+installed (this could be all HEASoft tools or some subset
 of the full distribution, depending on which package choices
 you made when downloading).
   
