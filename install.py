@@ -6,12 +6,12 @@ Installer for the heasoftpy Python interface to the FTools/HTools package.
 """
 
 import collections
-import datetime
+#import datetime
 import importlib
 import inspect
 import logging
 import os
-import pydoc
+#import pydoc
 import subprocess
 import sys
 import time
@@ -67,7 +67,7 @@ def _get_syspfiles_dir():
 #    pfiles_var = os.environ['PFILES']
     pfiles_parts = ENV_PFILES.split(';')        #pfiles_var.split(';')
     if len(pfiles_parts) == 1:
-        pfiles_dir = pfiles_var
+        pfiles_dir = ENV_PFILES
     else:
         pfiles_dir_fnd = False
         for pf_part in pfiles_parts:
@@ -193,10 +193,12 @@ def _create_positional_arg_function_start(fn_docstring, par_path, param_dict, ta
     fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
     fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
     fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
-    fn_start_str += ''.join([indent_lvl, '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
+    fn_start_str += ''.join([indent_lvl,
+                             '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
     fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
     fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
-    fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'', list(param_dict)[0], '\', args[0]))\n'])
+    fn_start_str += ''.join([indent_lvl,
+                             '    task_args.append(\'{0}={1}\'.format(\'', list(param_dict)[0], '\', args[0]))\n'])
 #    fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile'\', args[0]))\n'])
     fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
     fn_start_str += ''.join([indent_lvl, 'else:\n'])
@@ -215,29 +217,34 @@ def _create_task_function(task_nm, par_path):
         param_key = param_key.strip()
         if param_key == 'prompt':
             # Quotation marks are part of the prompt value, and we don't want to have two sets.
-            fn_str += ''.join([indent_lvl, 'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
+            fn_str += ''.join([indent_lvl,
+                               'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
         else:
-            fn_str += ''.join([indent_lvl, 'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
+            fn_str += ''.join([indent_lvl,
+                               'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
     fn_str += '\n'
     fn_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
     fn_str += ''.join([indent_lvl, 'for kwa in kwargs:\n'])
     fn_str += ''.join([indent_lvl, '    if not kwa == \'stderr\':\n'])
-    fn_str += ''.join([indent_lvl, '        task_args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'])
+    fn_str += ''.join([indent_lvl,
+                       '        task_args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'])
     fn_str += ''.join([indent_lvl, '        task_params[kwa] = kwargs[kwa]\n'])
     fn_str += ''.join([indent_lvl, 'params_not_specified = []\n'])
     fn_str += ''.join([indent_lvl, 'for entry in parfile_dict:\n'])
     fn_str += ''.join([indent_lvl, '    if not entry in kwargs:\n'])
-    fn_str += ''.join([indent_lvl, '        if hsp_utils.check_query_param(entry, parfile_dict):\n'])
+    fn_str += ''.join([indent_lvl,
+                       '        if hsp_utils.check_query_param(entry, parfile_dict):\n'])
     fn_str += ''.join([indent_lvl, '            params_not_specified.append(entry)\n'])
     fn_str += ''.join([indent_lvl, 'for missing_param in params_not_specified:\n'])
-    fn_str += ''.join([indent_lvl, '    param_val = hsp_utils.ask_for_param(missing_param, parfile_dict)\n'])
-    fn_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(missing_param, param_val))\n'])
+    fn_str += ''.join([indent_lvl,
+                       '    param_val = hsp_utils.ask_for_param(missing_param, parfile_dict)\n'])
+    fn_str += ''.join([indent_lvl,
+                       '    task_args.append(\'{0}={1}\'.format(missing_param, param_val))\n'])
     fn_str += ''.join([indent_lvl, '    task_params[missing_param] = param_val\n'])
     fn_str += ''.join([indent_lvl, 'stderr_dest = subprocess.STDOUT\n'])
     fn_str += ''.join([indent_lvl, 'if \'stderr\' in kwargs:\n'])
     fn_str += ''.join([indent_lvl, '    if kwargs[\'stderr\']:\n'])
     fn_str += ''.join([indent_lvl, '        stderr_dest = subprocess.PIPE\n'])
-
     fn_str += '    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
     fn_str += '    task_out, task_err = task_proc.communicate()\n'
     fn_str += '    if isinstance(task_out, bytes):\n'
@@ -301,16 +308,25 @@ def _get_task_fhelp(task_nm):
         #if (fhelp_str[:26] == 'Sorry, could not find help') or \
         #   (err[:17] == 'No help found for'):
         #    fhelp_str = '    No help available via fhelp for {}.'.format(task_nm)
-    except:# TypeError as te:
+    except TypeError:
         exc_info = sys.exc_info()
-        err_msg = 'Error decoding help for {}.'.format(task_nm)
+        err_msg = 'Type error encountered when attempting to decode help for {}.'.format(task_nm)
+        LOGGER.info(err_msg)
         LOGGER.info('type(fhelp_out): %s', type(fhelp_out))
         LOGGER.info('type(fhelp_str): %s', type(fhelp_str))
-        LOGGER.info(err_msg)
         LOGGER.info('   type: %s', exc_info[0])
         LOGGER.info('   value: %s', exc_info[1])
         LOGGER.info('   traceback: %s', exc_info[2])
         #LOGGER.info('   te.args: %s', te.args)
+    except UnicodeDecodeError:
+        exc_info = sys.exc_info()
+        err_msg = 'UnicodeDecodeError encountered when attempting to decode help for {}.'.format(task_nm)
+        LOGGER.info(err_msg)
+        LOGGER.info('type(fhelp_out): %s', type(fhelp_out))
+        LOGGER.info('type(fhelp_str): %s', type(fhelp_str))
+        LOGGER.info('   type: %s', exc_info[0])
+        LOGGER.info('   value: %s', exc_info[1])
+        LOGGER.info('   traceback: %s', exc_info[2])
     return fhelp_str
 
 # This has been commented out so that the code does not create a conflict with
@@ -348,6 +364,7 @@ def _import_func_module(task_nm, new_module_path):
 ################################################################################
 
 def main():
+    """ Program's primary function """
     print('Entering main()')
     if not os.path.exists(DEFS_DIR):
         os.mkdir(DEFS_DIR)
@@ -370,13 +387,9 @@ def main():
         # else:
         _create_task_file(task_name, par_file, func_module_path)
         remaining_files -= 1
-        print('Installing {} files. {} files remain.        '.format(num_files, remaining_files), end='\r')
+        print('Installing {} files. {} files remain.        '.\
+              format(num_files, remaining_files), end='\r')
 
-            #(func_module, spec) = _import_func_module(task_name, func_module_path)
-
-    #    setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
-    #    remaining_files -= 1
-    #    print('Processing {0} files, {1} remaining.     '.format(num_files, remaining_files), end='\r')
     print('\nInstallation complete!')
     return 0
 

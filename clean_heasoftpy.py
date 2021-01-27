@@ -93,6 +93,38 @@ def clean_pyc_file(task_name, pycache_dir, defs_dir):
             deleted = True
     return deleted, pycache_file_path
 
+def delete_files(defs_dir, pfiles_list, logger):
+    """ Loop through the par files, deleting the corresponding Python file """
+    pycache_dir = find_pycache_dir(defs_dir)
+    file_count = 0
+    pyc_file_count = 0
+    for pfile in pfiles_list:
+        # rstrip() didn't work below; it removed stuff that should have stayed
+        task_name = os.path.basename(pfile).rsplit('.')[0].replace('-', '_')
+        task_file = '.'.join([task_name, 'py'])
+
+        # Since Python doesn't allow a dash ('-') in a function name, the
+        # file/function names will have an underscore ('_') where the par file
+        # has a dash.
+        task_file_path = os.path.join(defs_dir, task_file)
+        log_msg = 'pfile: {0}, task_name: {1}, task_file: {2}, task_file_path: {3}'.\
+                  format(pfile, task_name, task_file, task_file_path)
+        logger.info(log_msg)
+        if os.path.exists(task_file_path):
+            clean_file(task_file, task_file_path, logger)
+            file_count += 1
+        else:
+            logger.info('Error! File "%s" not found.', task_file_path)
+
+        pyc_deleted, pycache_file_path = clean_pyc_file(task_name, pycache_dir, defs_dir)
+        if pyc_deleted:
+            logger.info('Deleted %s', pycache_file_path)
+            pyc_file_count += 1
+        else:
+            logger.info('Unable to find %s', pycache_file_path)
+    print('{} files were moved'.format(file_count))
+    print('{} pyc files were deleted'.format(pyc_file_count))
+
 def find_pycache_dir(defs_dir):
     """ Find where .pyc files should be stored. """
     pycache_dir = os.path.join(defs_dir, '__pycache__')
@@ -157,37 +189,8 @@ def main():
     if not hld_dir_ok:
         sys.exit(err_msg)
 
-    pycache_dir = find_pycache_dir(defs_dir)
+    delete_files(defs_dir, pfiles_list, logger)
 
-    # Loop through the par files, deleting the corresponding Python file
-    file_count = 0
-    pyc_file_count = 0
-    for pfile in pfiles_list:
-        # rstrip() didn't work below; it removed stuff that should have stayed
-        task_name = os.path.basename(pfile).rsplit('.')[0].replace('-', '_')
-        task_file = '.'.join([task_name, 'py'])
-
-        # Since Python doesn't allow a dash ('-') in a function name, the
-        # file/function names will have an underscore ('_') where the par file
-        # has a dash.
-        task_file_path = os.path.join(defs_dir, task_file)
-        log_msg = 'pfile: {0}, task_name: {1}, task_file: {2}, task_file_path: {3}'.\
-                  format(pfile, task_name, task_file, task_file_path)
-        logger.info(log_msg)
-        if os.path.exists(task_file_path):
-            clean_file(task_file, task_file_path, logger)
-            file_count += 1
-        else:
-            logger.info('Error! File "%s" not found.', task_file_path)
-
-        pyc_deleted, pycache_file_path = clean_pyc_file(task_name, pycache_dir, defs_dir)
-        if pyc_deleted:
-            logger.info('Deleted %s', pycache_file_path)
-            pyc_file_count += 1
-        else:
-            logger.info('Unable to find %s', pycache_file_path)
-    print('{} files were moved'.format(file_count))
-    print('{} pyc files were deleted'.format(pyc_file_count))
     return 0
 
 if __name__ == '__main__':

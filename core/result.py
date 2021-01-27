@@ -25,3 +25,28 @@ class Result:
         self.params = parms
         self.custom = custm
         self.output = std_out.split('\n')
+
+    def __str__(self):
+        if self.returncode is None:
+            ret_code_str = 'returncode: None'
+        else:
+            ret_code_str = ' '.join(['returncode:', str(self.returncode)])
+        if self.stderr:
+            stdout_str = ' '.join(['stdout:', self.stdout])
+            stderr_str = ' '.join(['stderr:', self.stderr])
+        else:
+            stdout_str = ' '.join(['stdout (including stderr):', self.stdout])
+            stderr_str = 'stderr: None - included in stdout'
+        param_str = 'params:\n'
+        if self.params:
+            for par_key in self.params.keys():
+                param_str += '  ' + par_key + ': ' + self.params[par_key] + '\n'
+        else:
+            param_str += '  None'
+        if self.custom:
+            custom_str = ' '.join(['custom:', str(self.custom)])
+        else:
+            custom_str = 'custom: None'
+        res_str = '\n'.join([ret_code_str, stdout_str, stderr_str,
+                             param_str, custom_str])
+        return res_str

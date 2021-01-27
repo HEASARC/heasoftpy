@@ -67,7 +67,8 @@ def _get_syspfiles_dir():
 #    pfiles_var = os.environ['PFILES']
     pfiles_parts = ENV_PFILES.split(';')        #pfiles_var.split(';')
     if len(pfiles_parts) == 1:
-        pfiles_dir = pfiles_var
+#        pfiles_dir = pfiles_var
+        pfiles_dir = ENV_PFILES
     else:
         pfiles_dir_fnd = False
         for pf_part in pfiles_parts:
@@ -283,8 +284,8 @@ def _get_task_fhelp(task_nm):
             fhelp_out, err = help_proc.communicate(input=b'task\n')
         else:
             fhelp_out, err = help_proc.communicate()
-    except:
-        err_msg = 'Error finding help for {}.'.format(task_nm)
+    except FileNotFoundError:
+        err_msg = 'Error! Could not find help for {}. The fhelp utility may be missing.'.format(task_nm)
     try:
         # Convert to string (from a bytes object)
         if not err:
@@ -297,7 +298,7 @@ def _get_task_fhelp(task_nm):
         #if (fhelp_str[:26] == 'Sorry, could not find help') or \
         #   (err[:17] == 'No help found for'):
         #    fhelp_str = '    No help available via fhelp for {}.'.format(task_nm)
-    except:# TypeError as te:
+    except ValueError:
         exc_info = sys.exc_info()
         err_msg = 'Error decoding help for {}.'.format(task_nm)
         LOGGER.info('type(fhelp_out): %s', type(fhelp_out))
@@ -340,6 +341,58 @@ def _import_func_module(task_nm, new_module_path):
     fn_module = importlib.util.module_from_spec(module_spec)
     module_spec.loader.exec_module(fn_module)
     return fn_module, module_spec
+
+def _create_local_pfiles_dir(pfiles_dir, orig_pfiles):
+    try:
+        os.mkdir(pfiles_dir)
+        os.environ['PFILES'] = ';'.join([pfiles_dir, orig_pfiles])
+    except OSError:
+        err_msg = 'Error! Could not create directory {0}. PFILES remains set to {1}'.\
+                  format(pfiles_dir, orig_pfiles)
+        print(err_msg)
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+def local_pfiles(pfiles_dir=None):
+    """
+    Resets the PFILES environment variable, useful for "batch mode processing"
+    in which the software may run several times simultaneously (thus over-
+    writing one another's parameter files). If the pfiles_dir parameter holds a
+    value, the PFILES environment variable will be set to that value prepended
+    $HEADAS/syspfiles. If pfiles_dir does not hold a value, the PFILES
+    environment variable will be prepended with /tmp/PID.tmp (where PID is
+    the process identifier for the current instantiation of the module).
+
+    More details about using HEASoft in batch processing can be found at:
+    https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html
+    """
+
+    pfiles_env = None
+    sys_pfiles = os.path.join(os.environ['HEADAS'], 'syspfiles')
+    if pfiles_dir:
+#        print('Received {} as a user specified pfile setting, but that functionality is not yet implemented'.format(pfiles_dir))
+        if os.path.exists(pfiles_dir):
+            if not os.path.isdir(pfiles_dir):
+                print('{0} exists, but is not a directory. PFILES remains set to {1}.'.\
+                      format(pfiles_dir, os.environ['PFILES']))
+            else:
+                pfiles_env = ';'.join([pfiles_dir, sys_pfiles])
+                os.environ['PFILES'] = pfiles_env
+        else:
+            
+            _create_local_pfiles_dir(pfiles_dir, sys_pfiles)
+            pfiles_env = ';'.join([pfiles_dir, sys_pfiles])
+            os.environ['PFILES'] = ';'.join([pfiles_dir, sys_pfiles])
+#            print('The directory {0} does not exist. PFILES remains set to {1}.'.\
+#                  format(pfiles_dir, orig_pfiles))
+    else:
+        pid_str = str(os.getpid())
+        pfiles_tmp_path = os.path.join('/tmp', pid_str + '.tmp')
+        print('PID based tmp pfile directory: {}'.format(pfiles_tmp_path))
+        _create_local_pfiles_dir(pfiles_tmp_path, sys_pfiles)
+        pfiles_env = ';'.join([pfiles_tmp_path, sys_pfiles])
+        os.environ['PFILES'] = pfiles_env
+    return pfiles_env
 
 ################################################################################
 

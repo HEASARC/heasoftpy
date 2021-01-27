@@ -37,6 +37,9 @@ Version 0.1.16 ME: Moved the setattr inside the check for the corresponding file
                    message if the file doesn't exist.
 Version 0.1.17 ME: Added error checks to utils.read_version. Extracted the update history from
                    __init__.py and put it in update_history (this file).
+Version 0.1.18 ME: Added __str__ method to result.Result class. Added local_pfiles() function
+                   to __init__.py. Code cleanup in clean_heasoftpy.py. Updated exception
+		   handling in install.py when encountering errors with Unicode decoding.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
