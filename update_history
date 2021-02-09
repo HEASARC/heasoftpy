@@ -40,6 +40,8 @@ Version 0.1.17 ME: Added error checks to utils.read_version. Extracted the updat
 Version 0.1.18 ME: Added __str__ method to result.Result class. Added local_pfiles() function
                    to __init__.py. Code cleanup in clean_heasoftpy.py. Updated exception
 		   handling in install.py when encountering errors with Unicode decoding.
+Version 0.1.19 ME: Added is_param_ok function to utils and updated install.py to have each
+                   task function call that function for each of its parameters.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
