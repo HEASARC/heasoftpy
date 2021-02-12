@@ -32,12 +32,55 @@ HDU 1   Primary Array      Null Array
 HDU 2   RATE               BinTable     3 cols x 5371 rows          
 """
 
-FTVERIFY_EXP_OUT = """^\s*ftverify \d\.\d\d \(CFITSIO V\d\.\d\d\d\)               
+FTSTAT_EXP_OUT="""====== statistics for test_rate.fit ======
+
+TIME[d]:
+   min:       735.372046425924
+   max:       1166.26167642593
+  mean:       957.737797417172
+median:       948.400935425925
+ sigma:       105.711068041755
+   sum:       5144009.70992763
+  mode:       789.889083425922
+ modes:          752
+ modez:          2
+  good:       5371
+  null:       0
+
+RATE[counts/s]:
+   min:       -3.67951
+   max:       236.791
+  mean:       60.9367
+median:       57.1098
+ sigma:       33.9633
+   sum:       327291
+  mode:       58.3374
+ modes:         1
+ modez:         2
+  good:       5371
+  null:       0
+
+ERROR[counts/s]:
+   min:       0.767405
+   max:       9.30882
+  mean:       2.62543
+median:       2.53607
+ sigma:       1.03185
+   sum:       14101.2
+  mode:       2.39873
+ modes:         1
+ modez:         2
+  good:       5371
+  null:       0
+"""
+
+FTVERIFY_EXP_OUT = """
+\s*ftverify \d\.\d\d \(CFITSIO V\d\.\d\d\d\)               
                ------------------------------               
  
 HEASARC conventions are being checked.
  
-File: my_rate.fit
+File: test_rate.fit
 
 2 Header-Data Units in this file.
  
@@ -57,7 +100,7 @@ File: my_rate.fit
    1 TIME \(d\)             D         
    2 RATE \(counts\/s\)      E         
    3 ERROR \(counts\/s\)     E         
- 
+
 \+* Error Summary  \+*
  
  HDU#  Name \(version\)       Type             Warnings  Errors
@@ -80,8 +123,7 @@ class TestTasks(unittest.TestCase):
     """
 
     def setUp(self):
-        #print('entering setUp()')
-        self.test_filename = 'my_rate.fit'
+        self.test_filename = 'test_rate.fit'
         self.test_filepath = os.path.join(PACKAGE_DIR, 'heasoftpy', 'tests', self.test_filename)
         self.maxDiff = 1000
 
@@ -92,7 +134,7 @@ class TestTasks(unittest.TestCase):
  
 HEASARC conventions are being checked.
  
-File: my_rate.fit
+File: test_rate.fit
 
 2 Header-Data Units in this file.
  
@@ -145,7 +187,7 @@ File: my_rate.fit
         self.assertTrue(test_out[0].strip() == 'NAME' and test_out[1].strip() == '' and
                         test_out[2].strip() == 'ftlist - List the contents of the input file.')
 
-        #    @unittest.skip('skipping fhelp')
+#    @unittest.skip('skipping fhelp_pos_arg')
     def test_fhelp_pos_arg(self):
         """
         Test the fthelp program by retrieving the help for ftlist.
@@ -199,21 +241,29 @@ File: my_rate.fit
         test_out = heasoftpy.ftlist(infile=self.test_filepath, option='H').output
         self.assertEqual(test_out, FTLIST_EXP_OUT.split('\n'))
 
+#    @unittest.skip('skipping ftstat')
+    def test_ftstat(self):
+        """ Test the ftlist program """
+        test_out = heasoftpy.ftstat(infile=self.test_filename, min=0, max=0,
+                                    mean=0, median=0, sigma=0, sum=0,
+                                    xmin=0, ymin=0, xmax=0, ymax=0,
+                                    xcent=0, ycent=0, xsigma=0, ysigma=0,
+                                    good=0, null=0, clipped=0,
+                                    modev=0, modes=0, modez=0).stdout
+        self.assertEqual(test_out, FTSTAT_EXP_OUT)
+
     @unittest.skip('Skipping ftverify')
     def test_ftverify(self):
         """ Tests the ftverify program """
-        test_result = heasoftpy.ftverify(infile=self.test_filepath,
+        test_result = heasoftpy.ftverify(infile=self.test_filename,
                                          numerrs=0, numwrns=0,
                                          stderr=True)
         test_out = test_result.stdout
-        print('type(test_out): {}'.format(type(test_out)))
         test_err = test_result.stderr
         if isinstance(test_out, bytes):
             test_out = test_out.decode()
         if isinstance(test_err, bytes):
             test_out = test_err.decode()
-#        self.assertEqual(test_out, expected_out)
-        print(re.match(FTVERIFY_EXP_OUT, test_out))
         self.assertRegex(test_out, FTVERIFY_EXP_OUT)
 
     @unittest.skip('Skipping ftverify_single_arg')
@@ -228,7 +278,6 @@ File: my_rate.fit
             test_out = test_out.decode()
         if isinstance(test_err, bytes):
             test_out = test_err.decode()
-#        self.assertEqual(test_out, expected_out)
         self.assertRegex(test_out, FTVERIFY_EXP_OUT)
 
 if __name__ == '__main__':
