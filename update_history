@@ -42,6 +42,8 @@ Version 0.1.18 ME: Added __str__ method to result.Result class. Added local_pfil
 		   handling in install.py when encountering errors with Unicode decoding.
 Version 0.1.19 ME: Added is_param_ok function to utils and updated install.py to have each
                    task function call that function for each of its parameters.
+Version 0.1.20 ME: Modified utils/__init__.py.ask_for_param() to add the default to the query
+                   and accept it with just an <Enter> response.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
