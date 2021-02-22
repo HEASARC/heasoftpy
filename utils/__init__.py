@@ -77,13 +77,18 @@ def ask_for_param(p_name, p_dict):
     :return: The user input
     """
     if 'prompt' in p_dict[p_name]:
-        query_msg = '{0}'.format(p_dict[p_name]['prompt']+'> ')
+        query_msg = ''.join([p_dict[p_name]['prompt'], ' (default=',
+                             p_dict[p_name]['default'], ') > '])
     else:
         query_msg = 'No value found for {0}.\nPlease enter: '.format(p_name+' > ')
     usr_inp = ''
     while not usr_inp:
         try:
             usr_inp = input(query_msg)
+            if usr_inp == '':
+                usr_inp = p_dict[p_name]['default']
+            else:
+                p_dict[p_name]['default'] = usr_inp
         except EOFError:
             sys.exit('\nKeyboard interrupt received, program stopping.')
     return usr_inp
@@ -115,23 +120,16 @@ def is_param_ok(param, par_dict):
     par_dict - the parameter rules dictionary against which param should be checked
     """
     param_ok = False
-#    print('checking {}'.format(param[0]))
     if param[0] in par_dict:
-#        print('Maybe')
-#        print(par_dict[param[0]])
         param_type = par_dict[param[0]]['type']
         if param_type == 's':
             # Is the following redundant? Everything will be a string when it "arrives"  ...
-#            print('Testing for string')
             if isinstance(param[1], str):
-#                print('{} is a string'.format(param[1]))
                 param_ok = True
         elif param_type == 'i':
-#            print('Testing {} as int.'.format(param[1]))
             try:
                 _ = int(param[1])
                 param_ok = True
-#                print('{} is an int'.format(param[1]))
             except ValueError:
                 #pass
                 print('ValueError encountered converting "{}" to int'.format(param[1]))
@@ -140,23 +138,17 @@ def is_param_ok(param, par_dict):
                 param_lower = param[1].lower()
                 if param_lower in ['y', 'yes', 'n', 'no']:
                     param_ok = True
-#            print('Testing for boolean')
             # To do: Figure what what is acceptable here. They seem to want "y", "n", "t", "f",
             # "1", "0", etc. to be acceptable ...
         elif param_type == 'r':
-#            print('Testing for real')
             try:
                 _ = float(param[1])
                 param_ok = True
-#                print('{} is an float'.format(param[1]))
             except ValueError:
-                #pass
                 print('ValueError encountered converting "{}" to float'.format(param[1]))
         elif param_type.find('f') != -1:
-#            print('Testing for filename')
             ### For now, checking for str. To do: find out what needs to be do for a "file type"
             if isinstance(param[1], str):
-#                print('{} is a string'.format(param[1]))
                 param_ok = True
     else:
         print('Error! Invalid parameter type {}'.format(param[0]))

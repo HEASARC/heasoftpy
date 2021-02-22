@@ -167,6 +167,8 @@ def _create_task_file_header(task_nm):
 
 def _create_fn_start(par_path, par_file_dict, task_nm):
     num_req_param = _get_num_req_param(par_file_dict)
+#    if task_nm.find("verify") != -1:
+#        print('task_nm: {0}, num_req_param: {1}       '.format(task_nm, num_req_param))
     ### Remove after debugging:
 #    if task_nm.find('fhelp') != -1:
 #        print('for {}, num_req_param = {}'.format(task_nm, num_req_param))
@@ -372,7 +374,7 @@ def _import_func_module(task_nm, new_module_path):
 
 def main():
     """ Program's primary function """
-    print('Entering main()')
+    #print('Entering main()')
     if not os.path.exists(DEFS_DIR):
         os.mkdir(DEFS_DIR)
 

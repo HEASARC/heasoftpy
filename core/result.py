@@ -32,10 +32,10 @@ class Result:
         else:
             ret_code_str = ' '.join(['returncode:', str(self.returncode)])
         if self.stderr:
-            stdout_str = ' '.join(['stdout:', self.stdout])
-            stderr_str = ' '.join(['stderr:', self.stderr])
+            stdout_str = '\n'.join(['stdout:', self.stdout])
+            stderr_str = '\n'.join(['stderr:', self.stderr])
         else:
-            stdout_str = ' '.join(['stdout (including stderr):', self.stdout])
+            stdout_str = '\n'.join(['stdout (including stderr):', self.stdout])
             stderr_str = 'stderr: None - included in stdout'
         param_str = 'params:\n'
         if self.params:
