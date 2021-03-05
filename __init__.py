@@ -7,10 +7,6 @@ The heasoftpy module provides a Python function corresponding to each
 Heasoft/FTools task. Note that dashes ("-") in task names are replaces with
 underscores ("_") in the corresponding heasoftpy function.
 
-If there is not already a file containing a function to run a given FTools
-program, this will create one upon import. The appropriate parameter file is
-used to do this.
-
 See the update_history file for the module's modification history.
 """
 
@@ -71,8 +67,9 @@ def _get_syspfiles_dir():
         pfiles_dir = ENV_PFILES
     else:
         pfiles_dir_fnd = False
-        for pf_part in pfiles_parts:
-            if (pf_part.find('heasoft') != -1) and (pf_part.find('syspfiles') != -1):
+        sys_pfiles_parts = pfiles_parts[1].split(':')
+        for pf_part in sys_pfiles_parts:
+            if pf_part.find('syspfiles') != -1:
                 pfiles_dir = pf_part
                 pfiles_dir_fnd = True
         if not pfiles_dir_fnd:

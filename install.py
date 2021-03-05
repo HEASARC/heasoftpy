@@ -2,7 +2,6 @@
 
 """
 Installer for the heasoftpy Python interface to the FTools/HTools package.
-
 """
 
 import collections
@@ -36,12 +35,12 @@ DEBUG = False
 #DEBUG = True
 
 LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
-LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
+LOG_NAME = ''.join(['heasoftpy_installation_', LOGFILE_DATETIME, '.log'])
 LOG_PATH = os.path.join('/tmp', LOG_NAME)
-logging.basicConfig(filename=LOG_PATH,
-                    filemode='a', level=logging.INFO)
+#logging.basicConfig(filename=LOG_PATH, filemode='a', level=logging.INFO)
+logging.basicConfig(filename=LOG_PATH, filemode='a', level=logging.DEBUG)
 
-LOGGER = logging.getLogger('heasoftpy_initialization')
+LOGGER = logging.getLogger('heasoftpy_installation')
 LOG_DT_LST = list(LOGFILE_DATETIME)
 LOG_DT_LST.insert(15, ':')
 LOG_DT_LST.insert(13, ':')
@@ -119,6 +118,21 @@ def _create_function_docstring(tsk_nm, par_dict):
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
 
+def _create_par_path_str(task_nm, indent_lvl):
+    """ Returns a string with commands for finding the par_path. """
+    par_path_str = ''.join([indent_lvl, 'if \'HEADAS\' in os.environ:\n'])
+    par_path_str += ''.join([indent_lvl, '    sys_par_path = os.path.join(os.environ[\'HEADAS\'], \'syspfiles\', \'{}.par\')\n'.format(task_nm)])
+    par_path_str += ''.join([indent_lvl, 'else:\n'])
+    par_path_str += ''.join([indent_lvl, '    sys.exit(\'Error! HEADAS not in the environment. Have you run the init script?\')\n'])
+    par_path_str += ''.join([indent_lvl, 'pfiles = os.environ[\'PFILES\'].split(\';\')\n'])
+    par_path_str += ''.join([indent_lvl, 'if len(pfiles) > 1:\n'])
+    par_path_str += ''.join([indent_lvl, '    loc_par_path = os.path.join(pfiles[0], \'{}.par\')\n'.format(task_nm)])
+    par_path_str += ''.join([indent_lvl, 'if os.path.exists(loc_par_path):\n'])
+    par_path_str += ''.join([indent_lvl, '    par_path = loc_par_path\n'])
+    par_path_str += ''.join([indent_lvl, 'else:\n'])
+    par_path_str += ''.join([indent_lvl, '    par_path = sys_par_path\n'])
+    return par_path_str
+
 def _create_task_file(task_nm, par_name, func_mod_path):
     """
     Creates a file containing the function to run an FTools task (program).
@@ -128,11 +142,12 @@ def _create_task_file(task_nm, par_name, func_mod_path):
         print('Creating function file:', task_nm)
     task_file_str = ''
     # Create the path to the par file we want
+    sys_par_path = os.path.join(SYS_PFILES_DIR, par_name)
     user_pfile_path = os.path.join(USER_PFILES_DIR, par_name)
     if os.path.exists(user_pfile_path):
         par_path = user_pfile_path
     else:
-        par_path = os.path.join(SYS_PFILES_DIR, par_name)
+        par_path = sys_par_path
     if os.path.exists(par_path) and os.path.isfile(par_path):
         LOGGER.debug('%s is a good path', par_path)
     else:
@@ -142,7 +157,7 @@ def _create_task_file(task_nm, par_name, func_mod_path):
             LOGGER.debug('%s is not a regular file', par_path)
     task_file_str = _create_task_file_header(task_nm)
 #    task_file_str += _create_task_help()           # MAY add this at some point
-    task_file_str += _create_task_function(task_nm, par_path)
+    task_file_str += _create_task_function(task_nm, par_path, sys_par_path)
 #    task_file_str += '    \n'
     LOGGER.debug('At end of _create_task_file().') #, task_file_str:\n%s', task_file_str)
     with open(func_mod_path, 'wt') as out_file:
@@ -156,6 +171,7 @@ def _create_task_file_header(task_nm):
     """
     hdr_str = '"""\nAutomatically created file containing ' + task_nm + ' function. This is\n'
     hdr_str += 'expected to be imported into (and be part of) the heasoftpy module.\n"""\n\n'
+    hdr_str += 'import os\n'
     hdr_str += 'import sys\n'
     hdr_str += 'import subprocess\n'
     hdr_str += 'import heasoftpy.ape as hsp_ape\n'
@@ -165,33 +181,40 @@ def _create_task_file_header(task_nm):
     hdr_str += '__version__ = \'{}\'\n\n'.format(__version__)
     return hdr_str
 
-def _create_fn_start(par_path, par_file_dict, task_nm):
-    num_req_param = _get_num_req_param(par_file_dict)
+def _create_fn_start(par_path, par_file_dict, sys_par_dict, task_nm):
+    LOGGER.debug('calling get_num_req_param for %s', task_nm)
+
+    num_req_param = _get_num_req_param(sys_par_dict)
+    LOGGER.debug('  num_req_param: %d', num_req_param)
 #    if task_nm.find("verify") != -1:
 #        print('task_nm: {0}, num_req_param: {1}       '.format(task_nm, num_req_param))
     ### Remove after debugging:
 #    if task_nm.find('fhelp') != -1:
 #        print('for {}, num_req_param = {}'.format(task_nm, num_req_param))
     fn_docstring = _create_function_docstring(task_nm, par_file_dict)
+
+#234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
     if num_req_param == 1:
-        fn_start_str, indent_lvl = _create_positional_arg_function_start(fn_docstring, par_path,
+        fn_start_str, indent_lvl = _create_positional_arg_function_start(fn_docstring,
                                                                          par_file_dict, task_nm)
     else:
         indent_lvl = '    '
         fn_start_str = ''
         fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
         fn_start_str += fn_docstring + '\n'
-        fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
+#        fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
+        fn_start_str += _create_par_path_str(task_nm, indent_lvl)
         fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
 
     return fn_start_str, indent_lvl
 
-def _create_positional_arg_function_start(fn_docstring, par_path, param_dict, task_nm):
+def _create_positional_arg_function_start(fn_docstring, param_dict, task_nm):
     indent_lvl = '    '
     fn_start_str = ''
     fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
     fn_start_str += fn_docstring + '\n'
-    fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
+    fn_start_str += _create_par_path_str(task_nm, indent_lvl)
+#    fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
     fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
     fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
     fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
@@ -208,22 +231,38 @@ def _create_positional_arg_function_start(fn_docstring, par_path, param_dict, ta
     indent_lvl += indent_lvl
     return fn_start_str, indent_lvl
 
-def _create_task_function(task_nm, par_path):
-
-    # Create body of function (command line creation, subprocess call)
-    parfile_dict = hsp_ape.read_par_file(par_path)
-    start_str, indent_lvl = _create_fn_start(par_path, parfile_dict, task_nm)
+def _create_task_function(task_nm, par_path, sys_par_path):
+    """
+    Returns a string containing the body of the function (including command line creation
+    and the subprocess call) being created.
+    """
+    LOGGER.debug('Reading system par file: %s.', sys_par_path)
+    sys_par_dict = hsp_ape.read_par_file(sys_par_path)
+    if par_path == sys_par_path:
+        LOGGER.debug('parfile_dict set to sys_par_dict')
+        parfile_dict = sys_par_dict
+    else:
+        LOGGER.debug('Reading par file: %s.', par_path)
+        parfile_dict = hsp_ape.read_par_file(par_path)
+    LOGGER.debug('For %s, the parfile dictionary is:\n%s', task_nm, parfile_dict)
+    start_str, indent_lvl = _create_fn_start(par_path, parfile_dict, sys_par_dict, task_nm)
+#    fn_str = start_str
     fn_str = start_str
-    fn_str += ''.join([indent_lvl, 'parfile_dict = dict()\n'])
-    for param_key in parfile_dict:
-        param_key = param_key.strip()
-        if param_key == 'prompt':
-            # Quotation marks are part of the prompt value, and we don't want to have two sets.
-            fn_str += ''.join([indent_lvl,
-                               'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
-        else:
-            fn_str += ''.join([indent_lvl,
-                               'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
+
+
+    #fn_str += ''.join([indent_lvl, 'parfile_dict = dict()\n'])
+    # for param_key in parfile_dict:
+    #     param_key = param_key.strip()
+    #     if param_key == 'prompt':
+    #         # Quotation marks are part of the prompt value, and we don't want to have two sets.
+    #         fn_str += ''.join([indent_lvl,
+    #                            'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
+    #     else:
+    #         fn_str += ''.join([indent_lvl,
+    #                            'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
+
+    fn_str += ''.join([indent_lvl, 'parfile_dict = hsp_ape.read_par_file(par_path)\n'])
+
     fn_str += '\n'
     fn_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
     fn_str += ''.join([indent_lvl, 'args_ok = True\n'])
@@ -271,6 +310,7 @@ def _create_task_function(task_nm, par_path):
 #    fn_str += '\n'
     fn_str += '        task_res.params = par_dict\n'
     fn_str += '    return task_res\n'
+    del parfile_dict
     return fn_str
 
 #def _create_task_help():
@@ -287,9 +327,14 @@ def _get_num_req_param(param_dict):
     if isinstance(param_dict, dict):
         req_param = 0
         for param_key in param_dict:
-            if (param_dict[param_key]['mode'] == 'a' or param_dict[param_key]['mode'] == 'q') and param_dict[param_key]['default'] == '':
-#            if param_dict[param_key]['mode'] == 'a' and param_dict[param_key]['default'] == '':
+            LOGGER.debug('  For parameter %s: mode is %s, default is %s',
+                         param_key, param_dict[param_key]['mode'], param_dict[param_key]['default'])
+            if (param_dict[param_key]['mode'] == 'a' or param_dict[param_key]['mode'] == 'q') and \
+               param_dict[param_key]['default'] == '':
                 req_param += 1
+                LOGGER.debug('  Parameter %s is required', param_key)
+            else:
+                LOGGER.debug('  Parameter %s is NOT required', param_key)
     return req_param
 
 def _get_task_fhelp(task_nm):
@@ -329,7 +374,8 @@ def _get_task_fhelp(task_nm):
         #LOGGER.info('   te.args: %s', te.args)
     except UnicodeDecodeError:
         exc_info = sys.exc_info()
-        err_msg = 'UnicodeDecodeError encountered when attempting to decode help for {}.'.format(task_nm)
+        err_msg = 'UnicodeDecodeError encountered when attempting to decode help for {}.'.\
+                  format(task_nm)
         LOGGER.info(err_msg)
         LOGGER.info('type(fhelp_out): %s', type(fhelp_out))
         LOGGER.info('type(fhelp_str): %s', type(fhelp_str))
@@ -385,15 +431,6 @@ def main():
     for par_file in par_file_list:
         task_name = os.path.splitext(par_file)[0].replace('-', '_')
         func_module_path = os.path.join(DEFS_DIR, task_name + '.py')
-        # if os.path.isfile(func_module_path):
-            # (func_module, spec) = _import_func_module(task_name, func_module_path)
-            # if '__version__' in func_module.__dict__:
-            #     func_mod_ver = utils.ProgramVersion(func_module.__version__)
-            #     if func_mod_ver < THIS_MOD_VER:
-            #         LOGGER.info('Updating the function %s (%s), which is out-dated.', func_module.__name__, func_module_path)
-            #         os.remove(func_module_path)
-            #         _create_task_file(task_name, par_file, func_module_path)
-        # else:
         _create_task_file(task_name, par_file, func_module_path)
         remaining_files -= 1
         print('Installing {} files. {} files remain.        '.\
