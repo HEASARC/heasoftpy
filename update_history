@@ -44,6 +44,11 @@ Version 0.1.19 ME: Added is_param_ok function to utils and updated install.py to
                    task function call that function for each of its parameters.
 Version 0.1.20 ME: Modified utils/__init__.py.ask_for_param() to add the default to the query
                    and accept it with just an <Enter> response.
+Version 0.1.21 ME: Reverted to using the system parameter file to generate functions to fix
+                   bug (using the local par file led to functions that did not accept single
+		   positional parameter when they should have). Also added code to better
+		   handle the PFILES environment variable when other tools (e.g. CIAO) have
+		   changed/set its value after it reported that this was leading to crashes.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
