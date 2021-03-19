@@ -181,7 +181,7 @@ def _create_task_file_header(task_nm):
     hdr_str += '__version__ = \'{}\'\n\n'.format(__version__)
     return hdr_str
 
-def _create_fn_start(par_path, par_file_dict, sys_par_dict, task_nm):
+def _create_fn_start(par_file_dict, sys_par_dict, task_nm):
     LOGGER.debug('calling get_num_req_param for %s', task_nm)
 
     num_req_param = _get_num_req_param(sys_par_dict)
@@ -193,7 +193,6 @@ def _create_fn_start(par_path, par_file_dict, sys_par_dict, task_nm):
 #        print('for {}, num_req_param = {}'.format(task_nm, num_req_param))
     fn_docstring = _create_function_docstring(task_nm, par_file_dict)
 
-#234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
     if num_req_param == 1:
         fn_start_str, indent_lvl = _create_positional_arg_function_start(fn_docstring,
                                                                          par_file_dict, task_nm)
@@ -245,7 +244,7 @@ def _create_task_function(task_nm, par_path, sys_par_path):
         LOGGER.debug('Reading par file: %s.', par_path)
         parfile_dict = hsp_ape.read_par_file(par_path)
     LOGGER.debug('For %s, the parfile dictionary is:\n%s', task_nm, parfile_dict)
-    start_str, indent_lvl = _create_fn_start(par_path, parfile_dict, sys_par_dict, task_nm)
+    start_str, indent_lvl = _create_fn_start(parfile_dict, sys_par_dict, task_nm)
 #    fn_str = start_str
     fn_str = start_str
 
@@ -302,13 +301,13 @@ def _create_task_function(task_nm, par_path, sys_par_path):
     fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
     fn_str += '    if task_res.returncode:\n'
     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
-    fn_str += '    else:\n'
-    fn_str += '        updated_par_contents = hsp_ape.read_par_file(par_path)\n'
-    fn_str += '        par_dict = dict()\n'
-    fn_str += '        for parm_key in updated_par_contents:\n'
-    fn_str += '            par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
+#    fn_str += '    else:\n'
+    fn_str += '    updated_par_contents = hsp_ape.read_par_file(par_path)\n'
+    fn_str += '    par_dict = dict()\n'
+    fn_str += '    for parm_key in updated_par_contents:\n'
+    fn_str += '        par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
 #    fn_str += '\n'
-    fn_str += '        task_res.params = par_dict\n'
+    fn_str += '    task_res.params = par_dict\n'
     fn_str += '    return task_res\n'
     del parfile_dict
     return fn_str
