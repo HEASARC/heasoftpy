@@ -301,7 +301,6 @@ def _create_task_function(task_nm, par_path, sys_par_path):
     fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
     fn_str += '    if task_res.returncode:\n'
     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
-#    fn_str += '    else:\n'
     fn_str += '    updated_par_contents = hsp_ape.read_par_file(par_path)\n'
     fn_str += '    par_dict = dict()\n'
     fn_str += '    for parm_key in updated_par_contents:\n'
