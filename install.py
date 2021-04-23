@@ -63,8 +63,7 @@ def _get_syspfiles_dir():
     Searches the PFILES environment variable and returns the path for the system
     pfiles directory
     """
-#    pfiles_var = os.environ['PFILES']
-    pfiles_parts = ENV_PFILES.split(';')        #pfiles_var.split(';')
+    pfiles_parts = ENV_PFILES.split(';')
     if len(pfiles_parts) == 1:
         pfiles_dir = ENV_PFILES
     else:
@@ -77,7 +76,7 @@ def _get_syspfiles_dir():
             sys.exit('Error! Could not locate syspfiles directory.')
     return pfiles_dir
 
-# Don't want  a one line function, but keeping this code in case more is needed
+# Don't want  a one line function, but keeping this code in case more is needed eventually
 #def _get_user_pfiles_dir():
 #    user_pfiles_dir = os.path.join(os.path.expanduser('~'), 'pfiles')
 #    return user_pfiles_dir
@@ -95,7 +94,26 @@ DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
 THIS_MOD_VER = utils.ProgramVersion(__version__)
 
-def _create_function_docstring(tsk_nm, par_dict):
+def _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl):
+
+    arg_handling_code = ''.join([indent_lvl, 'if len(args) >= 2:\n'])
+    arg_handling_code += ''.join([indent_lvl,
+                             '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
+    arg_handling_code += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
+    arg_handling_code += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
+    arg_handling_code += ''.join([indent_lvl, '    if isinstance(args[0], dict):\n'])
+    arg_handling_code += ''.join([indent_lvl, '        if \'infile\' in args[0]:\n'])
+    arg_handling_code += ''.join([indent_lvl, '            stderr_dest = subprocess.PIPE\n'])
+#    arg_handling_code += ''.join([indent_lvl, ''])
+
+    num_req_param = _get_num_req_param(sys_par_dict)
+
+    LOGGER.debug('  num_req_param: %d', num_req_param)
+    if num_req_param == 1:
+        arg_handling_code += _create_positional_arg_code(task_nm, indent_lvl)
+    return arg_handling_code
+
+def _create_func_docstr(tsk_nm, par_dict):
     """
     Create a string (expected to be used as the docstring for an automagically
     created function) listing the parameters of the function named in tsk_nm,
@@ -118,6 +136,25 @@ def _create_function_docstring(tsk_nm, par_dict):
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
 
+def _create_func_start(par_file_dict, sys_par_dict, task_nm):
+    """
+    Returns a string containing the starting parts of a function:
+    definition line, docstring, and the first several lines of
+    executable code.
+    """
+    LOGGER.debug('calling get_num_req_param for %s', task_nm)
+
+    fn_docstring = _create_func_docstr(task_nm, par_file_dict)
+    fn_start_str = ''.join(['def {}(*args, **kwargs):\n'.format(task_nm), fn_docstring])
+    indent_lvl = '    '
+    fn_start_str += _create_par_path_str(task_nm, indent_lvl)
+
+    fn_start_str += ''.join([indent_lvl, 'parfile_dict = hsp_ape.read_par_file(par_path)\n'])
+    fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
+    fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
+    fn_start_str += ''.join([indent_lvl, 'stderr_dest = subprocess.STDOUT\n'])
+    return fn_start_str, indent_lvl
+
 def _create_par_path_str(task_nm, indent_lvl):
     """ Returns a string with commands for finding the par_path. """
     par_path_str = ''.join([indent_lvl, 'if \'HEADAS\' in os.environ:\n'])
@@ -132,6 +169,13 @@ def _create_par_path_str(task_nm, indent_lvl):
     par_path_str += ''.join([indent_lvl, 'else:\n'])
     par_path_str += ''.join([indent_lvl, '    par_path = sys_par_path\n'])
     return par_path_str
+
+def _create_positional_arg_code(task_nm, indent_lvl):
+
+    pos_arg_code = ''.join([indent_lvl, '    elif isinstance(args[0], str):\n'])
+    pos_arg_code += ''.join([indent_lvl, '       task_args.append(\'{0}={1}\'.format(list(parfile_dict)[0], args[0]))\n'])
+    pos_arg_code += ''.join([indent_lvl, '       stderr_dest = subprocess.PIPE\n'])
+    return pos_arg_code
 
 def _create_task_file(task_nm, par_name, func_mod_path):
     """
@@ -181,55 +225,6 @@ def _create_task_file_header(task_nm):
     hdr_str += '__version__ = \'{}\'\n\n'.format(__version__)
     return hdr_str
 
-def _create_fn_start(par_file_dict, sys_par_dict, task_nm):
-    LOGGER.debug('calling get_num_req_param for %s', task_nm)
-
-    num_req_param = _get_num_req_param(sys_par_dict)
-    LOGGER.debug('  num_req_param: %d', num_req_param)
-#    if task_nm.find("verify") != -1:
-#        print('task_nm: {0}, num_req_param: {1}       '.format(task_nm, num_req_param))
-    ### Remove after debugging:
-#    if task_nm.find('fhelp') != -1:
-#        print('for {}, num_req_param = {}'.format(task_nm, num_req_param))
-    fn_docstring = _create_function_docstring(task_nm, par_file_dict)
-
-    if num_req_param == 1:
-        fn_start_str, indent_lvl = _create_positional_arg_function_start(fn_docstring,
-                                                                         par_file_dict, task_nm)
-    else:
-        indent_lvl = '    '
-        fn_start_str = ''
-        fn_start_str += 'def {0}(**kwargs):\n'.format(task_nm)
-        fn_start_str += fn_docstring + '\n'
-#        fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
-        fn_start_str += _create_par_path_str(task_nm, indent_lvl)
-        fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-
-    return fn_start_str, indent_lvl
-
-def _create_positional_arg_function_start(fn_docstring, param_dict, task_nm):
-    indent_lvl = '    '
-    fn_start_str = ''
-    fn_start_str += 'def {0}(*args, **kwargs):\n'.format(task_nm)
-    fn_start_str += fn_docstring + '\n'
-    fn_start_str += _create_par_path_str(task_nm, indent_lvl)
-#    fn_start_str += ''.join([indent_lvl, 'par_path = \'{}\'\n'.format(par_path)])
-    fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
-    fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
-    fn_start_str += ''.join([indent_lvl, 'if len(args) >= 2:\n'])
-    fn_start_str += ''.join([indent_lvl,
-                             '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
-    fn_start_str += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
-    fn_start_str += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
-    fn_start_str += ''.join([indent_lvl,
-                             '    task_args.append(\'{0}={1}\'.format(\'', list(param_dict)[0], '\', args[0]))\n'])
-#    fn_start_str += ''.join([indent_lvl, '    task_args.append(\'{0}={1}\'.format(\'infile'\', args[0]))\n'])
-    fn_start_str += ''.join([indent_lvl, '    stderr_dest = subprocess.PIPE\n'])
-    fn_start_str += ''.join([indent_lvl, 'else:\n'])
-    fn_start_str += '\n'
-    indent_lvl += indent_lvl
-    return fn_start_str, indent_lvl
-
 def _create_task_function(task_nm, par_path, sys_par_path):
     """
     Returns a string containing the body of the function (including command line creation
@@ -244,10 +239,9 @@ def _create_task_function(task_nm, par_path, sys_par_path):
         LOGGER.debug('Reading par file: %s.', par_path)
         parfile_dict = hsp_ape.read_par_file(par_path)
     LOGGER.debug('For %s, the parfile dictionary is:\n%s', task_nm, parfile_dict)
-    start_str, indent_lvl = _create_fn_start(parfile_dict, sys_par_dict, task_nm)
-#    fn_str = start_str
-    fn_str = start_str
-
+    start_str, indent_lvl = _create_func_start(parfile_dict, sys_par_dict, task_nm)
+    arg_handling_code = _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl)
+    fn_str = ''.join([start_str, arg_handling_code])
 
     #fn_str += ''.join([indent_lvl, 'parfile_dict = dict()\n'])
     # for param_key in parfile_dict:
@@ -260,38 +254,40 @@ def _create_task_function(task_nm, par_path, sys_par_path):
     #         fn_str += ''.join([indent_lvl,
     #                            'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
 
-    fn_str += ''.join([indent_lvl, 'parfile_dict = hsp_ape.read_par_file(par_path)\n'])
+    fn_str += ''.join([indent_lvl, 'else:\n'])
+    fn_str += ''.join([indent_lvl, '    args_ok = True\n'])
+    fn_str += ''.join([indent_lvl, '    for kwa in kwargs:\n'])
+    fn_str += ''.join([indent_lvl, '        if not kwa == \'stderr\':\n'])
+    fn_str += ''.join([indent_lvl, '            if hsp_utils.is_param_ok((kwa, kwargs[kwa]), parfile_dict):\n'])
+    fn_str += ''.join([indent_lvl,
+                       '                task_args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'])
+    fn_str += ''.join([indent_lvl, '                task_params[kwa] = kwargs[kwa]\n'])
+    fn_str += ''.join([indent_lvl, '            else:\n'])
+    fn_str += ''.join([indent_lvl, '                args_ok = False\n'])
+    fn_str += ''.join([indent_lvl, '                print(\'Error! The {} parameter was not specified correctly. Please correct and try again.\'.format(kwa))\n'])
 
-    fn_str += '\n'
-    fn_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
-    fn_str += ''.join([indent_lvl, 'args_ok = True\n'])
-    fn_str += ''.join([indent_lvl, 'for kwa in kwargs:\n'])
-    fn_str += ''.join([indent_lvl, '    if not kwa == \'stderr\':\n'])
-    fn_str += ''.join([indent_lvl, '        if hsp_utils.is_param_ok((kwa, kwargs[kwa]), parfile_dict):\n'])
+
+
+    fn_str += ''.join([indent_lvl, '    for entry in parfile_dict:\n'])
+    fn_str += ''.join([indent_lvl, '        if not entry in kwargs:\n'])
     fn_str += ''.join([indent_lvl,
-                       '            task_args.append(\'{0}={1}\'.format(kwa, kwargs[kwa]))\n'])
-    fn_str += ''.join([indent_lvl, '            task_params[kwa] = kwargs[kwa]\n'])
-    fn_str += ''.join([indent_lvl, '        else:\n'])
-    fn_str += ''.join([indent_lvl, '            args_ok = False\n'])
-    fn_str += ''.join([indent_lvl, '            print(\'Error! The {} parameter was not specified correctly. Please correct and try again.\'.format(kwa))\n'])
-    fn_str += ''.join([indent_lvl, 'if not args_ok:\n'])
-    fn_str += ''.join([indent_lvl, '    return None\n'])
-    fn_str += ''.join([indent_lvl, 'params_not_specified = []\n'])
-    fn_str += ''.join([indent_lvl, 'for entry in parfile_dict:\n'])
-    fn_str += ''.join([indent_lvl, '    if not entry in kwargs:\n'])
+                       '            if hsp_utils.check_query_param(entry, parfile_dict):\n'])
+    fn_str += ''.join([indent_lvl, '                params_not_specified.append(entry)\n'])
+    fn_str += ''.join([indent_lvl, '    params_not_specified = []\n'])
+
+    fn_str += ''.join([indent_lvl, '    for missing_param in params_not_specified:\n'])
     fn_str += ''.join([indent_lvl,
-                       '        if hsp_utils.check_query_param(entry, parfile_dict):\n'])
-    fn_str += ''.join([indent_lvl, '            params_not_specified.append(entry)\n'])
-    fn_str += ''.join([indent_lvl, 'for missing_param in params_not_specified:\n'])
+                       '        param_val = hsp_utils.ask_for_param(missing_param, parfile_dict)\n'])
     fn_str += ''.join([indent_lvl,
-                       '    param_val = hsp_utils.ask_for_param(missing_param, parfile_dict)\n'])
-    fn_str += ''.join([indent_lvl,
-                       '    task_args.append(\'{0}={1}\'.format(missing_param, param_val))\n'])
-    fn_str += ''.join([indent_lvl, '    task_params[missing_param] = param_val\n'])
-    fn_str += ''.join([indent_lvl, 'stderr_dest = subprocess.STDOUT\n'])
-    fn_str += ''.join([indent_lvl, 'if \'stderr\' in kwargs:\n'])
-    fn_str += ''.join([indent_lvl, '    if kwargs[\'stderr\']:\n'])
-    fn_str += ''.join([indent_lvl, '        stderr_dest = subprocess.PIPE\n'])
+                       '        task_args.append(\'{0}={1}\'.format(missing_param, param_val))\n'])
+    fn_str += ''.join([indent_lvl, '        task_params[missing_param] = param_val\n'])
+
+    fn_str += ''.join([indent_lvl, '    if not args_ok:\n'])
+    fn_str += ''.join([indent_lvl, '        return None\n'])
+
+    fn_str += ''.join([indent_lvl, '    if \'stderr\' in kwargs:\n'])
+    fn_str += ''.join([indent_lvl, '        if kwargs[\'stderr\']:\n'])
+    fn_str += ''.join([indent_lvl, '            stderr_dest = subprocess.PIPE\n'])
     fn_str += '    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
     fn_str += '    task_out, task_err = task_proc.communicate()\n'
     fn_str += '    if isinstance(task_out, bytes):\n'
