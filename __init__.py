@@ -1,11 +1,23 @@
 #!/usr/bin/env python3
 
 """
-Python interface to the FTools/HTools package.
+Python interface to the HEASoft/FTools package.
 
-The heasoftpy module provides a Python function corresponding to each
-Heasoft/FTools task. Note that dashes ("-") in task names are replaces with
-underscores ("_") in the corresponding heasoftpy function.
+The heasoftpy module provides Python wrapper functions for each of the
+Heasoft/FTools tasks (programs), These wrapper functions allow the tasks 
+to be called from Python scripts, Jupyter notebooks,interactive ipython 
+sessions, etc.
+
+Each HEASoft program has a function in heasoftpy corresponding to it. Note 
+that dashes ("-") in task names are replaces with underscores ("_") in the
+corresponding heasoftpy function.
+
+Use example:
+
+>>> import heasoftpy as hsp
+>>> fdump_res = hsp.fdump(infile='foo.fits')
+>>>
+
 
 See the update_history file for the module's modification history.
 """

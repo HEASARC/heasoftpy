@@ -268,12 +268,12 @@ def _create_task_function(task_nm, par_path, sys_par_path):
 
 
 
+    fn_str += ''.join([indent_lvl, '    params_not_specified = []\n'])
     fn_str += ''.join([indent_lvl, '    for entry in parfile_dict:\n'])
     fn_str += ''.join([indent_lvl, '        if not entry in kwargs:\n'])
     fn_str += ''.join([indent_lvl,
                        '            if hsp_utils.check_query_param(entry, parfile_dict):\n'])
     fn_str += ''.join([indent_lvl, '                params_not_specified.append(entry)\n'])
-    fn_str += ''.join([indent_lvl, '    params_not_specified = []\n'])
 
     fn_str += ''.join([indent_lvl, '    for missing_param in params_not_specified:\n'])
     fn_str += ''.join([indent_lvl,
