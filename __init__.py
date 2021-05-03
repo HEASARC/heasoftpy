@@ -3,20 +3,21 @@
 """
 Python interface to the HEASoft/FTools package.
 
-The heasoftpy module provides Python wrapper functions for each of the
+The heasoftpy package provides Python wrapper functions for each of the
 Heasoft/FTools tasks (programs), These wrapper functions allow the tasks 
 to be called from Python scripts, Jupyter notebooks,interactive ipython 
 sessions, etc.
 
-Each HEASoft program has a function in heasoftpy corresponding to it. Note 
-that dashes ("-") in task names are replaces with underscores ("_") in the
-corresponding heasoftpy function.
+After heasoftpy is installed, each HEASoft program will have a function
+in heasoftpy corresponding to it. Note that dashes ("-") in task names are
+replaces with underscores ("_") in the corresponding heasoftpy function.
 
 Use example:
 
 >>> import heasoftpy as hsp
 >>> fdump_res = hsp.fdump(infile='foo.fits')
->>>
+>>> if fdump_res.return_code != 0:
+>>>     print('Error! return_code: '.format(fdump_res.return_code))
 
 
 See the update_history file for the module's modification history.
