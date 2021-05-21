@@ -1,0 +1,72 @@
+import heasoftpy
+import inspect
+print(inspect.getfile(heasoftpy.template.tjtest1))
+
+print("\nTest 1")
+try: 
+     result=heasoftpy.template.tjtest1()
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+
+print("\nTest 2")
+try:
+     result=heasoftpy.template.tjtest1(foo='oof',bar=3)
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+print("\nTest 3")
+try:
+     result=heasoftpy.template.tjtest1(result.params)
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+print("\nTest 4")
+try:
+     result=heasoftpy.template.tjtest1({"foo":"oof","bar":10})
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+
+print("\nTest 5")
+try:
+     result=heasoftpy.fdump(prhead="no")
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+
+print("\nTest 6")
+try:
+     result=heasoftpy.fdump(infile="tests/test_rate.fit",mode="h",prhead="no")
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+
+print("\nTest 7:  Currently broken, you have to interrupt.")
+try:
+     result=heasoftpy.fdump({'infile':"tests/test_rate.fit",'mode':"h",'prhead':"no"})
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+
+print("\nTest 8:  Currently broken, you have to interrupt.")
+try:
+     result.params['prhead']="no"
+     result=heasoftpy.fdump(result.params)
+     print(result.stdout)
+except Exception as e:
+     print(f"ERROR:  {e}")
+
+
+
+
+
+
+exit

@@ -23,6 +23,9 @@ Use example:
 See the update_history file for the module's modification history.
 """
 
+from .packages import template
+
+
 import collections
 import datetime
 import importlib
