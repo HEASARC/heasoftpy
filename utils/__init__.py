@@ -5,6 +5,7 @@ not called by users.
 
 import csv
 import os
+import subprocess
 import sys
 
 class ProgramVersion():
@@ -88,7 +89,7 @@ def ask_for_param(p_name, p_dict):
             if usr_inp == '':
                 usr_inp = p_dict[p_name]['default']
             else:
-                p_dict[p_name]['default'] = usr_inp 
+                p_dict[p_name]['default'] = usr_inp
                 usr_inp = type_switch(p_dict[p_name]['type'])(str(usr_inp).strip())
         except EOFError:
             sys.exit('\nKeyboard interrupt received, program stopping.')
@@ -167,34 +168,45 @@ def read_version(module_dir):
             try:
                 ver_str = str(ver_file.read())
             except:
-                err_msg = 'Error! Could not read file "version" in the {} directory.'.format(full_module_dir)
+                err_msg = 'Error! Could not read file "version" in the {} directory.'.\
+                          format(full_module_dir)
                 sys.exit(err_msg)
     else:
-        err_msg = 'Error! Could not locate file "version" in the {} directory.'.format(full_module_dir)
+        err_msg = 'Error! Could not locate file "version" in the {} directory.'.\
+                  format(full_module_dir)
         sys.exit(err_msg)
     return ver_str
 
 
-def typify(value,intype):
+def typify(value, intype):
     """Take input string value and type string and return correctly typed value.
 
-    Need to handle special types in here, like CALDB.  
+    Need to handle special types in here, like CALDB.
     Currently returns blank strings when confused."""
-    if len(value.strip()) == 0:
+
+    value = value.strip()
+    if value.find("'") != -1:
+        value = value.replace("'", "")
+    if value.find('"') != -1:
+        value = value.replace('"', '')
+    if len(value) == 0:
         return ''
     try:
-        return type_switch(intype)(value)
+        # Note that type_switch(intype) returns a type conversion function
+        # (such as int()).
+        converter_fn = type_switch(intype.strip())
+        return converter_fn(value)
     except:
-        print(f"WARNING:  Could not convert {value} to {intype}")
+        print(f"WARNING:  Could not convert '{value}' to '{intype}'")
         return value
 
 
 def type_switch(arg):
     "A switch on the input type string to return the Python type"
-    switcher = { 'i': int, 's': str , 'f': str, 'b': bool, 
+    switcher = { 'i': int, 's': str , 'f': str, 'b': bool,
                  'r': float, 'fr':str, 'd': str}
     try:
-        return(switcher.get(arg))
+        return switcher.get(arg)
     except:
         sys.exit("Error!  don't understand the type {arg} in the pfile")
 
@@ -205,8 +217,8 @@ def get_pfile(exename,user=False):
     user=False means return user's dir not system even if it doesn't exist."""
     if 'HEADAS' in os.environ:
         sys_par_path = os.path.join(
-            os.environ['HEADAS'], 
-            'syspfiles', 
+            os.environ['HEADAS'],
+            'syspfiles',
             f'{exename}.par')
     else:
         sys.exit('Error! HEADAS not in the environment. \
@@ -218,13 +230,13 @@ def get_pfile(exename,user=False):
     if os.path.exists(loc_par_path):
         par_path = loc_par_path
     elif user:
-        par_path=loc_par_path 
+        par_path=loc_par_path
     else:
         par_path = sys_par_path
-    return(par_path)
+    return par_path
 
 
-def runit(exename,pars):
+def runit(exename, pars):
     """Call a task;  the guts of the non-Python tool wrapper.  DOESN'T WORK!!!
 
     Haven't figured out what's needed for args.  Some of this is in the params class.
@@ -244,7 +256,7 @@ def runit(exename,pars):
     else:
         if pars['stderr']:
             stderr_dest = subprocess.PIPE
- 
+
     task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)
     task_out, task_err = task_proc.communicate()
     if isinstance(task_out, bytes):

@@ -6,7 +6,7 @@ import sys
 import heasoftpy.core.errors as hsp_err
 import heasoftpy.core.result as hsp_res
 import heasoftpy.utils as hsp_utils
-import __main__
+#import __main__
 
 
 def read_par_file(par_path):
@@ -47,14 +47,14 @@ def read_par_file(par_path):
 
 
 class params(collections.OrderedDict):
-    """Parameter object for heasoftpy that works like a smart dictionary.
+    """ Parameter object for heasoftpy that works like a smart dictionary.
     """
     def __enter__(self,inarg=None):
-        "Called when you enter a with statement"
+        """ Called when you enter a with statement """
         return self
         
     def __exit__(self, exc_type, exc_value, tb):
-        "Called when you exit the with statement"
+        """ Called when you exit the with statement """
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False
@@ -70,7 +70,7 @@ class params(collections.OrderedDict):
         """
 
         #  First figure out the context. It would be good to get something here
-        #   that works generally rather than have to be given the name.     
+        #  that works generally rather than have to be given the name.     
         if name is None:
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)

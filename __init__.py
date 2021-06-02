@@ -23,8 +23,7 @@ Use example:
 See the update_history file for the module's modification history.
 """
 
-from .packages import template
-
+#from .packages import template
 
 import collections
 import datetime
@@ -147,7 +146,7 @@ def _create_local_pfiles_dir(pfiles_dir, orig_pfiles):
     except OSError:
         err_msg = 'Error! Could not create directory {0}. PFILES remains set to {1}'.\
                   format(pfiles_dir, orig_pfiles)
-        print(err_msg)
+        print(err_msg, file=sys.stderr)
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 
@@ -171,8 +170,8 @@ def local_pfiles(pfiles_dir=None):
 #        print('Received {} as a user specified pfile setting, but that functionality is not yet implemented'.format(pfiles_dir))
         if os.path.exists(pfiles_dir):
             if not os.path.isdir(pfiles_dir):
-                print('{0} exists, but is not a directory. PFILES remains set to {1}.'.\
-                      format(pfiles_dir, os.environ['PFILES']))
+                print('{0} exists, but is not a directory. PFILES remains set to {1}.\n'.\
+                      format(pfiles_dir, os.environ['PFILES']), file=sys.stderr)
             else:
                 pfiles_env = ';'.join([pfiles_dir, sys_pfiles])
                 os.environ['PFILES'] = pfiles_env
@@ -204,5 +203,5 @@ for par_file in par_file_list:
         (func_module, spec) = _import_func_module(task_name, func_module_path)
         setattr(THIS_MODULE, task_name, func_module.__dict__[task_name])
     else:
-        print('Module {} not found.'.format(task_name))
+        print('Module {} not found.'.format(task_name), file=sys.stderr)
 print()

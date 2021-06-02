@@ -40,7 +40,7 @@ class Result:
         param_str = 'params:\n'
         if self.params:
             for par_key in self.params.keys():
-                param_str += '  ' + par_key + ': ' + self.params[par_key] + '\n'
+                param_str += '  ' + par_key + ': ' + str(self.params[par_key]) + '\n'
         else:
             param_str += '  None'
         if self.custom:

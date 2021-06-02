@@ -61,6 +61,52 @@ class TestUtils(unittest.TestCase):
         test_result = heasoftpy.utils.read_version(os.path.join(PACKAGE_DIR, 'heasoftpy'))
         self.assertRegex(test_result, ver_format)
 
+    #@unittest.skip('Skipping test_type_switch_b')
+    def test_type_switch_b(self):
+        test_result = heasoftpy.utils.type_switch('b')
+        self.assertEqual(test_result, bool)
+
+    #@unittest.skip('Skipping test_type_switch_f')
+    def test_type_switch_f(self):
+        # 'f' is for file, not float
+        test_result = heasoftpy.utils.type_switch('f')
+        self.assertEqual(test_result, str)
+
+    #@unittest.skip('Skipping test_type_switch_i')
+    def test_type_switch_i(self):
+        test_result = heasoftpy.utils.type_switch('i')
+        self.assertEqual(test_result, int)
+
+    #@unittest.skip('Skipping test_type_switch_r')
+    def test_type_switch_r(self):
+        test_result = heasoftpy.utils.type_switch('r')
+        self.assertEqual(test_result, float)
+
+    #@unittest.skip('Skipping test_type_switch_s')
+    def test_type_switch_s(self):
+        test_result = heasoftpy.utils.type_switch('s')
+        self.assertEqual(test_result, str)
+
+    #@unittest.skip('Skipping test_typify_bool')
+    def test_typify_bool(self):
+        test_result = heasoftpy.utils.typify('True', 'b')
+        self.assertEqual(test_result, True)
+
+    #@unittest.skip('Skipping test_typify_int')
+    def test_typify_int(self):
+        test_result = heasoftpy.utils.typify('42', 'i')
+        self.assertEqual(test_result, 42)
+
+    #@unittest.skip('Skipping test_typify_real')
+    def test_typify_real(self):
+        test_result = heasoftpy.utils.typify('0.42', 'r')
+        self.assertEqual(test_result, 0.42)
+
+    #@unittest.skip('Skipping test_typify_str')
+    def test_typify_str(self):
+        test_result = heasoftpy.utils.typify('forty-two', 's')
+        self.assertEqual(test_result, 'forty-two')
+
     #@unittest.skip('Skipping test_version_compare')
     def test_version_compare(self):
         lesser_ver = heasoftpy.utils.ProgramVersion('0.0.1')
