@@ -189,6 +189,8 @@ def typify(value, intype):
         value = value.replace("'", "")
     if value.find('"') != -1:
         value = value.replace('"', '')
+    if value == 'INDEF' and (intype == 'r' or intype == 'i'):
+        return None
     if len(value) == 0:
         return ''
     try:
