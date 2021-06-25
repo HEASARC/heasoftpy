@@ -15,21 +15,26 @@ import subprocess
 import sys
 import time
 
-import ape as hsp_ape
-import utils
+# import ape as hsp_ape
+# import par_reader
+# import utils
 
 #print(__name__)
 
-#THIS_MODULE = 'heasoftpy' #sys.modules[__name__]
+THIS_MODULE = 'heasoftpy' #sys.modules[__name__]
+
+# Functions from the ape, par_reader, and utils packages are used by the installer.
+# However, since heasoftpy hasn't been created yet, these packages cannot be installed
+# using a normal install statement. Thus we bring them in using importlib.import_module().
+#hsp_ape = importlib.import_module('ape.ape')#, package=THIS_MODULE)
+par_reader = importlib.import_module('par_reader') #, package=THIS_MODULE)
+version_mod = importlib.import_module('program_version.version') #THIS_MODULE.__name__)
 
 #utils = importlib.import_module('.utils', package='') #THIS_MODULE.__name__)
-
-#utils = importlib.import_module('.utils', package='heasoftpy') #THIS_MODULE.__name__)
 #hsp_ape = importlib.import_module('.ape', package='heasoftpy') #THIS_MODULE.__name__)
-#hsp_ape = importlib.import_module('.ape', package=THIS_MODULE)
 #hsp_tfc = importlib.import_module('.task_file_creator', package=THIS_MODULE.__name__)
 
-__version__ = utils.read_version(os.path.dirname(__file__)).rstrip()
+__version__ = version_mod.read_version(os.path.dirname(__file__)).rstrip()
 
 DEBUG = False
 #DEBUG = True
@@ -92,7 +97,7 @@ THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.curren
 
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
-THIS_MOD_VER = utils.ProgramVersion(__version__)
+THIS_MOD_VER = version_mod.ProgramVersion(__version__)
 
 def _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl):
 
@@ -231,13 +236,13 @@ def _create_task_function(task_nm, par_path, sys_par_path):
     and the subprocess call) being created.
     """
     LOGGER.debug('Reading system par file: %s.', sys_par_path)
-    sys_par_dict = hsp_ape.read_par_file(sys_par_path)
+    sys_par_dict = par_reader.read_par_file(sys_par_path)
     if par_path == sys_par_path:
         LOGGER.debug('parfile_dict set to sys_par_dict')
         parfile_dict = sys_par_dict
     else:
         LOGGER.debug('Reading par file: %s.', par_path)
-        parfile_dict = hsp_ape.read_par_file(par_path)
+        parfile_dict = par_reader.read_par_file(par_path)
     LOGGER.debug('For %s, the parfile dictionary is:\n%s', task_nm, parfile_dict)
     start_str, indent_lvl = _create_func_start(parfile_dict, sys_par_dict, task_nm)
     arg_handling_code = _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl)
@@ -414,7 +419,6 @@ def _import_func_module(task_nm, new_module_path):
 
 def main():
     """ Program's primary function """
-    #print('Entering main()')
     if not os.path.exists(DEFS_DIR):
         os.mkdir(DEFS_DIR)
 

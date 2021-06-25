@@ -36,12 +36,18 @@ import subprocess
 import sys
 import time
 
+print('Entering heasoftpy.__init__')
+
 THIS_MODULE = sys.modules[__name__]
+#
+#import program_version
+#import utils
 
+program_version = importlib.import_module('.program_version', package=THIS_MODULE.__name__)
 utils = importlib.import_module('.utils', package=THIS_MODULE.__name__)
-hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
+#hsp_ape = importlib.import_module('.ape', package=THIS_MODULE.__name__)
 
-__version__ = utils.read_version(os.path.dirname(__file__)).rstrip()
+__version__ = program_version.read_version(os.path.dirname(__file__)).rstrip()
 
 DEBUG = False
 #DEBUG = True
@@ -105,7 +111,7 @@ HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
 
 THIS_MODULE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
-THIS_MOD_VER = utils.ProgramVersion(__version__)
+THIS_MOD_VER = program_version.ProgramVersion(__version__)
 
 # This has been commented out so that the code does not create a conflict with
 # Python's builtin help facility. It is kept here in case it is later decided
