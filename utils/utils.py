@@ -105,14 +105,14 @@ def get_pfile(exename,user=False):
         sys_par_path = os.path.join(
             os.environ['HEADAS'],
             'syspfiles',
-            f'{exename}.par')
+            ''.join([str(exename), '.par']))
     else:
         sys.exit('Error! HEADAS not in the environment. \
         Have you run the init script?')
     pfiles = os.environ['PFILES'].split(';')
 
     if len(pfiles) > 1 and not user:
-        loc_par_path = os.path.join(pfiles[0], f'{exename}.par')
+        loc_par_path = os.path.join(pfiles[0], ''.join([str(exename), '.par']))
     if os.path.exists(loc_par_path):
         par_path = loc_par_path
     elif user:

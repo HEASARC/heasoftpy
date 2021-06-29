@@ -8,9 +8,6 @@ import heasoftpy.core.result as hsp_res
 import heasoftpy.utils as hsp_utils
 #import __main__
 
-
-
-
 class params(collections.OrderedDict):
     """ Parameter object for heasoftpy that works like a smart dictionary.
     """
@@ -40,7 +37,7 @@ class params(collections.OrderedDict):
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
             self.exename=calframe[1][3]
-            print(f"WARNING:  no name given, and inspect thinks I'm {self.exename}.")
+            print("WARNING:  no name given, and inspect thinks I'm {}.".format(self.exename))
         else:
             self.exename = name
 

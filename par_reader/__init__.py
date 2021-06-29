@@ -61,7 +61,7 @@ def typify(value, intype):
         converter_fn = type_switch(intype.strip())
         return converter_fn(value)
     except:
-        print(f"WARNING:  Could not convert '{value}' to '{intype}'")
+        print('WARNING:  Could not convert "{0}" to "{1}"'.format(value, intype))
         return value
 
 
