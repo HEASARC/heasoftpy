@@ -50,5 +50,13 @@ Version 0.1.21 ME: Reverted to using the system parameter file to generate funct
 		   handle the PFILES environment variable when other tools (e.g. CIAO) have
 		   changed/set its value after it reported that this was leading to crashes.
 
+Version 0.1.22 ME: Some bug fixes were made.
+		   Python dictionaries containing parameter names and values
+		   can now be passed into wrapper functions instead of passing
+		   the parameters as keywords and values (which still works if
+		   that is preferred).
+		   The help message for the heasoftpy module was modified to
+		   make it more informative.
+
 ME = Matt Elliott
 MFC = Mike Corcoran
