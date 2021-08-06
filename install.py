@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+from __future__ import print_function
+# While the HEASARC only supports heasoftpy under Python 3, the above may allow
+# the software to work with Python 2.
+
 """
 Installer for the heasoftpy Python interface to the FTools/HTools package.
 """
@@ -15,7 +19,7 @@ import subprocess
 import sys
 import time
 
-# import ape as hsp_ape
+#import ape as hsp_ape
 # import par_reader
 # import utils
 
@@ -136,7 +140,7 @@ def _create_func_docstr(tsk_nm, par_dict):
     docstr_lines.append('\n')
     fhelp_str = _get_task_fhelp(tsk_nm)
     docstr_lines.append(fhelp_str)
-    docstr_lines.append('\n')
+    #docstr_lines.append('\n')
     docstr_lines.append('    """\n')    # join() doesn't put a \n at the end of the string.
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
@@ -155,6 +159,7 @@ def _create_func_start(par_file_dict, sys_par_dict, task_nm):
     fn_start_str += _create_par_path_str(task_nm, indent_lvl)
 
     fn_start_str += ''.join([indent_lvl, 'parfile_dict = hsp_ape.read_par_file(par_path)\n'])
+    fn_start_str += ''.join([indent_lvl, 'params = hsp_ape.Params(inarg=parfile_dict, name=\'{}\')\n'.format(task_nm)])
     fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
     fn_start_str += ''.join([indent_lvl, 'task_params = dict()\n'])
     fn_start_str += ''.join([indent_lvl, 'stderr_dest = subprocess.STDOUT\n'])
@@ -293,22 +298,23 @@ def _create_task_function(task_nm, par_path, sys_par_path):
     fn_str += ''.join([indent_lvl, '    if \'stderr\' in kwargs:\n'])
     fn_str += ''.join([indent_lvl, '        if kwargs[\'stderr\']:\n'])
     fn_str += ''.join([indent_lvl, '            stderr_dest = subprocess.PIPE\n'])
-    fn_str += '    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
-    fn_str += '    task_out, task_err = task_proc.communicate()\n'
-    fn_str += '    if isinstance(task_out, bytes):\n'
-    fn_str += '        task_out = task_out.decode()\n'
-    fn_str += '    if isinstance(task_err, bytes):\n'
-    fn_str += '        task_err = task_err.decode()\n'
-    fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
-    fn_str += '    if task_res.returncode:\n'
-    fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
-    fn_str += '    updated_par_contents = hsp_ape.read_par_file(par_path)\n'
-    fn_str += '    par_dict = dict()\n'
-    fn_str += '    for parm_key in updated_par_contents:\n'
-    fn_str += '        par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
-#    fn_str += '\n'
-    fn_str += '    task_res.params = par_dict\n'
+    fn_str += ''.join([indent_lvl, 'task_res = hsp_utils.runit(task_args[0], task_args[1:], parfile_dict, stderr_dest, par_path )\n'])
+#     fn_str += '    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
+#     fn_str += '    task_out, task_err = task_proc.communicate()\n'
+#     fn_str += '    if isinstance(task_out, bytes):\n'
+#     fn_str += '        task_out = task_out.decode()\n'
+#     fn_str += '    if isinstance(task_err, bytes):\n'
+#     fn_str += '        task_err = task_err.decode()\n'
+#     fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
+#     fn_str += '    if task_res.returncode:\n'
+#     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
+#     fn_str += '    updated_par_contents = hsp_ape.read_par_file(par_path)\n'
+#     fn_str += '    par_dict = dict()\n'
+#     fn_str += '    for parm_key in updated_par_contents:\n'
+#     fn_str += '        par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
+#     fn_str += '    task_res.params = par_dict\n'
     fn_str += '    return task_res\n'
+#    fn_str += '\n'
     del parfile_dict
     return fn_str
 

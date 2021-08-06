@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 
+from ..core import result as hsp_res
 from ..par_reader import read_par_file
 
 def ask_for_param(p_name, p_dict):
@@ -121,13 +122,37 @@ def get_pfile(exename,user=False):
         par_path = sys_par_path
     return par_path
 
-def runit(exename, pars):
+def runit(exename, params_list, task_params, stderr_dest, par_path):
     """Call a task;  the guts of the non-Python tool wrapper.  DOESN'T WORK!!!
 
     Haven't figured out what's needed for args.  Some of this is in the params class.
     Finish this later.
-    """
 
+    Well, it works now. It's kludged, doesn't use the params class, and needs
+    other improvements, but does run in experimental code.
+    
+    """
+    task_args = [ exename ] + params_list
+    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)
+    task_out, task_err = task_proc.communicate()
+    if isinstance(task_out, bytes):
+        task_out = task_out.decode()
+    if isinstance(task_err, bytes):
+        task_err = task_err.decode()
+    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)
+    if task_res.returncode:
+        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)
+    updated_par_contents = read_par_file(par_path)
+    par_dict = dict()
+    for parm_key in updated_par_contents:
+        par_dict[parm_key] = updated_par_contents[parm_key]['default']
+    task_res.params = par_dict
+    return task_res
+
+
+def do_not_call_this_archived_code():
+# def runit(exename, pars):
+# Stuff from runit that isn't in use right now
     task_args = ['fdump']
     task_params = dict(pars)
     stderr_dest = subprocess.STDOUT
@@ -142,6 +167,7 @@ def runit(exename, pars):
         if pars['stderr']:
             stderr_dest = subprocess.PIPE
 
+# The code below has been put into runit; kept for reference/to have "original"
     task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)
     task_out, task_err = task_proc.communicate()
     if isinstance(task_out, bytes):

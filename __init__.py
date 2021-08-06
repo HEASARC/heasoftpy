@@ -36,7 +36,7 @@ import subprocess
 import sys
 import time
 
-print('Entering heasoftpy.__init__')
+#print('Entering heasoftpy.__init__')
 
 THIS_MODULE = sys.modules[__name__]
 #
