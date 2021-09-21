@@ -6,24 +6,23 @@ each executable.
 """
 
 from heasoftpy.core import result as hsp_res
-from heasoftpy.ape import params
+from heasoftpy.ape import Params
 
 
 def tjtest1(inpars=None,**kwargs):
     """Sets foo to bar"""
-    #  Need to reset stdout and stderr to pass back in Result
-    if inpars and type(inpars) is params:
-        pars=params(inpars,name="tjtest1")
+    if inpars and type(inpars) is Params:
+        pars = inpars.to_simple_dict()
     else:
-        pars = params(**kwargs,name="tjtest1")
+        pars = Params(inpars,name="tjtest1",**kwargs).to_simple_dict()
 
     ## ----------
     ##  Your code here
-    out=f"""Resetting the foo parameter from {pars['foo']} to {pars['bar']}.\n"""
-    pars['foo']=f"{pars['bar']}" #  stringify the int
-    out+="Now foo = {}.".format(pars['foo'])
-    pars['bar']=utilfunc(pars['bar'])
-    out+=" and bar = {}.".format(pars['bar'])
+    out = f"""Resetting the foo parameter from {pars['foo']} to {pars['bar']}.\n"""
+    pars['foo'] = f"{pars['bar']}" #  stringify the int
+    out += f"Now foo = {pars['foo']}."
+    pars['bar'] = utilfunc(pars['bar'])
+    out += f" and bar = {pars['bar']}."
     ## ----------
 
     return hsp_res.Result(0,out,None,pars)

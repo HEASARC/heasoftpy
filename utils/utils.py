@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from ..core import result as hsp_res
-from ..par_reader import read_par_file
+from ..par_reader import read_par_file, type_switch
 
 def ask_for_param(p_name, p_dict):
     """
@@ -32,7 +32,10 @@ def ask_for_param(p_name, p_dict):
                 usr_inp = p_dict[p_name]['default']
             else:
                 p_dict[p_name]['default'] = usr_inp
-                usr_inp = type_switch(p_dict[p_name]['type'])(str(usr_inp).strip())
+                try:
+                    usr_inp = type_switch(p_dict[p_name]['type'])(str(usr_inp).strip())
+                except ValueError:
+                    print(f'ValueError encountered converting "{usr_inp}" to int')
         except EOFError:
             sys.exit('\nKeyboard interrupt received, program stopping.')
     return usr_inp
