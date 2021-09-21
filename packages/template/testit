@@ -1,72 +1,89 @@
-import heasoftpy
+#! /usr/bin/env python
+from heasoftpy.packages.template import tjtest1
+from heasoftpy import fdump
 import inspect
-print(inspect.getfile(heasoftpy.template.tjtest1))
+print(inspect.getfile(tjtest1))
 
-print("\nTest 1")
+
+
+
+print("\n-----------------------------")
+print("\nTest 0:  Command line through subprocess, ./tjtest1.py infile=../../tests/test_rate.fit foo=xyz bar=20 ; \n     Should not prompt.  Output:\n--------")
+import subprocess
+result=subprocess.run("./tjtest1.py infile=../../tests/test_rate.fit foo=xyz bar=20", shell=True, check=True)  
+
+
+
+print("\n-----------------------------")
+print("Test 1:  no params given, query user for all three params  Output:\n--------")
 try: 
-     result=heasoftpy.template.tjtest1()
+     result=tjtest1()
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
-
-print("\nTest 2")
+print("\n-----------------------------")
+print("Test 2:  given foo='oof',bar=3 as kwargs;\n          should query for infile  Output:\n--------")
 try:
-     result=heasoftpy.template.tjtest1(foo='oof',bar=3)
+     result=tjtest1(foo='oof',bar=3)
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
-print("\nTest 3")
+result.params['foo']='test3'
+print("\n-----------------------------")
+print("Test 3:  give Params object at function call;\n          should not query but get an input value of foo of 'test3'.  Output:\n--------")
 try:
-     result=heasoftpy.template.tjtest1(result.params)
+     result=tjtest1(result.params)
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
-print("\nTest 4")
+print("\n-----------------------------")
+print("Test 4: give dictionary of \{'foo':'oof','bar':10\} at function call;\n         should query for infile only  Output:\n--------")
 try:
-     result=heasoftpy.template.tjtest1({"foo":"oof","bar":10})
+     result=tjtest1({"foo":"oof","bar":10})
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
 
-print("\nTest 5")
+
+
+print("\n-----------------------------")
+print("Test 5:  run fdump instead, with prhead='no';\n          BROKEN should query for all and then print header  Output:\n--------")
 try:
-     result=heasoftpy.fdump(prhead="no")
+     result=fdump(prhead="no")
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
 
-print("\nTest 6")
+print("\n-----------------------------")
+print("Test 6:  fdump given infile and mode='h';\n          BROKEN should not query.  Output:\n--------")
 try:
-     result=heasoftpy.fdump(infile="tests/test_rate.fit",mode="h",prhead="no")
+     result=fdump(infile="../../tests/test_rate.fit",mode="h",prhead="no")
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
-
-print("\nTest 7:  Currently broken, you have to interrupt.")
+print("\n-----------------------------")
+print("Test 7:  fdump with dictionary, mode=h;\n      BROKEN  Currently broken, you have to interrupt or hit return a few times.\n     It should not query for anything and should not prhead  Output:\n--------")
 try:
-     result=heasoftpy.fdump({'infile':"tests/test_rate.fit",'mode':"h",'prhead':"no"})
+     result=fdump({'infile':"../../tests/test_rate.fit",'mode':"h",'prhead':"no"})
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
 
 
-print("\nTest 8:  Currently broken, you have to interrupt.")
+print("\n-----------------------------")
+print("Test 8:  fdump with Params object;\n        BROKEN  Currently broken, you have to interrupt or hit return a few times.\n       Should not prhead or query anything.   Output:\n--------")
 try:
      result.params['prhead']="no"
-     result=heasoftpy.fdump(result.params)
+     result=fdump(result.params)
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
-
-
-
-
 
 
 exit

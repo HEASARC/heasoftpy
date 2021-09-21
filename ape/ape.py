@@ -9,13 +9,13 @@ import collections
 #import os
 #import re
 import subprocess
-#import sys
+import sys
 import traceback
 
 #import heasoftpy.core.errors as hsp_err
 #import heasoftpy.core.result as hsp_res
 import heasoftpy.utils as hsp_utils
-from  ..par_reader import read_par_file
+from  ..par_reader import read_par_file, type_switch
 
 #import __main__
 
@@ -33,7 +33,7 @@ class ApeParamsException(Exception):
 
 class Params(collections.OrderedDict):
     """
-    Parameter object for heasoftpy that works like a smart dictionary.
+    Parameter object for heasoftpy, an OrderedDict with extra functions.
     """
     def __enter__(self,inarg=None):
         """ Called when you enter a with statement """
@@ -50,58 +50,85 @@ class Params(collections.OrderedDict):
 
     def __init__(self,inarg=None,name=None,**kwargs):
         """
-        Here there be brains to figure out what was given and what to do with it
+        Here there be brains to figure out what was given and what to do with it.
 
-        Note that if you call only params(arg), then arg should be a dictionary or
-        params object. If you need to specify the name, always use name="myname".
+        A module will be called as 
+
+            def mymodule(inpars=None,**kwargs):
+                if inpars and type(inpars) is Params:
+                    pars = Params(inpars,name="mymodule")
+                else:
+                    pars = Params(**kwargs,name="mymodule")
+
+        The executable for mymodule will have a main function that is basically:  
+
+            with Params(name="tjtest1") as pars:  
+                try:
+                    result=tjtest1(pars)
+
+
+        Case 1:  Params(previousParams)  a complete Params object or OrderedDict
+        Case 2:  Params({"foo":"bar","x":0})  i.e., a simple dictionary
+        Case 3:  Params(foo='bar',x=0)  i.e., passed in through kwargs
+        Case 4:  nothing given on init but on command-line in argv
+        Case 5:  nothing give on init or command-line;  query as usual
+
+        Possible mixes:  Cases 2, 3, and 5 can give a partial list of parameters.  
+        The parameter file will be read to fill in the others, querying the user 
+        if appropriate.
+
+        (Do we need 2 and 3?  kwargs is both.)  
         """
-
-        # TO DO: Figure out how to make this part work ... if it can be done
-        #  First figure out the context. It would be good to get something here
-        #  that works generally rather than have to be given the name.
-        # if name is None:
-        #     curframe = inspect.currentframe()
-        #     calframe = inspect.getouterframes(curframe, 2)
-        #     self.exename=calframe[1][3]
-        #     print("WARNING:  no name given, and inspect thinks I'm {}.".format(self.exename))
-        # else:
-        #     self.exename = name
 
         if name:
             self.exename = name
         else:
             raise ApeParamsException('No name specified in Params instantiation.')
 
-        #  Get whatever was passed in
-        self.kwargs = kwargs
-        #  Get what's in the user or system pfile
-        self.parfile_dict = self._read_par_file()
-
-        ### TESTING CODE ###
-#        print('After _read_par_file, self.parfile_dict:', self.parfile_dict)
-
-        #  If you give no arguments, use pfile dictionary
-        if inarg is None and len(kwargs) == 0:
-            collections.OrderedDict.__init__(self,self.parfile_dict)
-        # If another Params object or a dictionary is passed in, init
-        # the (new) Params object from it.
-        elif isinstance(inarg, (dict, Params)):
+        if type(inarg) is Params or type(inarg) is collections.OrderedDict:
+            # Case 1:  Do nothing but init the current dictionary from it
             collections.OrderedDict.__init__(self,inarg)
-        #  If keyword arguments are passed in:
+        elif type(inarg) is dict:
+            # Case 2:  read in pfile into self, replace with input dictionary
+            #  values, then query for any remaining
+            collections.OrderedDict.__init__(self,self._read_par_file())
+            for k,v in inarg.items():  self[k]['default']=v
+            self._query_args(inarg) 
         elif len(kwargs) > 0:
-            if not self._process_kwargs():
-                print("ERROR:  cannot initialize params object from kwargs")
-                raise ValueError
-        else:
-            print("ERROR:  cannot initialize params object from {inarg}")
-            raise ValueError
+            # Case 3:  read in pfile into self, then replace any specified 
+            #   with kwargs, then query for any remaining.  
+            collections.OrderedDict.__init__(self,self._read_par_file())
+            self._process_inputs(kwargs)
+            self._query_args(kwargs) 
+        elif len(sys.argv) > 1:
+            # Case 4:  read in pfile into self, then replace with argv,
+            #  then query for any remaining.  
+            collections.OrderedDict.__init__(self,self._read_par_file())
+            inargs=self._get_command_line_args()
+            self._query_args(inargs) 
+        elif len(sys.argv) == 1 and not kwargs and not inarg:
+            # Case 5:  read in pfile into Params and query as appropriate
+            collections.OrderedDict.__init__(self,self._read_par_file())
+            self._query_args()             
+        else:  
+            # confused
+            raise ApeParamsException(
+                f"""Confused by inputs:\n  inarg={inarg},\n  
+                kwargs={kwargs},\n  sys.argv={sys.argv}."""
+            )
 
-        #  Now query for anything else (and converts values from dict to value type).
-        self._query_args()
+        self._fix_types()
+        return
+
+    def _fix_types(self):
+        for param in self:
+            thistype = self[param]['type']
+            thisval = self[param]['default'] 
+            self[param]['default'] = type_switch(thistype)(str(thisval).strip())
 
 
     def _read_par_file(self):
-        """ Read in the pfile to a dictionary """
+        """ Read in the full pfile to an Ordered Dict like in Params """
         par_path = hsp_utils.get_pfile(self.exename)
         return read_par_file(par_path)
 
@@ -114,43 +141,58 @@ class Params(collections.OrderedDict):
         the fulld dictionary.
         """
         # TO DO:  write current to pfile
-        print("TO DO:  write current to pfile")
+        print("TO DO:  write current Params to pfile")
         # par_path=hsp_utils.get_pfile(self.exename,user=True)
         # while open(par_path,'w') as pfile:
         #     writer=csv.writer(pfile,delimiter=',', quotechar='"')
         #     writer.writerow(
 
-    def _process_kwargs(self):
-        args_ok = True
-        for kwa in self.kwargs:
-            if not kwa == 'stderr':
-                if hsp_utils.is_param_ok((kwa, self.kwargs[kwa]), self.parfile_dict):
-                    #self.task_args.append('{0}={1}'.format(kwa, self.kwargs[kwa]))
-                    #self.task_params[kwa] = self.kwargs[kwa]
-                    self[kwa] = self.kwargs[kwa]
+    def _process_inputs(self, indict):
+        """Looks at inputs and resets self  as needed"""
+        for param in indict.keys():
+            if not param == 'stderr':
+                if hsp_utils.is_param_ok((param, indict[param]), self):
+                    self[param]['default'] = indict[param]
                 else:
-                    args_ok = False
-                    print( 'Error! The {} parameter was not specified correctly. ' \
-                    'Please correct and try again.'.format(kwa))
-        if 'stderr' in self.kwargs:
-            if self.kwargs['stderr']:
+                    ApeParamsException(f"Error! The {param} parameter was not specified correctly.")
+        if 'stderr' in indict:
+            if indict['stderr']:
                 self.stderr_dest = subprocess.PIPE
-        return args_ok
 
 
-    def _query_args(self):
-        """Queries user for parameters depending on settings.
+    def _query_args(self, indict=None):
+        """Queries user for parameters depending on settings.  
 
-        Note that the value of each key may be a dictionary going into this
-        and is a simple value coming out.
+        Used by init when kwargs or argv become the indict.  When called,
+        self should already be an OrderedDict filled with the parameter file.  
         """
-        params_not_specified = []
-        for entry in self.parfile_dict:
-            if not entry in self.kwargs:
-                if hsp_utils.check_query_param(entry, self.parfile_dict):
-                    params_not_specified.append(entry)
-                else:
-                    self[entry]=self.parfile_dict[entry]['default']
-        for missing_param in params_not_specified:
-            param_val = hsp_utils.ask_for_param(missing_param, self.parfile_dict)
-            self[missing_param] = param_val
+        if not indict:  indict={}
+        for param in self:
+            if not param in indict and hsp_utils.check_query_param(param, self):
+                param_val = hsp_utils.ask_for_param(param, self)
+                self[param]['default'] = param_val
+
+
+    def _get_command_line_args(self):
+        """ Looks at argv for key=vale pairs to read, resets self as necessary"""
+        import sys
+        indict={}
+        if len(sys.argv) == 0:
+            return
+        else:
+            for a in sys.argv[1:]:
+                x=a.split('=')
+                indict[x[0]]=x[1]
+        self._process_inputs(indict)
+        return indict
+
+
+    def to_simple_dict(self):
+        out={}
+        for param in self.keys():
+            out[param]=self[param]['default']
+        return out
+
+    def update(self, outpars):
+        for param in outpars:
+            self[param]['default']=outpars[param]

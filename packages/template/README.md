@@ -10,7 +10,8 @@ as an executable or as a library module.
 
 - Replace the tjtest.py with your code as a library of modules.  You
   can have more than one obviously.  Your modules just need to take a
-  dictionary of kwargs.  The params class will do the rest.  
+  single argument or dictionary of kwargs and to include the top block
+  of code from the example.  The params class will do the rest.  
 
 - Add the routines you want visible in the heasoftpy.ixpe package to
   the __init__.py file following the example.  
