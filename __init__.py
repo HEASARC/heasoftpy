@@ -4,8 +4,8 @@
 Python interface to the HEASoft/FTools package.
 
 The heasoftpy package provides Python wrapper functions for each of the
-Heasoft/FTools tasks (programs), These wrapper functions allow the tasks 
-to be called from Python scripts, Jupyter notebooks,interactive ipython 
+Heasoft/FTools tasks (programs), These wrapper functions allow the tasks
+to be called from Python scripts, Jupyter notebooks,interactive ipython
 sessions, etc.
 
 After heasoftpy is installed, each HEASoft program will have a function
@@ -155,6 +155,27 @@ def _create_local_pfiles_dir(pfiles_dir, orig_pfiles):
         print(err_msg, file=sys.stderr)
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
+def get_heasoft_version():
+    """
+    Extract and return the version from $HEADAS/syspfiles/ftools.par.
+    """
+    try:
+        ver_file_spec = os.path.join(SYS_PFILES_DIR, 'ftools.par')
+        with open(ver_file_spec, 'rt') as ver_file:
+            ver_lines = ver_file.readlines()
+        # Par files are comma-separated values files. The version should be the
+        # last field in the last line of the file. (In this case, using the CSV
+        # module would be overkill.) The rstrip() removes the newline expected
+        # at the end of line. The version should also be embedded in double
+        # quotes, which are removed with strip().
+        ver_str = ver_lines[-1].split(',')[-1].rstrip().strip('"')
+    except FileNotFoundError:
+        err_msg = '*** Error! The version file {} was not found. ***'.format(ver_file_spec)
+        sys.exit(err_msg)
+    except:
+        print('*** Error! Unanticipated error encountered getting HEASoft version. ***')
+        raise
+    return ver_str
 
 def local_pfiles(pfiles_dir=None):
     """
@@ -173,7 +194,6 @@ def local_pfiles(pfiles_dir=None):
     pfiles_env = None
     sys_pfiles = os.path.join(os.environ['HEADAS'], 'syspfiles')
     if pfiles_dir:
-#        print('Received {} as a user specified pfile setting, but that functionality is not yet implemented'.format(pfiles_dir))
         if os.path.exists(pfiles_dir):
             if not os.path.isdir(pfiles_dir):
                 print('{0} exists, but is not a directory. PFILES remains set to {1}.\n'.\
