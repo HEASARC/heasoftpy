@@ -124,19 +124,10 @@ class Params(collections.OrderedDict):
     def _fix_types(self):
         "Depending on the path above, these have already been typified"
         for param in self:
-            if not isinstance(self[param]['default'],str):
+            if isinstance(self[param]['default'],str):
                 thistype = self[param]['type']
                 thisval = self[param]['default'] 
-                self[param]['default'] = typify(thisval,thistype)
-#            #print(f"DEBUG: param={param} has thistype={thistype} and thisval={thisval}")
-#            if thistype == 'i' and thisval == '':
-#                #  int('') doesn't return 0 the way I wish it did
-#                self[param]['default'] = 0
-#            elif thisval == None and ( thistype == 'i' or thistype == 'r'):
-#                thisval = 0
-#            else:
-#                #self[param]['default'] = type_switch(thistype)(str(thisval).strip())
-                
+                self[param]['default'] = typify(thisval,thistype)               
 
 
     def _read_par_file(self):
