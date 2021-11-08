@@ -46,6 +46,8 @@ def typify(value, intype):
     Need to handle special types in here, like CALDB.
     Currently returns blank strings when confused."""
 
+    #  Some paths, this has already been done.
+    if not isinstance(value,str):  return
     value = value.strip()
     if value.find("'") != -1:
         value = value.replace("'", "")
@@ -55,6 +57,8 @@ def typify(value, intype):
         return None
     if len(value) == 0:
         return ''
+    if intype == 'fw':
+        return
     try:
         # Note that type_switch(intype) returns a type conversion function
         # (such as int()).
