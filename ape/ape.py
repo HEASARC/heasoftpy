@@ -122,9 +122,9 @@ class Params(collections.OrderedDict):
         return
 
     def _fix_types(self):
-        "Depending on the path above, these have already been typified.
+        """Depending on the path above, these have already been typified.
         So don't run typify again if the parameter is not a string, because it's
-        expecting string args. Re-typifying a string though is fine if ugly."
+        expecting string args. Re-typifying a string though is fine if ugly."""
         for param in self:
             if isinstance(self[param]['default'],str):
                 thistype = self[param]['type']
