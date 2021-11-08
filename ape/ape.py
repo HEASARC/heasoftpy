@@ -124,7 +124,11 @@ class Params(collections.OrderedDict):
         for param in self:
             thistype = self[param]['type']
             thisval = self[param]['default'] 
-            self[param]['default'] = type_switch(thistype)(str(thisval).strip())
+            if thistype == 'i' and thisval == '':
+                #  int('') doesn't return 0 the way I wish it did
+                self[param]['default'] = 0
+            else:
+                self[param]['default'] = type_switch(thistype)(str(thisval).strip())
 
 
     def _read_par_file(self):
