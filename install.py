@@ -23,8 +23,6 @@ import time
 # import par_reader
 # import utils
 
-#print(__name__)
-
 THIS_MODULE = 'heasoftpy' #sys.modules[__name__]
 
 # Functions from the ape, par_reader, and utils packages are used by the installer.
@@ -85,12 +83,14 @@ def _get_syspfiles_dir():
             sys.exit('Error! Could not locate syspfiles directory.')
     return pfiles_dir
 
-# Don't want  a one line function, but keeping this code in case more is needed eventually
+# Avoiding a one line function, but keeping this code in case more is needed eventually
 #def _get_user_pfiles_dir():
 #    user_pfiles_dir = os.path.join(os.path.expanduser('~'), 'pfiles')
 #    return user_pfiles_dir
 
 SYS_PFILES_DIR = _get_syspfiles_dir()
+if DEBUG:
+    LOGGER.debug('SYS_PFILES_DIR: %s', SYS_PFILES_DIR)
 USER_PFILES_DIR = os.path.join(os.path.expanduser('~'), 'pfiles')
 HToolsParameter = collections.namedtuple('HToolsParameter', ['name', 'type', \
                                                              'mode', 'default', \
@@ -103,15 +103,16 @@ DEFS_DIR = os.path.join(THIS_MODULE_DIR, 'defs')
 
 THIS_MOD_VER = version_mod.ProgramVersion(__version__)
 
-def _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl):
+def _create_arg_handling_code(sys_par_dict, indent_lvl):
 
     arg_handling_code = ''.join([indent_lvl, 'if len(args) >= 2:\n'])
     arg_handling_code += ''.join([indent_lvl,
-                             '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
+                                 '    err_msg = \'Error! At most one positional argument can be supplied.\'\n'])
     arg_handling_code += ''.join([indent_lvl, '    sys.exit(err_msg)\n'])
     arg_handling_code += ''.join([indent_lvl, 'elif len(args) == 1:\n'])
     arg_handling_code += ''.join([indent_lvl, '    if isinstance(args[0], dict):\n'])
-    arg_handling_code += ''.join([indent_lvl, '        if \'infile\' in args[0]:\n'])
+    sys_par_key_list = list(sys_par_dict.keys())
+    arg_handling_code += ''.join([indent_lvl, '        if \'{}\' in args[0]:\n'.format(sys_par_key_list[0])])
     arg_handling_code += ''.join([indent_lvl, '            stderr_dest = subprocess.PIPE\n'])
 #    arg_handling_code += ''.join([indent_lvl, ''])
 
@@ -119,7 +120,7 @@ def _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl):
 
     LOGGER.debug('  num_req_param: %d', num_req_param)
     if num_req_param == 1:
-        arg_handling_code += _create_positional_arg_code(task_nm, indent_lvl)
+        arg_handling_code += _create_positional_arg_code(indent_lvl)
     return arg_handling_code
 
 def _create_func_docstr(tsk_nm, par_dict):
@@ -145,7 +146,7 @@ def _create_func_docstr(tsk_nm, par_dict):
     fn_docstr = '\n'.join(docstr_lines)
     return fn_docstr
 
-def _create_func_start(par_file_dict, sys_par_dict, task_nm):
+def _create_func_start(sys_par_path, par_file_dict, task_nm):
     """
     Returns a string containing the starting parts of a function:
     definition line, docstring, and the first several lines of
@@ -157,7 +158,8 @@ def _create_func_start(par_file_dict, sys_par_dict, task_nm):
     fn_start_str = ''.join(['def {}(*args, **kwargs):\n'.format(task_nm), fn_docstring])
     indent_lvl = '    '
     fn_start_str += _create_par_path_str(task_nm, indent_lvl)
-
+    fn_start_str += ''.join([indent_lvl, 'sys_par_dict = hsp_ape.read_par_file(\'{}\')\n'.\
+                             format(sys_par_path)])
     fn_start_str += ''.join([indent_lvl, 'parfile_dict = hsp_ape.read_par_file(par_path)\n'])
     fn_start_str += ''.join([indent_lvl, 'params = hsp_ape.Params(inarg=parfile_dict, name=\'{}\')\n'.format(task_nm)])
     fn_start_str += ''.join([indent_lvl, 'task_args = [\'{}\']\n'.format(task_nm)])
@@ -180,11 +182,14 @@ def _create_par_path_str(task_nm, indent_lvl):
     par_path_str += ''.join([indent_lvl, '    par_path = sys_par_path\n'])
     return par_path_str
 
-def _create_positional_arg_code(task_nm, indent_lvl):
+def _create_positional_arg_code(indent_lvl):
 
     pos_arg_code = ''.join([indent_lvl, '    elif isinstance(args[0], str):\n'])
-    pos_arg_code += ''.join([indent_lvl, '       task_args.append(\'{0}={1}\'.format(list(parfile_dict)[0], args[0]))\n'])
-    pos_arg_code += ''.join([indent_lvl, '       stderr_dest = subprocess.PIPE\n'])
+    pos_arg_code += ''.join([indent_lvl, '        # Handle single arguments with no keyword.\n'])
+    pos_arg_code += ''.join([indent_lvl, '        task_args.append(\'{0}={1}\'.format(list(parfile_dict)[0], args[0]))\n'])
+    pos_arg_code += ''.join([indent_lvl, '        stderr_dest = subprocess.PIPE\n'])
+#    pos_arg_code += ''.join([indent_lvl, '    else: #if isinstance(args[0], dict):\n'])
+#    arg_handling_code += ''.join([indent_lvl, '        pass\n'])
     return pos_arg_code
 
 def _create_task_file(task_nm, par_name, func_mod_path):
@@ -192,8 +197,6 @@ def _create_task_file(task_nm, par_name, func_mod_path):
     Creates a file containing the function to run an FTools task (program).
     """
     LOGGER.info('Creating function file: %s', task_nm)
-    if DEBUG:
-        print('Creating function file:', task_nm)
     task_file_str = ''
     # Create the path to the par file we want
     sys_par_path = os.path.join(SYS_PFILES_DIR, par_name)
@@ -249,8 +252,8 @@ def _create_task_function(task_nm, par_path, sys_par_path):
         LOGGER.debug('Reading par file: %s.', par_path)
         parfile_dict = par_reader.read_par_file(par_path)
     LOGGER.debug('For %s, the parfile dictionary is:\n%s', task_nm, parfile_dict)
-    start_str, indent_lvl = _create_func_start(parfile_dict, sys_par_dict, task_nm)
-    arg_handling_code = _create_arg_handling_code(task_nm, sys_par_dict, indent_lvl)
+    start_str, indent_lvl = _create_func_start(sys_par_path, parfile_dict, task_nm)
+    arg_handling_code = _create_arg_handling_code(sys_par_dict, indent_lvl)
     fn_str = ''.join([start_str, arg_handling_code])
 
     #fn_str += ''.join([indent_lvl, 'parfile_dict = dict()\n'])
@@ -264,7 +267,7 @@ def _create_task_function(task_nm, par_path, sys_par_path):
     #         fn_str += ''.join([indent_lvl,
     #                            'parfile_dict[\'{0}\'] = {1}\n'.format(param_key, parfile_dict[param_key])])
 
-    fn_str += ''.join([indent_lvl, 'else:\n'])
+    fn_str += ''.join([indent_lvl, 'elif len(kwargs) > 0:\n'])
     fn_str += ''.join([indent_lvl, '    args_ok = True\n'])
     fn_str += ''.join([indent_lvl, '    for kwa in kwargs:\n'])
     fn_str += ''.join([indent_lvl, '        if not kwa == \'stderr\':\n'])
@@ -294,25 +297,24 @@ def _create_task_function(task_nm, par_path, sys_par_path):
 
     fn_str += ''.join([indent_lvl, '    if not args_ok:\n'])
     fn_str += ''.join([indent_lvl, '        return None\n'])
-
-    fn_str += ''.join([indent_lvl, '    if \'stderr\' in kwargs:\n'])
-    fn_str += ''.join([indent_lvl, '        if kwargs[\'stderr\']:\n'])
-    fn_str += ''.join([indent_lvl, '            stderr_dest = subprocess.PIPE\n'])
-    fn_str += ''.join([indent_lvl, 'task_res = hsp_utils.runit(task_args[0], task_args[1:], parfile_dict, stderr_dest, par_path )\n'])
-#     fn_str += '    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
-#     fn_str += '    task_out, task_err = task_proc.communicate()\n'
-#     fn_str += '    if isinstance(task_out, bytes):\n'
-#     fn_str += '        task_out = task_out.decode()\n'
-#     fn_str += '    if isinstance(task_err, bytes):\n'
-#     fn_str += '        task_err = task_err.decode()\n'
-#     fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
-#     fn_str += '    if task_res.returncode:\n'
-#     fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
-#     fn_str += '    updated_par_contents = hsp_ape.read_par_file(par_path)\n'
-#     fn_str += '    par_dict = dict()\n'
-#     fn_str += '    for parm_key in updated_par_contents:\n'
-#     fn_str += '        par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
-#     fn_str += '    task_res.params = par_dict\n'
+    fn_str += ''.join([indent_lvl, 'if \'stderr\' in kwargs:\n'])
+    fn_str += ''.join([indent_lvl, '    if kwargs[\'stderr\']:\n'])
+    fn_str += ''.join([indent_lvl, '        stderr_dest = subprocess.PIPE\n'])
+    fn_str += '    task_proc = subprocess.Popen(task_args, stdout=subprocess.PIPE, stderr=stderr_dest)\n'
+    fn_str += '    task_out, task_err = task_proc.communicate()\n'
+    fn_str += '    if isinstance(task_out, bytes):\n'
+    fn_str += '        task_out = task_out.decode()\n'
+    fn_str += '    if isinstance(task_err, bytes):\n'
+    fn_str += '        task_err = task_err.decode()\n'
+    fn_str += '    task_res = hsp_res.Result(task_proc.returncode, task_out, task_err, task_params)\n'
+    fn_str += '    if task_res.returncode:\n'
+    fn_str += '        raise hsp_err.HeasoftpyExecutionError(task_args[0], task_res)\n'
+    fn_str += '    updated_par_contents = hsp_ape.read_par_file(par_path)\n'
+    fn_str += '    par_dict = dict()\n'
+    fn_str += '    for parm_key in updated_par_contents:\n'
+    fn_str += '        par_dict[parm_key] = updated_par_contents[parm_key][\'default\']\n'
+#    fn_str += '\n'
+    fn_str += '    task_res.params = par_dict\n'
     fn_str += '    return task_res\n'
 #    fn_str += '\n'
     del parfile_dict
@@ -332,14 +334,8 @@ def _get_num_req_param(param_dict):
     if isinstance(param_dict, dict):
         req_param = 0
         for param_key in param_dict:
-            LOGGER.debug('  For parameter %s: mode is %s, default is %s',
-                         param_key, param_dict[param_key]['mode'], param_dict[param_key]['default'])
-            if (param_dict[param_key]['mode'] == 'a' or param_dict[param_key]['mode'] == 'q') and \
-               param_dict[param_key]['default'] == '':
+            if _is_param_required(param_key, param_dict):
                 req_param += 1
-                LOGGER.debug('  Parameter %s is required', param_key)
-            else:
-                LOGGER.debug('  Parameter %s is NOT required', param_key)
     return req_param
 
 def _get_task_fhelp(task_nm):
@@ -389,6 +385,32 @@ def _get_task_fhelp(task_nm):
         LOGGER.info('   traceback: %s', exc_info[2])
     return fhelp_str
 
+def _is_param_required(param_key, param_dict):
+    """
+    Returns True if the parameter in param_dict indicated by param_key must be entered
+    by the user/caller for the FTool in question.
+    """
+    is_required = False
+    effective_mode = None
+    LOGGER.debug('  For parameter %s: mode is %s, default is %s',
+                 param_key, param_dict[param_key]['mode'], param_dict[param_key]['default'])
+    if param_dict[param_key]['mode'] == 'a':
+        LOGGER.debug('  Parameter %s has its mode set to auto, defaulting to mode param default', param_key)
+        effective_mode = param_dict['mode']['default']
+    else:
+        effective_mode = param_dict[param_key]['mode']
+    LOGGER.debug('  effective mode is "%s"', effective_mode)
+    if effective_mode.find('q') != -1:
+        LOGGER.debug('    Found query mode, default is "%s"', param_dict[param_key]['default'])
+        if param_dict[param_key]['default'] is None or \
+            (param_dict[param_key]['type'] == 's' and (isinstance(param_dict[param_key]['default'], str) and param_dict[param_key]['default'].strip() == '')):
+            is_required = True
+    if is_required:
+        LOGGER.debug('  Parameter %s is required', param_key)
+    else:
+        LOGGER.debug('  Parameter %s is NOT required', param_key)
+    return is_required
+
 # This has been commented out so that the code does not create a conflict with
 # Python's builtin help facility. It is kept here in case it is later decided
 # to add this back into the module. It should be noted that help can be obtained
@@ -428,7 +450,8 @@ def main():
     if not os.path.exists(DEFS_DIR):
         os.mkdir(DEFS_DIR)
 
-    par_file_list = os.listdir(SYS_PFILES_DIR)
+    par_dir_contents = os.listdir(SYS_PFILES_DIR)
+    par_file_list = [fn for fn in par_dir_contents if os.path.isfile(os.path.join(SYS_PFILES_DIR, fn))]
     num_files = len(par_file_list)
     remaining_files = num_files
     print('Installing {} files. {} files remain.'.format(num_files, remaining_files), end='\r')

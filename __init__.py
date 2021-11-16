@@ -29,14 +29,12 @@ import collections
 import datetime
 import importlib
 import inspect
-import logging
+#import logging
 import os
 import pydoc
 import subprocess
 import sys
 import time
-
-#print('Entering heasoftpy.__init__')
 
 THIS_MODULE = sys.modules[__name__]
 #
@@ -52,20 +50,20 @@ __version__ = program_version.read_version(os.path.dirname(__file__)).rstrip()
 DEBUG = False
 #DEBUG = True
 
-LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
-LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
-LOG_PATH = os.path.join('/tmp', LOG_NAME)
-logging.basicConfig(filename=LOG_PATH,
-                    filemode='a', level=logging.INFO)
+#LOGFILE_DATETIME = time.strftime('%Y-%m-%d_%H%M%S', time.localtime())
+#LOG_NAME = ''.join(['heasoftpy_initialization_', LOGFILE_DATETIME, '.log'])
+#LOG_PATH = os.path.join('/tmp', LOG_NAME)
+#logging.basicConfig(filename=LOG_PATH,
+#                    filemode='a', level=logging.INFO)
 
-LOGGER = logging.getLogger('heasoftpy_initialization')
-LOG_DT_LST = list(LOGFILE_DATETIME)
-LOG_DT_LST.insert(15, ':')
-LOG_DT_LST.insert(13, ':')
+#LOGGER = logging.getLogger('heasoftpy_initialization')
+#LOG_DT_LST = list(LOGFILE_DATETIME)
+#LOG_DT_LST.insert(15, ':')
+#LOG_DT_LST.insert(13, ':')
 
-DBG_MSG = 'Entering heasoftpy module at {}'.\
-          format(''.join(LOG_DT_LST).replace('_', ' '))
-LOGGER.debug(DBG_MSG)
+#DBG_MSG = 'Entering heasoftpy module at {}'.\
+#          format(''.join(LOG_DT_LST).replace('_', ' '))
+#LOGGER.debug(DBG_MSG)
 
 ENV_PFILES = os.environ['PFILES']
 HEADAS_DIR = os.environ['HEADAS']
@@ -154,7 +152,6 @@ def _create_local_pfiles_dir(pfiles_dir, orig_pfiles):
                   format(pfiles_dir, orig_pfiles)
         print(err_msg, file=sys.stderr)
 
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
 def get_heasoft_version():
     """
     Extract and return the version from $HEADAS/syspfiles/ftools.par.
