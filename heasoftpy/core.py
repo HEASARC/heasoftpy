@@ -3,7 +3,7 @@ from collections import OrderedDict
 import subprocess
 import os
 
-import utils 
+from . import utils 
 
 
 class HSPTaskException(Exception):
@@ -76,13 +76,37 @@ class HSPTask:
             pname = info[0]
             pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
             par   = {key: info[ikey+1].strip('"').strip() for ikey,key in enumerate(pkeys)}
+            
+            for k in ['default', 'min', 'max']:
+                par[k] = HSPTask.param_type(par[k], par['type'])
+            
             params[pname] = par
         return params
+    
+    
+    @staticmethod
+    def param_type(value, inType):
+        """Find the correct type from pfiles"""
+        
+        # handle special cases first
+        if value == 'INDEF' and inType in ['r', 'i']:
+            return None
+        
+        if value == '' and inType in ['r', 'i']:
+            value = 0
             
-            
-if __name__ == '__main__':
-    import glob
-    pfiles = glob.glob('/opt/heasoft/syspfiles/*par')
-    for pf in pfiles[-2:]:
-        pp = HSPTask.read_pfile(pf)
-        print(pp);
+        if inType == 'b':
+            value = 1 if value.lower() in ['yes', 'true'] else 0
+        
+        
+        # now proceed with the conversion
+        switcher = { 'i': int, 's': str , 'f': str, 'b': bool,
+                     'r': float, 'fr':str, 'd': str}
+        
+        if not inType in switcher.keys():
+            raise ValueError(f'arameter type {inType} is not recognized')
+        
+        # TODO: more error trapping here
+        result = switcher[inType](value)
+        return result
+        
