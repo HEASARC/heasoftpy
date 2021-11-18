@@ -1,1 +1,1 @@
-from .core import HSPTask
+from .core import HSPTask, HSPTaskException

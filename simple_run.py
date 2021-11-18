@@ -10,8 +10,12 @@ import heasoftpy
 
 
 if __name__ == '__main__':
-    import glob
-    pfiles = glob.glob(os.environ['HEADAS'] + '/syspfiles/*par')
-    for pf in pfiles[-10:]:
-        pp = HSPTask.read_pfile(pf)
-        print(pp);
+    #import glob
+    #pfiles = glob.glob(os.environ['HEADAS'] + '/syspfiles/*par')
+    #for pf in pfiles[-10:]:
+    #    pp = heasoftpy.HSPTask.read_pfile(pf)
+    #    print(pp);
+    #heasoftpy.HSPTask('fcurve', columns='ELV')
+    os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+    hsp = heasoftpy.HSPTask('testtask', infile='IN_FILE')
+    print(hsp.params)

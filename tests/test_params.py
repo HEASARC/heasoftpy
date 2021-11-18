@@ -2,9 +2,10 @@
 from .context import heasoftpy
 
 import unittest
+import os
 
 
-class TestParReader(unittest.TestCase):
+class TestParamType(unittest.TestCase):
     """Tests for reading parameters"""
 
     def test__param_type__b(self):
@@ -55,9 +56,52 @@ class TestParReader(unittest.TestCase):
         test_result = heasoftpy.HSPTask.param_type('a simple text', 's')
         self.assertEqual(test_result, 'a simple text')
     
-        def test__param_type__failCast(self):
-            self.assertRaises(heasoftpy.HSPTask.param_type('Text', 'r'), ValueError)
-        
+    def test__param_type__failCast(self):
+        with self.assertRaises(ValueError):
+            heasoftpy.HSPTask.param_type('Text', 'r')
+
+
+class TestPFile(unittest.TestCase):
+    """Tests for locating pfiles"""
+
+    # HEADAS is not defined
+    def test__find_pfile__noHeadas(self):
+        headas = os.environ['HEADAS']
+        with self.assertRaises(heasoftpy.HSPTaskException):
+            del os.environ['HEADAS']
+            heasoftpy.HSPTask.find_pfile('test')
+        os.environ['HEADAS'] = headas
+    
+    # task does not exist
+    def test__find_pfile__noTask(self):
+        with self.assertRaises(heasoftpy.HSPTaskException):
+            heasoftpy.HSPTask.find_pfile('noTask')
+    
+    # user_pfile
+    def test__find_pfile__userTrue(self):
+        pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=True)
+        pfile2 = os.path.join(os.environ['PFILES'].split(';')[0], 'fdump.par')
+        self.assertEqual(pfile, pfile2)
+
+
+class TestReadPFile(unittest.TestCase):
+    """Tests for reading pfiles"""
+    
+    # pfile does not exist
+    def test__read_pfile__noFile(self):
+        with self.assertRaises(IOError):
+            heasoftpy.HSPTask.read_pfile('/dir/to/noTask')
+            
+    # simple .par file
+    def test__find_pfile__simpleFile(self):
+        wTxt = 'infile,s,a,,,,"Name of file"'
+        tmpfile = 'tmp.simpleFile.par'
+        open(tmpfile, 'w').write(wTxt)
+        pars = dict(heasoftpy.HSPTask.read_pfile(tmpfile))
+        expected = {'infile': {'type':'s', 'mode':'a', 'default':'',
+                               'min': '', 'max': '', 'prompt': 'Name of file'}}
+        self.assertEqual(pars, expected)
+        os.remove(tmpfile)
         
 if __name__ == '__main__':
     unittest.main()
