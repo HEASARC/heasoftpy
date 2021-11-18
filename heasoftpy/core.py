@@ -4,8 +4,6 @@ import subprocess
 import os
 import re
 
-from . import utils 
-
 
 class HSPTaskException(Exception):
     """A simple exception class"""
