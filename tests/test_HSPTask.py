@@ -60,6 +60,17 @@ class TestHSPTask(unittest.TestCase):
         self.assertEqual(hsp.params, {'infile':'IN_FILE', 'number':5.0})
         __builtins__['input'] = orig_input_f
     
+    # required parameter not given
+    def test__init_HSPTask__qnotgiven(self):
+        # the following is a work-around to simulate user input
+        orig_input_f = __builtins__['input']
+        with self.assertRaises(ValueError):
+            def dummyf(_): raise ValueError
+            __builtins__['input'] = dummyf
+            hsp  = heasoftpy.HSPTask(self.taskname)
+            hsp(infile='IN_FILE')
+        __builtins__['input'] = orig_input_f
+    
         
 if __name__ == '__main__':
     unittest.main()

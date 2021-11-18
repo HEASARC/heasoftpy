@@ -94,8 +94,9 @@ class HSPTask:
         """
         
         # loop through task parameters and either:
-        params = {}
-        default_mode = params['mode']['default'] if 'mode' in params.keys() else 'h'
+        aParams = self.all_params
+        params  = {}
+        default_mode = aParams['mode']['default'] if 'mode' in aParams.keys() else 'h'
         for pname, pdesc in self.all_params.items():
             
             isReq = 'q' in pdesc['mode'] or ('a' in pdesc['mode'] and 'q' in default_mode)
