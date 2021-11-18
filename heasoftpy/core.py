@@ -35,6 +35,13 @@ class HSPTask:
         # first read the par file as a starter
         pfile  = HSPTask.find_pfile(name)
         params = HSPTask.read_pfile(pfile)
+     
+        # add extra useful keys
+        default_mode = params['mode']['default'] if 'mode' in params.keys() else 'h'
+        for pname, pdesc in params.items():
+            isReq = 'q' in pdesc['mode'] or ('a' in pdesc['mode'] and 'q' in default_mode)
+            pdesc['required'] = isReq
+        
         self.all_params = params
         
     
@@ -96,10 +103,9 @@ class HSPTask:
         # loop through task parameters and either:
         aParams = self.all_params
         params  = {}
-        default_mode = aParams['mode']['default'] if 'mode' in aParams.keys() else 'h'
         for pname, pdesc in self.all_params.items():
             
-            isReq = 'q' in pdesc['mode'] or ('a' in pdesc['mode'] and 'q' in default_mode)
+            isReq = pdesc['required']
             
             if pname in user_pars:
                 params[pname] = user_pars[pname]
