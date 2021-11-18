@@ -17,28 +17,12 @@ class HSPTaskException(Exception):
 class HSPTask:
     """A class for handling a Heasoftpy (HSP) task"""
 
-    def __init__(self, name=None, args=None, **kwargs):
-        """Create an HSPTask with a given name.
-        
-        There are several ways to initialize HSPTaks:
-        1: HSPTask(name): query parameters as usually done with heasoft tasks
-        2: HSPTask(name, previousHSPTask): initialize from a previously defined HSPTask
-        3: HSPTask(name, argsDict): args is a dict or OrderedDict of input parameters
-        4: HSPTask(name, foo=bar, x=0): parameters are passed in the kwargs dict.
-        
+    def __init__(self, name=None):
+        """Initialize an HSPTask with a given name.
         
         Args:
             name (str): The name of the task to be called. Required
-            args (HSPTask, dict, OrderedDict): task parameters as another HSPTask,
-                dict or OrderedDict
-            **kwargs: individual task parameters given as: paramter=value.
-            
-        Returns:
-            
-            
-        Examples:
-            TODO.
-            
+                
         """
         
         # task name is required #
@@ -53,6 +37,25 @@ class HSPTask:
         params = HSPTask.read_pfile(pfile)
         self.all_params = params
         
+    
+    def __call__(self, args=None, **kwargs):
+        """Call the task.
+        
+        There are several ways to call HSPTaks:
+        1: HSPTask(): query parameters as usually done with heasoft tasks
+        2: HSPTask(previousHSPTask): initialize from a previously defined HSPTask
+        3: HSPTask(argsDict): args is a dict or OrderedDict of input parameters
+        4: HSPTask(foo=bar, x=0): parameters are passed in the kwargs dict.
+        
+        
+        Args:
+            args (HSPTask, dict, OrderedDict): task parameters as another HSPTask,
+                dict or OrderedDict
+            **kwargs: individual task parameters given as: paramter=value.
+            
+        Returns:
+            
+        """
         
         # assemble the user input, if any, into a dict
         if args is None:
@@ -71,6 +74,8 @@ class HSPTask:
         # now check the user input against expectations, and query if incomplete
         params = self.build_params(user_pars)
         self.params = params
+        
+        # now we are ready to call the task 
     
     
     def build_params(self, user_pars):

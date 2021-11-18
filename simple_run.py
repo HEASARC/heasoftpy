@@ -16,6 +16,8 @@ if __name__ == '__main__':
     #    pp = heasoftpy.HSPTask.read_pfile(pf)
     #    print(pp);
     #heasoftpy.HSPTask('fcurve', columns='ELV')
-    os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
-    hsp = heasoftpy.HSPTask('testtask', infile='IN_FILE')
-    print(hsp.params)
+    #os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+    #hsp = heasoftpy.HSPTask('testtask', infile='IN_FILE')
+    #print(hsp.params)
+    heasoftpy.tasks.create_fcn('fdump')
+    heasoftpy.tasks.fdump()
