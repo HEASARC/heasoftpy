@@ -1,4 +1,4 @@
-from .core import HSPTask, HSPTaskException
+from .core import HSPTask, HSPTaskException, HSPResult
 from . import utils
 
 from .fcn import *

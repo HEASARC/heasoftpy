@@ -86,6 +86,7 @@ class HSPTask:
         do_exec = kwargs.get('do_exec', True)
         if do_exec:
             result = self.exec_task()
+            # TODO: write updated params to user .par file
             print(result)
     
     
@@ -136,7 +137,7 @@ class HSPTask:
             isReq = pdesc['required']
             
             if pname in user_pars:
-                params[pname] = user_pars[pname]
+                params[pname] = HSPTask.param_type(user_pars[pname], pdesc['type'])
             elif isReq:
                 # query parameter
                 params[pname] = HSPTask.query_param(self.name, pname, pdesc)
