@@ -11,10 +11,10 @@ import heasoftpy
 
 if __name__ == '__main__':
 
-    #hsp = heasoftpy.HSPTask('fdump')
+    hsp = heasoftpy.HSPTask('fdump')
     #hsp(infile='test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
     #hsp.write_pfile(hsp.pfile, hsp.params, hsp.all_params)
     #hsp(infile='test')
     #print(hsp.all_params)
-    fcn = heasoftpy.utils.generate_fcn_code('fdump')
+    fcn = hsp.generate_fcn_code()
     with open('heasoftpy/fcn/fdump.py', 'w') as fp: fp.write(fcn)
