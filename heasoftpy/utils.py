@@ -4,9 +4,6 @@ import subprocess
 from .core import HSPTask, HSPTaskException
 
 
-MODULE = sys.modules[__name__]
-
-
 def _generate_fcn_docs(hspTask):
     """Generation function docstring for a heasoft task using fhelp
     
@@ -88,24 +85,49 @@ if __name__ == '__main__':
     # this will be updated depending on where we want this installed
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
     from heasoftpy.core import HSPTask, HSPTaskException
+    from heasoftpy.utils import process_cmdLine
 else:    
     from ..core import HSPTask, HSPTaskException
 
 
 
-def {task_name}(*args, **kwargs):
+def {task_name}(args=None, **kwargs):
     \"""
 {docs}
     \"""
 
-    {task_name} = HSPTask(name="{task_name}")
-    {task_name}()
+    {task_name}_task = HSPTask(name="{task_name}")
+    {task_name}_task(args, **kwargs)
 
 
 if __name__ == '__main__':
-    {task_name}()
+    cmd_args = process_cmdLine('{task_name}')
+    {task_name}(**cmd_args)
 
     """
     
-    with open(f'{task_name}.py', 'w') as fp:
-        fp.write(fcn)
+    return fcn
+
+
+def process_cmdLine(task_name=None):
+    """Process command line arguments into a dict
+    
+    task_name is needed in case we want to print the help 
+    text when -h is present
+    
+    """
+    # we can make this complicated using argparse, but we start simple
+    
+    # The case of requesting help only; print and exit
+    if len(sys.argv) == 2 and sys.argv[1] in ['-h', '--help']:
+        print(_generate_fcn_docs(HSPTask(name=task_name)))
+        sys.exit(0)
+    
+    args = {}
+    for val in sys.argv[1:]:
+        val_list = val.strip().split('=')
+        if len(val_list) == 1:
+            raise ValueError(f'Unable to parse parameter {val}. Please use: param=value')
+        args[val_list[0]] = val_list[1]
+        
+    return args

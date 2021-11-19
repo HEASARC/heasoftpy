@@ -80,7 +80,36 @@ class HSPTask:
         params = self.build_params(user_pars)
         self.params = params
         
-        # now we are ready to call the task 
+        # now we are ready to call the task
+        # do_exec is a hidden parameter used for debugging and testing
+        # it should be set to False when calling for testing and debuggin
+        do_exec = kwargs.get('do_exec', True)
+        if do_exec:
+            self.exec_task()
+    
+    
+    def exec_task(self):
+        """Run the Heasoft task"""
+        
+        # put the parameters in to a list of par=value
+        all_params = self.all_params
+        usr_params = self.params
+        
+        cmd_params = [f'{par}={val}' for par,val in usr_params.items()]
+        
+        # the task executable
+        exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
+        cmd_list = [exec_cmd] + cmd_params
+        print(cmd_params)
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc_out, proc_err = proc.communicate()
+        
+        if not proc_err:
+            pout = proc_out.decode()
+        else:
+            pout = proc_err.decode()
+        
+        print(pout)
     
     
     def build_params(self, user_pars):

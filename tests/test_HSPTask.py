@@ -33,21 +33,21 @@ class TestHSPTask(unittest.TestCase):
     # case: initilize by kwargs
     def test__init_HSPTask__kwargs(self):
         hsp  = heasoftpy.HSPTask(self.taskname)
-        hsp(infile='IN_FILE', number=4)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
         self.assertEqual(hsp.params, {'infile':'IN_FILE', 'number':4})
     
     # case: initilize by another HSPTask object
     def test__init_HSPTask__anotherHSPTask(self):
         hsp  = heasoftpy.HSPTask(self.taskname)
-        hsp(infile='IN_FILE', number=4)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
         hsp2 = heasoftpy.HSPTask(self.taskname)
-        hsp2(hsp)
+        hsp2(hsp, do_exec=False)
         self.assertEqual(hsp.params, hsp2.params)
     
     # case: initilize by dict
     def test__init_HSPTask__dict(self):
         hsp  = heasoftpy.HSPTask(self.taskname)
-        hsp({'number':4, 'infile':'IN_FILE'})
+        hsp({'number':4, 'infile':'IN_FILE'}, do_exec=False)
         self.assertEqual(hsp.params, {'infile':'IN_FILE', 'number':4})
         
     # case: query one parameter
@@ -56,7 +56,7 @@ class TestHSPTask(unittest.TestCase):
         orig_input_f = __builtins__['input']
         __builtins__['input'] = lambda _: 5.0
         hsp  = heasoftpy.HSPTask(self.taskname)
-        hsp(infile='IN_FILE')
+        hsp(infile='IN_FILE', do_exec=False)
         self.assertEqual(hsp.params, {'infile':'IN_FILE', 'number':5.0})
         __builtins__['input'] = orig_input_f
     
