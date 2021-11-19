@@ -24,6 +24,10 @@ class SampleTask(hsp.HSPTask):
         ## ----------
 
         return hsp.HSPResult(0, out, None, usr_params)
+    
+    def task_docs(self):
+        docs = "*** Documentation for the sample code goes here! ***"
+        return docs
 
 def utilfunc(inval):
     return inval+1
@@ -32,7 +36,6 @@ if __name__ == '__main__':
     # test the code here
     os.environ['PFILES'] = os.getcwd() + '/contrib;' + os.environ['PFILES']
     
-    cmd_args = hsp.utils.process_cmdLine('sample')
-    
     sample = SampleTask(name='sample')
+    cmd_args = hsp.utils.process_cmdLine(sample)
     sample(**cmd_args)

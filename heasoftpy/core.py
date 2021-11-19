@@ -129,6 +129,47 @@ class HSPTask:
         return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
     
     
+    def task_docs(self):
+        """Print docstring help specific to this task
+        
+        For standard tasks, this uses fhelp to get the docs,
+        for python-only tasks, classes subclassing HSPTask can
+        provide a task_docs method that return a string with the
+        docs.
+        
+        
+        Return:
+            str of documentation
+        
+        """
+        name = self.name
+        
+        # call fhelp; assume HEADAS is defined #
+        cmd  = os.path.join(os.environ['HEADAS'], 'bin/fhelp')
+        try:
+            proc = subprocess.Popen([cmd, f'task={name}'], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc_out, proc_err = proc.communicate()
+        except:
+            print(f'Failed in running fhelp to obtain docs for {name}')
+        # ---------- #
+
+        # convert fhelp output from byte to str #
+        try:
+            if proc_err is None or len(proc_err) != 0:
+                raise RuntimeError
+            else:
+                fhelp = proc_out.decode()
+                fhelp = f"{'-'*50}\n   The following has been generated from fhelp\n{'-'*50}\n{fhelp}"
+        except:
+            # we can be more specific in trapping
+            fhelp = f'No fhelp text was generated for {name}'
+        fhelp.replace('"""', '')
+        # ------------------------------------- #
+        
+        return fhelp
+    
+    
     def build_params(self, user_pars):
         """Check the user given parameters agains the expectation from the .par file.
 

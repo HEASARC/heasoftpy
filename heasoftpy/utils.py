@@ -24,38 +24,18 @@ def _generate_fcn_docs(hspTask):
         for par,desc in params.items()])
     # --------------------- #
     
-    # call fhelp #
-    cmd  = os.path.join(os.environ['HEADAS'], 'bin/fhelp')
-    try:
-        proc = subprocess.Popen([cmd, f'task={name}'], stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        proc_out, proc_err = proc.communicate()
-    except:
-        print(f'Failed in running fhelp to obtain docs for {name}')
-    # ---------- #
-    
-    # convert fhelp output from byte to str #
-    try:
-        if not proc_err:
-            fhelp = proc_out.decode()
-        else:
-            fhelp = proc_err.decode()
-    except:
-        # we can be more specific in trapping
-        print(f'Failed in processing fhelp return for {name}')
-    fhelp.replace('"""', '')
-    # ------------------------------------- #
+    # get extra docs from the task #
+    task_docs = hspTask.task_docs()
     
     # put it all together #
     docs = f"""
     Automatically generated function for Heasoft task {name}.
-    For detailed help, scroll down to the fhelp text.
+    Additional help may be provided below.
     
     Args:
 {parsDesc}
-\n{'#'*70}
-{'-'*50}\n   The following has been generated from fhelp\n{'-'*50}\n
-{fhelp}
+\n\n
+{task_docs}
     """
     return docs
     
@@ -101,18 +81,19 @@ def {task_name}(args=None, **kwargs):
 
 
 if __name__ == '__main__':
-    cmd_args = process_cmdLine('{task_name}')
-    {task_name}(**cmd_args)
+    {task_name}_task = HSPTask(name="{task_name}")
+    cmd_args = process_cmdLine({task_name}_task)
+    {task_name}_task(**cmd_args)
 
     """
     
     return fcn
 
 
-def process_cmdLine(task_name=None):
+def process_cmdLine(hspTask=None):
     """Process command line arguments into a dict
     
-    task_name is needed in case we want to print the help 
+    hspTask is needed in case we want to print the help 
     text when -h is present
     
     """
@@ -120,7 +101,7 @@ def process_cmdLine(task_name=None):
     
     # The case of requesting help only; print and exit
     if len(sys.argv) == 2 and sys.argv[1] in ['-h', '--help']:
-        print(_generate_fcn_docs(HSPTask(name=task_name)))
+        print(_generate_fcn_docs(hspTask))
         sys.exit(0)
     
     args = {}
