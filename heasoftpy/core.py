@@ -85,7 +85,8 @@ class HSPTask:
         # it should be set to False when calling for testing and debuggin
         do_exec = kwargs.get('do_exec', True)
         if do_exec:
-            self.exec_task()
+            result = self.exec_task()
+            print(result)
     
     
     def exec_task(self):
@@ -104,12 +105,12 @@ class HSPTask:
         proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc_out, proc_err = proc.communicate()
         
-        if not proc_err:
-            pout = proc_out.decode()
-        else:
-            pout = proc_err.decode()
+        if isinstance(proc_out, bytes): 
+            proc_out = proc_out.decode()
+        if isinstance(proc_err, bytes): 
+            proc_err = proc_err.decode()
         
-        print(pout)
+        return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
     
     
     def build_params(self, user_pars):
@@ -295,4 +296,35 @@ class HSPTask:
         # not strictly accurate, but use it for now
         pfile = loc_pfile if (os.path.exists(loc_pfile) or return_user) else sys_pfile
         return pfile
-            
+        
+
+class HSPResult:
+    """Container for the result of a task execution"""
+    
+    def __init__(self, ret_code, std_out, std_err=None, params=None):
+        """Create a result object to summarize the return of a task
+        
+        
+        Args:
+            ret_code: return code from running the task
+            std_out: The returned string in standard output
+            std_err: The returnd standard error, or None
+            params: a dict and OrderedDict containing the task parameters
+        
+        """
+        
+        self.ret_code = ret_code
+        self.std_out  = std_out
+        self.std_err  = std_err
+        self.params   = params
+        
+    def __str__(self):
+        """Print the result object in a clean way"""
+        
+        txt  = ('-'*21) + '\n:: Excution Result ::\n' + ('-'*21)
+        txt += f'\n> Return Code: {self.ret_code}'
+        txt += f'\n> Output:\n{self.std_out}'
+        txt += f'\n> Errors: {(self.std_err if self.std_err else "None")}'
+        ptxt = '\n\t'.join([f'{par:10}: {val}' for par,val in self.params.items()])
+        txt += f'\n> Parameters:\n\t{ptxt}'
+        return txt
