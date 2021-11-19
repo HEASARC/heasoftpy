@@ -82,13 +82,17 @@ class HSPTask:
         params = self.build_params(user_pars)
         self.params = params
         
-        # now we are ready to call the task
         # do_exec is a hidden parameter used for debugging and testing
-        # it should be set to False when calling for testing and debuggin
+        # Set to True, unless we are testing and debugging.
         do_exec = kwargs.get('do_exec', True)
         if do_exec:
             result = self.exec_task()
-            HSPTask.write_pfile(self.pfile, self.params, self.all_params)
+            
+            # write new params to the user .par file
+            usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
+            HSPTask.write_pfile(usr_pfile, self.params, self.all_params)
+            
+            # now we are ready to call the task
             return result
     
     
