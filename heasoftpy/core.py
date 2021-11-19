@@ -41,6 +41,7 @@ class HSPTask:
             pdesc['required'] = isReq
         
         self.all_params = params
+        self.pfile = pfile
         
     
     def __call__(self, args=None, **kwargs):
@@ -86,12 +87,26 @@ class HSPTask:
         do_exec = kwargs.get('do_exec', True)
         if do_exec:
             result = self.exec_task()
-            # TODO: write updated params to user .par file
-            print(result)
+            HSPTask.write_pfile(self.pfile, self.params, self.all_params)
+            return result
     
     
     def exec_task(self):
-        """Run the Heasoft task"""
+        """Run the Heasoft task
+        
+        This method can be overriden by python-only tasks that subclass HSPTask
+        The task parameters are available in:
+            self.params: a dict of {par:value} parameters provided by the user
+            self.all_params: an OrderedDict if {par:description_dict} of all possible 
+                parameters, defined in the .par file.
+                
+        Here, we just call the heasoft task as a subprocess
+                
+        Returns:
+            This method should return HSPResult object.
+            e.g. HSPResult(ret_code, std_out, std_err, params)
+        
+        """
         
         # put the parameters in to a list of par=value
         all_params = self.all_params
@@ -181,6 +196,66 @@ class HSPTask:
                 print(f'value {user_inp} cannot be processed. Try again!')
         return user_inp
     
+    
+    @staticmethod
+    def write_pfile(pfile, usr_params, all_params):
+        """Write .par file of some task, typically after executing
+        
+        Args:
+            pfile: path and name of the .par file. If it doesn't exist, create it
+            usr_params: dict of par:value supplied by user to be updated
+            all_params: OrderedDict of par:desc containing all parameters of the task
+            
+        Return:
+            None
+        
+        """
+        
+        # check the file exists or create one #
+        if not os.path.exists(pfile):
+            try:
+                open(pfile, 'w').write('')
+            except:
+                raise IOError(f'Cannot write to {pfile}. Check folder and permission')
+            old_params = all_params
+        else:
+            old_params = HSPTask.read_pfile(pfile)
+        
+        # check that all_params and params in existing .par are consistent
+        if len(old_params) != len(all_params):
+            raise HSPTaksExecption(f'Number of parameters in all_params '
+                                   f'({len(all_params)}) differ from those '
+                                   'in existing {pfile} ({len(old_params)})')
+        # ----------------------------------- #
+        
+        # update previous pars with those given by user #
+        for pname,pval in usr_params.items():
+            if pname in all_params:
+                all_params[pname]['default'] = pval
+            else:
+                print(f'parameter {pname} does not exist in task parameter list. Skipping')
+        # --------------------------------------------- #
+        
+        
+        # make any style changes to the values to be printed #
+        for pname, pdesc in all_params.items():
+            if pdesc['type'] == 'b':
+                pdesc['default'] = 'yes' if pdesc['default'] else 'no'
+            if pdesc['type'] == 's':
+                pdesc['default'] = f'\"{pdesc["default"]}\"'
+        # -------------------------------------------------- #
+        
+        
+        # now write the updated parameter list #
+        ptxt = '\n'.join([f'{pname},{pdesc["type"]},{pdesc["mode"]},'
+                          f'{pdesc["default"]},{pdesc["min"]},{pdesc["max"]},'
+                          f'\"{pdesc["prompt"]}\"'
+                          
+                          for pname,pdesc in all_params.items()])
+        with open(pfile, 'w') as pf:
+            pf.write(ptxt)
+        # ------------------------------------ #
+        
         
     @staticmethod
     def read_pfile(pfile):
@@ -212,7 +287,7 @@ class HSPTask:
             pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
             par   = {key: info[ikey+1].strip('"').strip() for ikey,key in enumerate(pkeys)}
             
-            for k in ['default', 'min', 'max']:
+            for k in ['default']:
                 par[k] = HSPTask.param_type(par[k], par['type'])
             
             params[pname] = par
