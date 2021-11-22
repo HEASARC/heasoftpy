@@ -5,6 +5,7 @@ Python interface to HeaSoft
 - [About](#About)
 - [Usage](#Usage)
 - [Installation](#Installation)
+- [Writing Python Tasks](#Writing-Python-Tasks)
 
 
 ## About:
@@ -137,3 +138,51 @@ DESCRIPTION
 
 
 ## Installation
+TODO
+
+---
+## Writing Python Tasks
+The core of `HEASoftpy` os the class `HSPTask`, which handles the `.par` parameter reading and setting.
+
+It was written in a way to make it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create subclass of `HSPTask` and implements a method `exec_task` that does the task function. An example is given in `contrib/sample.py`. The following is short snippet:
+
+```python
+
+import heasoftpy as hsp
+
+class SampleTask(hsp.HSPTask):
+    """New Task"""
+    
+    def def exec_task(self):
+        
+        # model parameters
+        all_params = self.all_params
+        usr_params = self.params
+        
+        # write your task code here #
+        # ...
+        # ...
+        # ------------------------- #
+        
+        # finally return a HSPResult
+        return hsp.HSPResult(0, out, None, usr_params)
+        
+```
+The `HSPTask` class provides two variables that hold the parameters:
+- `all_params`: gives all parameters available in the .par file
+- `usr_params`: is a dict for the parameters supplied by the user
+
+`HSPResult` is a simple container of the task output, which contains:
+- `ret_code`: a return code: 0 if the task executed smoothly (int).
+- `std_out`: standard output (str).
+- `std_err`: standard error message (str).
+- `params`: dict of user parameters in case the task changed them, used to update the .par file.
+
+You can also define a method `task_docs` in `SampleTask` that returns a string of the documentations of the task. This will be appended to the docstring automatically generated from the `.par` parameter. For example:
+
+```python
+
+    def task_docs(self):
+        docs = "*** Documentation for the sample code goes here! ***"
+        return docs
+```
