@@ -15,7 +15,7 @@ import traceback
 #import heasoftpy.core.errors as hsp_err
 #import heasoftpy.core.result as hsp_res
 import heasoftpy.utils as hsp_utils
-from  ..par_reader import read_par_file, type_switch
+from  ..par_reader import read_par_file, type_switch, typify
 
 #import __main__
 
@@ -48,7 +48,7 @@ class Params(collections.OrderedDict):
         return True
 
 
-    def __init__(self,inarg=None,name=None,**kwargs):
+    def __init__(self,inarg=None,name=None,init_mode=None,**kwargs):
         """
         Here there be brains to figure out what was given and what to do with it.
 
@@ -109,7 +109,8 @@ class Params(collections.OrderedDict):
         elif len(sys.argv) == 1 and not kwargs and not inarg:
             # Case 5:  read in pfile into Params and query as appropriate
             collections.OrderedDict.__init__(self,self._read_par_file())
-            self._query_args()             
+            if init_mode is not 'h':
+                self._query_args()             
         else:  
             # confused
             raise ApeParamsException(
@@ -121,10 +122,14 @@ class Params(collections.OrderedDict):
         return
 
     def _fix_types(self):
+        """Depending on the path above, these have already been typified.
+        So don't run typify again if the parameter is not a string, because it's
+        expecting string args. Re-typifying a string though is fine if ugly."""
         for param in self:
-            thistype = self[param]['type']
-            thisval = self[param]['default'] 
-            self[param]['default'] = type_switch(thistype)(str(thisval).strip())
+            if isinstance(self[param]['default'],str):
+                thistype = self[param]['type']
+                thisval = self[param]['default'] 
+                self[param]['default'] = typify(thisval,thistype)               
 
 
     def _read_par_file(self):

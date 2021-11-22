@@ -62,7 +62,7 @@ except Exception as e:
 print("\n-----------------------------")
 print("Test 6:  fdump given infile and mode='h';\n          BROKEN should not query.  Output:\n--------")
 try:
-     result=fdump(infile="../../tests/test_rate.fit",mode="h",prhead="no")
+     result=fdump(infile="../../tests/test_rate.fit",mode="h",prhead="no",rows="1-5")
      print(result.stdout)
 except Exception as e:
      print(f"ERROR:  {e}")
