@@ -157,6 +157,7 @@ def _create_func_start(sys_par_path, par_file_dict, task_nm):
     fn_docstring = _create_func_docstr(task_nm, par_file_dict)
     fn_start_str = ''.join(['def {}(*args, **kwargs):\n'.format(task_nm), fn_docstring])
     indent_lvl = '    '
+    fn_start_str += ''.join([indent_lvl, 'os.environ[\'HEADASNOQUERY\'] = \'True\'\n'])
     fn_start_str += _create_par_path_str(task_nm, indent_lvl)
     fn_start_str += ''.join([indent_lvl, 'sys_par_dict = hsp_ape.read_par_file(\'{}\')\n'.\
                              format(sys_par_path)])

@@ -49,7 +49,6 @@ Version 0.1.21 ME: Reverted to using the system parameter file to generate funct
 		   positional parameter when they should have). Also added code to better
 		   handle the PFILES environment variable when other tools (e.g. CIAO) have
 		   changed/set its value after it reported that this was leading to crashes.
-
 Version 0.1.22 ME: Some bug fixes were made.
 		   Python dictionaries containing parameter names and values
 		   can now be passed into wrapper functions instead of passing
@@ -57,6 +56,13 @@ Version 0.1.22 ME: Some bug fixes were made.
 		   that is preferred).
 		   The help message for the heasoftpy module was modified to
 		   make it more informative.
+Version 0.1.23 ME: Added get_heasoft_version. Made several bug fixes, including:
+                   removal of logging from the import, and correcting issues
+		   involving the creation of wrappers for FTools that accept
+		   single, positional arguments.
+Version 0.1.24 ME: Set HEADASNOQUERY environment variable to True in an effort
+                   to eliminate problems using heasoftpy in jupyter notebooks.
 
 ME = Matt Elliott
 MFC = Mike Corcoran
+TJ = Tess Jaffe
