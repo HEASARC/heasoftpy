@@ -26,8 +26,10 @@ class HSPTask:
         # task name is required #
         if name is None:
             raise HSPTaskException('Task name is required')
-        else:
-            self.name = name
+        
+        # to handle "_" and "-" in names, we also create pyname
+        self.name   = name
+        self.pyname = name.replace('-', '_')
             
         
         # first read the par file as a starter
@@ -86,6 +88,10 @@ class HSPTask:
         # Set to True, unless we are testing and debugging.
         do_exec = kwargs.get('do_exec', True)
         if do_exec:
+            # disable prompt: https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html
+            os.environ['HEADASNOQUERY'] = ''
+            os.environ['HEADASPROMPT'] = '/dev/null'
+            
             result = self.exec_task()
             
             # write new params to the user .par file
@@ -122,7 +128,6 @@ class HSPTask:
         # the task executable
         exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
         cmd_list = [exec_cmd] + cmd_params
-        print(cmd_params)
         proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc_out, proc_err = proc.communicate()
         
@@ -368,13 +373,16 @@ class HSPTask:
         if inType == 'b':
             value = 1 if value.lower() in ['yes', 'true'] else 0
         
+        if inType in ['r', 'i']:
+            value = str(value).replace("'", "").replace('"', '')
+        
         
         # now proceed with the conversion
         switcher = { 'i': int, 's': str , 'f': str, 'b': bool,
-                     'r': float, 'fr':str, 'd': str}
+                     'r': float, 'fr':str, 'd': str, 'g': str, 'fw': str}
         
         if not inType in switcher.keys():
-            raise ValueError(f'arameter type {inType} is not recognized')
+            raise ValueError(f'parameter type {inType} is not recognized.')
         
         # TODO: more error trapping here
         result = switcher[inType](value)
@@ -458,7 +466,8 @@ class HSPTask:
         """Create python function for task_name
 
         """
-        task_name = self.name
+        task_name   = self.name
+        task_pyname = self.pyname
 
         # generate docstring
         docs = self._generate_fcn_docs()
@@ -480,19 +489,19 @@ else:
 
 
 
-def {task_name}(args=None, **kwargs):
-    \"""
+def {task_pyname}(args=None, **kwargs):
+    r\"""
 {docs}
     \"""
 
-    {task_name}_task = HSPTask(name="{task_name}")
-    {task_name}_task(args, **kwargs)
+    {task_pyname}_task = HSPTask(name="{task_name}")
+    return {task_pyname}_task(args, **kwargs)
 
 
 if __name__ == '__main__':
-    {task_name}_task = HSPTask(name="{task_name}")
-    cmd_args = process_cmdLine({task_name}_task)
-    {task_name}_task(**cmd_args)
+    {task_pyname}_task = HSPTask(name="{task_name}")
+    cmd_args = process_cmdLine({task_pyname}_task)
+    {task_pyname}_task(**cmd_args)
 
         """
 
