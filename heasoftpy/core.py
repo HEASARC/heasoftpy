@@ -291,19 +291,21 @@ class HSPTask:
         # --------------------------------------------- #
         
         
-        # make any style changes to the values to be printed #
-        for pname, pdesc in all_params.items():
-            if pdesc['type'] == 's' and ' ' in pdesc['default']:
-                pdesc['default'] = f'\"{pdesc["default"]}\"'
-        # -------------------------------------------------- #
-        
         
         # now write the updated parameter list #
-        ptxt = '\n'.join([f'{pname},{pdesc["type"]},{pdesc["mode"]},'
-                          f'{pdesc["default"]},{pdesc["min"]},{pdesc["max"]},'
-                          f'\"{pdesc["prompt"]}\"'
-                          
-                          for pname,pdesc in all_params.items()])
+        ptxt = ''
+        for pname,pdesc in all_params.items():
+            val = pdesc["default"]
+            
+            # make any style changes to the values to be printed #
+            if pdesc['type'] == 's' and ' ' in val:
+                val = f'"{val}"'
+            
+            # write #
+            ptxt += (f'{pname},{pdesc["type"]},{pdesc["mode"]},'
+                     f'{val},{pdesc["min"]},{pdesc["max"]},'
+                     f'\"{pdesc["prompt"]}\"\n')
+            
         with open(pfile, 'w') as pf:
             pf.write(ptxt)
         # ------------------------------------ #
