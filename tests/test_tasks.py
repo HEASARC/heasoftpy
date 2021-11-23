@@ -44,11 +44,18 @@ class TestPyTasks(unittest.TestCase):
         
     def test__tasks__fdump(self):
         task = heasoftpy.HSPTask('fdump')
-        result = task(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='no')
+        result = task(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='no', prhead='yes')
         out = result.std_out.split('\n')
         self.assertEqual(out[0], 'SIMPLE  =                    T / file does conform to FITS standard')
         self.assertEqual(out[1], 'BITPIX  =                    8 / number of bits per data pixel')
         self.assertEqual(out[2], 'NAXIS   =                    0 / number of data axes')
+    
+    
+    def test__tasks__fdump2runs(self):
+        task = heasoftpy.HSPTask('fdump')
+        res1 = task(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='no', prhead='yes')
+        res2 = task(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='no', prhead='yes')
+        self.assertEqual(res1.params, res2.params)
         
 if __name__ == '__main__':
     unittest.main()
