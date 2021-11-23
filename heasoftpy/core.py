@@ -43,6 +43,7 @@ class HSPTask:
             pdesc['required'] = isReq
         
         self.all_params = params
+        self.params = None
         self.pfile = pfile
         self.__doc__ = self._generate_fcn_docs()
 
@@ -82,7 +83,12 @@ class HSPTask:
         
         # now check the user input against expectations, and query if incomplete
         params = self.build_params(user_pars)
-        self.params = params
+        
+        # create a dict for all model parameters
+        usr_params = {p:pdesc['default'] for p,pdesc in self.all_params.items()}
+        usr_params.update(params)
+        self.params = usr_params
+        
         
         # do_exec is a hidden parameter used for debugging and testing
         # Set to True, unless we are testing and debugging.
@@ -108,8 +114,6 @@ class HSPTask:
         This method can be overriden by python-only tasks that subclass HSPTask
         The task parameters are available in:
             self.params: a dict of {par:value} parameters provided by the user
-            self.all_params: an OrderedDict if {par:description_dict} of all possible 
-                parameters, defined in the .par file.
                 
         Here, we just call the heasoft task as a subprocess
                 
@@ -120,7 +124,6 @@ class HSPTask:
         """
         
         # put the parameters in to a list of par=value
-        all_params = self.all_params
         usr_params = self.params
         
         cmd_params = [f'{par}={val}' for par,val in usr_params.items()]
@@ -183,10 +186,10 @@ class HSPTask:
     def build_params(self, user_pars):
         """Check the user given parameters agains the expectation from the .par file.
 
-        - Loop through the expected task parameters (self.params).
+        - Loop through the expected task parameters (self.all_params).
         - Update their value if any of them is given by the user (in user_pars)
         - if a parameter is required by the task and not given, query the user
-        The final updated list of parameters is in self.params
+        The final updated list of parameters is returned
         
         Args:
             user_pars: a dict containing the par_name:value given by the user
@@ -290,8 +293,6 @@ class HSPTask:
         
         # make any style changes to the values to be printed #
         for pname, pdesc in all_params.items():
-            if pdesc['type'] == 'b':
-                pdesc['default'] = 'yes' if pdesc['default'] else 'no'
             if pdesc['type'] == 's':
                 pdesc['default'] = f'\"{pdesc["default"]}\"'
         # -------------------------------------------------- #
@@ -336,7 +337,7 @@ class HSPTask:
             # extract information about the parameter
             pname = info[0]
             pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
-            par   = {key: info[ikey+1].strip('"').strip() for ikey,key in enumerate(pkeys)}
+            par   = {key: info[ikey+1].strip().strip('"') for ikey,key in enumerate(pkeys)}
             
             for k in ['default']:
                 par[k] = HSPTask.param_type(par[k], par['type'])
@@ -386,6 +387,10 @@ class HSPTask:
         
         # TODO: more error trapping here
         result = switcher[inType](value)
+        
+        # keep boolean as yes/no not True/False
+        if inType == 'b':
+            result = 'yes' if result else 'no'
         return result
     
     

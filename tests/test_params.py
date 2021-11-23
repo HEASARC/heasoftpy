@@ -9,8 +9,9 @@ class TestParamType(unittest.TestCase):
     """Tests for reading parameters"""
 
     def test__param_type__b(self):
+        # this is a yes/no string
         test_result = heasoftpy.HSPTask.param_type('', 'b')
-        self.assertIsInstance(test_result, bool)
+        self.assertIsInstance(test_result, str)
 
     def test__param_type__f(self):
         test_result = heasoftpy.HSPTask.param_type('', 'f')
@@ -30,19 +31,19 @@ class TestParamType(unittest.TestCase):
         
     def test__param_type__bYes(self):
         test_result = heasoftpy.HSPTask.param_type('yes', 'b')
-        self.assertEqual(test_result, True)
+        self.assertEqual(test_result, 'yes')
         
     def test__param_type__bTrue(self):
         test_result = heasoftpy.HSPTask.param_type('True', 'b')
-        self.assertEqual(test_result, True)
+        self.assertEqual(test_result, 'yes')
         
     def test__param_type__bNo(self):
         test_result = heasoftpy.HSPTask.param_type('no', 'b')
-        self.assertEqual(test_result, False)
+        self.assertEqual(test_result, 'no')
         
     def test__param_type__bFalse(self):
         test_result = heasoftpy.HSPTask.param_type('False', 'b')
-        self.assertEqual(test_result, False)
+        self.assertEqual(test_result, 'no')
 
     def test__param_type__iInt(self):
         test_result = heasoftpy.HSPTask.param_type('42', 'i')
