@@ -293,7 +293,7 @@ class HSPTask:
         
         # make any style changes to the values to be printed #
         for pname, pdesc in all_params.items():
-            if pdesc['type'] == 's':
+            if pdesc['type'] == 's' and ' ' in pdesc['default']:
                 pdesc['default'] = f'\"{pdesc["default"]}\"'
         # -------------------------------------------------- #
         
