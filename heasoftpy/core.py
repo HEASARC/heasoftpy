@@ -214,8 +214,18 @@ class HSPTask:
             dict of {pname:pvalue} for the values either passed by user or queried if required
         """
         
-        # loop through task parameters and either:
         aParams = self.all_params
+        
+        # handle relation between parameters. these are task-specifc
+        # and need to be done in a better way
+        page  = aParams.get('page', None)
+        upage = user_pars.get('page', None) 
+        if not page is None:
+            if aParams['page']['default'] == 'no' or upage == 'no':
+                user_pars['more'] = 'yes'
+                
+        
+        # loop through task parameters and either:
         params  = {}
         for pname, pdesc in self.all_params.items():
             
