@@ -11,9 +11,9 @@ import heasoftpy
 
 if __name__ == '__main__':
 
-    hsp = heasoftpy.HSPTask('fstruct')
-    r = hsp(infile='tests/test.fits')
-    print(r.params['isfits'])
+    #hsp = heasoftpy.HSPTask('fstruct')
+    #r = hsp(infile='tests/test.fits')
+    #print(r.params['isfits'])
     #r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
     #print(r.params)
     #hsp.write_pfile(hsp.pfile, hsp.params, hsp.all_params)
@@ -23,3 +23,4 @@ if __name__ == '__main__':
     #with open('heasoftpy/fcn/fdump.py', 'w') as fp: fp.write(fcn)
     #heasoftpy.utils.generate_py_code(['ftlist'])
     #print(heasoftpy.ftlist(infile='tests/test.fits', option='T'))
+    print(heasoftpy.utils.local_pfiles('/tmp/pfiles.tmp'))

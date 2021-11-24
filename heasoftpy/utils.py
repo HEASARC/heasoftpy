@@ -77,4 +77,47 @@ def generate_py_code(tasks=None):
             fp.write(fcn)
         print('done!')
     
+
+def local_pfiles(par_dir=None):
+    """Create a local parameter folder and add it to $PFILES
     
+    This is useful for scripting and running many tasks at the same time
+    so that the tasks do not overwrite each other's pfiles.
+    See https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html.
+    
+    Args:
+        par_dir: a user-specified directory. None means create a temporary
+            one.
+    
+    """
+    
+    # we need heasoft initialized
+    if not 'HEADAS' in os.environ:
+        raise HSPTaskExeception('HEADAS not defined. Please initialize heasoft')
+    
+    # do we have PFILES defined for the system pfiles?
+    if not 'PFILES' in os.environ:
+        os.environ['PFILES'] = os.path.join(os.environ['HEADAS'], 'syspfiles')
+        
+    # did the user provide a directory?
+    create = True
+    pDir   = par_dir
+    if par_dir is None:
+        pDir = os.path.join('/tmp', str(os.getpid()) + '.pfiles.tmp')
+    elif os.path.exists(par_dir):
+        if os.path.isdir(par_dir):
+            create = False
+        else:
+            raise OSError(f'{par_dir} is not a directory. It cannot be used pfiles')
+    else:
+        pass
+    
+    if create:
+        try:
+            os.mkdir(pDir)
+        except:
+            raise OSError(f'Cannot create parameter directory {pDir}')
+    
+    # if we make here, things are good, so add pDir to PFILES
+    os.environ['PFILES'] = f'{pDir};{os.environ["PFILES"]}'
+    return pDir
