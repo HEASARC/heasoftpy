@@ -529,7 +529,7 @@ if __name__ == '__main__':
 class HSPResult:
     """Container for the result of a task execution"""
     
-    def __init__(self, ret_code, std_out, std_err=None, params=None):
+    def __init__(self, returncode, stdout, stderr=None, params=None, custom=None):
         """Create a result object to summarize the return of a task
         
         
@@ -538,21 +538,23 @@ class HSPResult:
             std_out: The returned string in standard output
             std_err: The returnd standard error, or None
             params: a dict and OrderedDict containing the task parameters
+            custom: a dict of any extra parameters.
         
         """
         
-        self.ret_code = ret_code
-        self.std_out  = std_out
-        self.std_err  = std_err
-        self.params   = params
+        self.returncode = returncode
+        self.stdout     = stdout
+        self.stderr     = stderr
+        self.params     = params
+        self.custom     = custom
         
     def __str__(self):
         """Print the result object in a clean way"""
         
         txt  = ('-'*21) + '\n:: Execution Result ::\n' + ('-'*21)
-        txt += f'\n> Return Code: {self.ret_code}'
-        txt += f'\n> Output:\n{self.std_out}'
-        txt += f'\n> Errors: {(self.std_err if self.std_err else "None")}'
+        txt += f'\n> Return Code: {self.returncode}'
+        txt += f'\n> Output:\n{self.stdout}'
+        txt += f'\n> Errors: {(self.stderr if self.stderr else "None")}'
         ptxt = '\n\t'.join([f'{par:10}: {val}' for par,val in self.params.items()])
         txt += f'\n> Parameters:\n\t{ptxt}'
         return txt
