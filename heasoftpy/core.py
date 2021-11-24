@@ -567,3 +567,8 @@ class HSPResult:
     
     def __repr__(self):
         return self.__str__()
+    
+    @property
+    def output(self):
+        """Return the standard output as a list of line"""
+        return self.stdout.split('\n')
