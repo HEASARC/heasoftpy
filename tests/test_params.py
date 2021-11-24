@@ -119,6 +119,7 @@ class TestWritePFile(unittest.TestCase):
         heasoftpy.HSPTask.write_pfile(tmpfile, {}, all_pars)        
         pars = dict(heasoftpy.HSPTask.read_pfile(tmpfile))
         self.assertEqual(all_pars, pars)
+        os.remove(tmpfile)
             
         
 if __name__ == '__main__':

@@ -35,7 +35,7 @@ class TestPyTasks(unittest.TestCase):
         
     def test__tasks__flistC(self):
         task = heasoftpy.HSPTask('ftlist')
-        result = task(infile='tests/test.fits', option='T')
+        result = task(infile='tests/test.fits', option='T', colheader='no', rownum='no', separator=" ")
         out = result.std_out.split('\n')
         self.assertEqual(out[0], '       1164.29445392592        18.2019        1.22564')
         self.assertEqual(out[1], '       1164.43056492592        16.3479        1.38458')

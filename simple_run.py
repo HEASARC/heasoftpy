@@ -13,9 +13,9 @@ if __name__ == '__main__':
 
     hsp = heasoftpy.HSPTask('fdump')
     r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
-    print(r.params)
-    r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
-    print(r.params)
+    print(r.std_err)
+    #r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
+    #print(r.params)
     #hsp.write_pfile(hsp.pfile, hsp.params, hsp.all_params)
     #hsp(infile='test')
     #print(hsp.all_params)

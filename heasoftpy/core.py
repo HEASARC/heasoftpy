@@ -81,6 +81,12 @@ class HSPTask:
         # any commandLine arguments in sys.argv should be passed in kwargs
         user_pars.update(kwargs)
         
+        # do we have an explicit stderr
+        stderr = user_pars.get('stderr', False)
+        if not type(stderr) == bool:
+            stderr = True
+        self.stderr = stderr
+        
         # now check the user input against expectations, and query if incomplete
         params = self.build_params(user_pars)
         
@@ -126,12 +132,16 @@ class HSPTask:
         # put the parameters in to a list of par=value
         usr_params = self.params
         
-        cmd_params = [f'{par}={val}' for par,val in usr_params.items()]
+        # do we have stderr?
+        stderr = subprocess.PIPE if self.stderr else subprocess.STDOUT
+        
+        # the :<1 ensures that empty str gets an extra space
+        cmd_params = [f'{par}={val:<1}' for par,val in usr_params.items()]
         
         # the task executable
         exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
         cmd_list = [exec_cmd] + cmd_params
-        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr)
         proc_out, proc_err = proc.communicate()
         
         if isinstance(proc_out, bytes): 
@@ -298,7 +308,7 @@ class HSPTask:
             val = pdesc["default"]
             
             # make any style changes to the values to be printed #
-            if pdesc['type'] == 's' and ' ' in val:
+            if pdesc['type'] == 's' and (' ' in val or val == ''):
                 val = f'"{val}"'
             
             # write #
