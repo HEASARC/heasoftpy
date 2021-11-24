@@ -2,15 +2,15 @@ Python interface to HeaSoft
 ===========================
 
 ## Content
-- [About](#About)
-- [Usage](#Usage)
-- [Installation](#Installation)
-- [Writing Python Tasks](#Writing-Python-Tasks)
+- [About](#about)
+- [Usage](#usage)
+- [Installation](#installation)
+- [Writing Python Tasks](#writing-Python-Tasks)
 
 
 ## About:
 `HEASoftpy` is a Python 3 package that gives access to the `HEASoft` 
-tools using python. It provies python wrappers that calls the 
+tools using python. It provies python wrappers that call the 
 `HEASoft` tools, allowing for easy integration into other python
 code.
 
@@ -23,7 +23,7 @@ installation of `HEASoft` is therefore required.
 
 
 ## Usage
-After intallation (see [installation](#Installation)), `HEASoftpy` can
+After intallation (see [installation](#installation)), `HEASoftpy` can
 be used is several ways.
 
 ### Different way of usage:
@@ -77,6 +77,10 @@ hsp.fdump(fdump_task)
 
 Whenver a task in called, if any of the required parameters is missing, 
 the user is prompted to enter a value.
+
+Note that ceatting a task object with `fdump_task = hsp.HSPTask('fdump')` does
+not actually call the task. Only doing `fdump_task(...)` that it is called and 
+paramters are queried if necessary.
 
 
 ### Finding help for the tasks
@@ -156,7 +160,6 @@ class SampleTask(hsp.HSPTask):
     def def exec_task(self):
         
         # model parameters
-        all_params = self.all_params
         usr_params = self.params
         
         # write your task code here #
@@ -169,14 +172,14 @@ class SampleTask(hsp.HSPTask):
         
 ```
 The `HSPTask` class provides two variables that hold the parameters:
-- `all_params`: gives all parameters available in the .par file
-- `usr_params`: is a dict for the parameters supplied by the user
+- `usr_params`: is a dict for the task parameters
 
 `HSPResult` is a simple container of the task output, which contains:
-- `ret_code`: a return code: 0 if the task executed smoothly (int).
-- `std_out`: standard output (str).
-- `std_err`: standard error message (str).
+- `returncode`: a return code: 0 if the task executed smoothly (int).
+- `stdout`: standard output (str).
+- `stderr`: standard error message (str).
 - `params`: dict of user parameters in case the task changed them, used to update the .par file.
+- `custom`: dict of any other variables to returned by the task.
 
 You can also define a method `task_docs` in `SampleTask` that returns a string of the documentations of the task. This will be appended to the docstring automatically generated from the `.par` parameter. For example:
 
