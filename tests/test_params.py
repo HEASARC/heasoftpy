@@ -107,7 +107,7 @@ class TestReadPFile(unittest.TestCase):
 class TestWritePFile(unittest.TestCase):
     """Tests for writing pfiles"""
     
-    # pfile does not exist
+    # simple write
     def test__write_pfile__write(self):
         wTxt = 'infile,s,a,,,,"Name of file"\nang,s,a," ",,,"Some interesting parameter"'
         all_pars = {'infile': {'type':'s', 'mode':'a', 'default':'',
@@ -120,7 +120,7 @@ class TestWritePFile(unittest.TestCase):
         pars = dict(heasoftpy.HSPTask.read_pfile(tmpfile))
         self.assertEqual(all_pars, pars)
         os.remove(tmpfile)
-            
+
         
 if __name__ == '__main__':
     unittest.main()

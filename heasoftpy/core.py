@@ -108,6 +108,12 @@ class HSPTask:
             
             # write new params to the user .par file
             usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
+            
+            # re-read the pfile in case it has been modified by the task
+            if os.path.exists(usr_pfile):
+                params_after = HSPTask.read_pfile(usr_pfile)
+                for k,desc in params_after.items():
+                    self.params[k] = desc['default']
             HSPTask.write_pfile(usr_pfile, self.params, self.all_params)
             
             # now we are ready to call the task

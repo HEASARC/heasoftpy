@@ -57,5 +57,13 @@ class TestPyTasks(unittest.TestCase):
         res2 = task(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='no', prhead='yes')
         self.assertEqual(res1.params, res2.params)
         
+    # re-read pfile after a task is run
+    def test__write_pfile__fstruct_rereadPfile(self):
+        task = heasoftpy.HSPTask('fstruct')
+        # we force isfits=no, which should be updated after running the task
+        res  = task(infile='tests/test.fits', isfits='no')
+        self.assertEqual(res.params['isfits'], 'yes')
+        
+        
 if __name__ == '__main__':
     unittest.main()

@@ -11,9 +11,9 @@ import heasoftpy
 
 if __name__ == '__main__':
 
-    hsp = heasoftpy.HSPTask('fdump')
-    r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
-    print(r.std_err)
+    hsp = heasoftpy.HSPTask('fstruct')
+    r = hsp(infile='tests/test.fits')
+    print(r.params['isfits'])
     #r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', prhead='no')
     #print(r.params)
     #hsp.write_pfile(hsp.pfile, hsp.params, hsp.all_params)
