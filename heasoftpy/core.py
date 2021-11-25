@@ -3,6 +3,10 @@ from collections import OrderedDict
 import subprocess
 import os
 import re
+import sys
+import io
+import selectors
+
 
 
 class HSPTaskException(Exception):
@@ -104,7 +108,8 @@ class HSPTask:
             os.environ['HEADASNOQUERY'] = ''
             os.environ['HEADASPROMPT'] = '/dev/null'
             
-            result = self.exec_task()
+            verbose = kwargs.get('verbose', False)
+            result = self.exec_task(verbose)
             
             # write new params to the user .par file
             usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
@@ -120,7 +125,7 @@ class HSPTask:
             return result
     
     
-    def exec_task(self):
+    def exec_task(self, verbose=False):
         """Run the Heasoft task
         
         This method can be overriden by python-only tasks that subclass HSPTask
@@ -128,6 +133,9 @@ class HSPTask:
             self.params: a dict of {par:value} parameters provided by the user
                 
         Here, we just call the heasoft task as a subprocess
+        
+        Args:
+            verbose: if True, print progress.
                 
         Returns:
             This method should return HSPResult object.
@@ -147,13 +155,45 @@ class HSPTask:
         # the task executable
         exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
         cmd_list = [exec_cmd] + cmd_params
-        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr)
-        proc_out, proc_err = proc.communicate()
+        # using encoding, so we get str instead of byte as output
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr, encoding='utf-8')
         
-        if isinstance(proc_out, bytes): 
-            proc_out = proc_out.decode()
-        if isinstance(proc_err, bytes): 
-            proc_err = proc_err.decode()
+        # ---------------------------------------------------- #
+        # if verbose, we need to both print and capture output #
+        # keeping track of stdout and stderr                   #
+        # ---------------------------------------------------- #
+        if verbose:
+            # selectors handle multiple io streams
+            # https://stackoverflow.com/questions/31833897/python-read-from-subprocess-stdout-and-stderr-separately-while-preserving-order
+            selector = selectors.DefaultSelector()
+            selector.register(proc.stdout, selectors.EVENT_READ)
+            outBuf = io.StringIO()
+            if self.stderr:
+                selector.register(proc.stderr, selectors.EVENT_READ)
+                errBuf = io.StringIO()
+            
+            # while task is running, print/capture output #
+            while proc.poll() is None:
+                for key, _ in selector.select():
+                    line = key.fileobj.read()
+                    if not line:
+                        break
+                    if not self.stderr or key.fileobj is proc.stdout:
+                        sys.stdout.write(line)
+                        outBuf.write(line)
+                    else:
+                        sys.stderr.write(line)
+                        errBuf.write(line)
+
+            proc_out = outBuf.getvalue()
+            outBuf.close()
+            proc_err = None
+            if self.stderr:
+                proc_err = errBuf.getvalue()
+                errBuf.close()
+        else:
+            proc_out, proc_err = proc.communicate()
+        # ---------------------------------------------------- #
         
         return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
     
