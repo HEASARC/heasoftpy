@@ -86,3 +86,6 @@ from .fcn import *
 
 # help function
 def help(): return print(__doc__)
+
+# version
+from .version import __version__
