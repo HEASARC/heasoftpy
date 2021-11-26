@@ -156,7 +156,7 @@ class HSPTask:
         exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
         cmd_list = [exec_cmd] + cmd_params
         # using encoding, so we get str instead of byte as output
-        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr, encoding='utf-8')
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr)
         
         # ---------------------------------------------------- #
         # if verbose, we need to both print and capture output #
@@ -175,7 +175,8 @@ class HSPTask:
             # while task is running, print/capture output #
             while proc.poll() is None:
                 for key, _ in selector.select():
-                    line = key.fileobj.read()
+                    line = key.fileobj.read1().decode()
+                    print(type(line));exit(0)
                     if not line:
                         break
                     if not self.stderr or key.fileobj is proc.stdout:
@@ -193,6 +194,8 @@ class HSPTask:
                 errBuf.close()
         else:
             proc_out, proc_err = proc.communicate()
+            if isinstance(proc_out, bytes): proc_out = proc_out.decode()
+            if isinstance(proc_err, bytes): proc_err = proc_err.decode()
         # ---------------------------------------------------- #
         
         return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
@@ -256,13 +259,19 @@ class HSPTask:
         
         aParams = self.all_params
         
+        # ----------------------------------------------------------- #
         # handle relation between parameters. these are task-specifc
         # and need to be done in a better way
+        
+        # page/more
         page  = aParams.get('page', None)
         upage = user_pars.get('page', None) 
         if not page is None:
             if aParams['page']['default'] == 'no' or upage == 'no':
                 user_pars['more'] = 'yes'
+        
+        noprompt = user_pars.get('noprompt', False)
+        # ----------------------------------------------------------- #
                 
         
         # loop through task parameters and either:
@@ -273,7 +282,7 @@ class HSPTask:
             
             if pname in user_pars:
                 params[pname] = HSPTask.param_type(user_pars[pname], pdesc['type'])
-            elif isReq:
+            elif isReq and not noprompt:
                 # query parameter
                 params[pname] = HSPTask.query_param(self.name, pname, pdesc)
             else:
