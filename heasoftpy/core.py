@@ -176,7 +176,6 @@ class HSPTask:
             while proc.poll() is None:
                 for key, _ in selector.select():
                     line = key.fileobj.read1().decode()
-                    print(type(line));exit(0)
                     if not line:
                         break
                     if not self.stderr or key.fileobj is proc.stdout:
