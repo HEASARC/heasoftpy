@@ -83,6 +83,17 @@ not actually call the task. Only doing `fdump_task(...)` that it is called and
 paramters are queried if necessary.
 
 
+### Common `heasoftpy` Parameters:
+There are a few parameters that can be used by all tasks:
+- verbose: If True, print the task output to screen. Default is False
+- noprompt: Typically, HSPTask would check the input parameters and 
+    queries any missing ones. Some tasks (e.g. pipelines) can run by using
+    default values. Setting noprompt=True, disables checking and quering 
+    the parameters. Default is False.
+- stderr: If True, make stderr separate from stdout. The default
+    is False, so stderr is written to stdout.
+
+
 ### Finding help for the tasks
 The help for the tasks can be accessed in the standard python way.
 ```python

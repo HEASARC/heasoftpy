@@ -67,8 +67,17 @@ class HSPTask:
                 dict or OrderedDict
             **kwargs: individual task parameters given as: paramter=value.
             
-        Returns:
+        Common Keywords:
+            verbose: If True, print the task output to screen. Default is False
+            noprompt: Typically, HSPTask would check the input parameters and 
+                queries any missing ones. Some tasks (e.g. pipelines) can run by using
+                default values. Setting noprompt=True, disables checking and quering 
+                the parameters. Default is False.
+            stderr: If True, make stderr separate from stdout. The default
+                is False, so stderr is written to stdout.
             
+        Returns:
+            HSPResult
         """
         
         # assemble the user input, if any, into a dict

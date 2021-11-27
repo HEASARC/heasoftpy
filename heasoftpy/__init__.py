@@ -42,6 +42,17 @@ The input to the functions is also flexible:
 >>> result = hsp.ftlist(params)
 
 
+All tasks take additional optional parameters:
+- verbose: If True, print the task output to screen. Default is False
+- noprompt: Typically, HSPTask would check the input parameters and 
+    queries any missing ones. Some tasks (e.g. pipelines) can run by using
+    default values. Setting noprompt=True, disables checking and quering 
+    the parameters. Default is False.
+- stderr: If True, make stderr separate from stdout. The default
+    is False, so stderr is written to stdout.
+
+
+
 HELP:
 ----
 Help for tasks can be accesed by:
