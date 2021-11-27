@@ -1,8 +1,4 @@
 """
-VERIONS:
--------
-0.1: (AZ) importing and re-organizaing functionality from old code.
-
 
 DESCRIPTION:
 -----------
