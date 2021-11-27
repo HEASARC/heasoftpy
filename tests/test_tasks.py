@@ -20,22 +20,22 @@ class TestPyTasks(unittest.TestCase):
     
     def test__tasks__flistH(self):
         task = heasoftpy.HSPTask('ftlist')
-        result = task(infile='tests/test.fits', option='H')
+        result = task(infile='tests/test.fits', option='H', outfile='-')
         out = result.stdout.split('\n')
         self.assertEqual(out[4], 'HDU 2   RATE               BinTable     3 cols x 10 rows            ')
     
     
     def test__tasks__flistC(self):
         task = heasoftpy.HSPTask('ftlist')
-        result = task(infile='tests/test.fits', option='C')
+        result = task(infile='tests/test.fits', option='C', outfile='-')
         out = result.stdout.split('\n')
         self.assertEqual(out[3], '    1 TIME               D [d]                label for field   1')
         self.assertEqual(out[4], '    2 RATE               E [counts/s]         label for field   8')
         self.assertEqual(out[5], '    3 ERROR              E [counts/s]         label for field   9')
         
-    def test__tasks__flistC(self):
+    def test__tasks__flistT(self):
         task = heasoftpy.HSPTask('ftlist')
-        result = task(infile='tests/test.fits', option='T', colheader='no', rownum='no', separator=" ")
+        result = task(infile='tests/test.fits', option='T', colheader='no', rownum='no', separator=" ", outfile='-')
         out = result.stdout.split('\n')
         self.assertEqual(out[0], '       1164.29445392592        18.2019        1.22564')
         self.assertEqual(out[1], '       1164.43056492592        16.3479        1.38458')
