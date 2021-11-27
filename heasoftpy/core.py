@@ -91,13 +91,16 @@ class HSPTask:
             stderr = True
         self.stderr = stderr
         
+        # noprompt?
+        self.noprompt = user_pars.get('noprompt', False)
+        
         # now check the user input against expectations, and query if incomplete
-        params = self.build_params(user_pars)
+        usr_params = self.build_params(user_pars)
         
         # create a dict for all model parameters
-        usr_params = {p:pdesc['default'] for p,pdesc in self.all_params.items()}
-        usr_params.update(params)
-        self.params = usr_params
+        params = {p:pdesc['default'] for p,pdesc in self.all_params.items()}
+        params.update(usr_params)
+        self.params = usr_params if self.noprompt else params
         
         
         # do_exec is a hidden parameter used for debugging and testing
@@ -108,18 +111,21 @@ class HSPTask:
             os.environ['HEADASNOQUERY'] = ''
             os.environ['HEADASPROMPT'] = '/dev/null'
             
+            # write new params to the user .par file
+            # do this before calling in case the task also updates the .par file
+            usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
+            HSPTask.write_pfile(usr_pfile, self.params, self.all_params)
+            
             verbose = kwargs.get('verbose', False)
             result = self.exec_task(verbose)
             
-            # write new params to the user .par file
-            usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
             
             # re-read the pfile in case it has been modified by the task
             if os.path.exists(usr_pfile):
                 params_after = HSPTask.read_pfile(usr_pfile)
                 for k,desc in params_after.items():
                     self.params[k] = desc['default']
-            HSPTask.write_pfile(usr_pfile, self.params, self.all_params)
+            
             
             # now we are ready to call the task
             return result
@@ -269,7 +275,7 @@ class HSPTask:
             if aParams['page']['default'] == 'no' or upage == 'no':
                 user_pars['more'] = 'yes'
         
-        noprompt = user_pars.get('noprompt', False)
+        noprompt = self.noprompt
         # ----------------------------------------------------------- #
                 
         
