@@ -41,6 +41,12 @@ The input to the functions is also flexible:
 >>> params = {'infile':'input.fits', 'option':'T'}
 >>> result = hsp.ftlist(params)
 
+- When using HSPTask, the task can also be input inline:
+>>> ftlist = hsp.HSPTask('ftlist')
+>>> ftlist.infile = 'input.fits'
+>>> ftlist.option = 'T'
+>>> result = ftlist()
+
 
 All tasks take additional optional parameters:
 - verbose: If True, print the task output to screen. Default is False
