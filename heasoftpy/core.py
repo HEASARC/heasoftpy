@@ -587,6 +587,10 @@ class HSPParam():
     def __repr__(self):
         return f'param:{self.pname}:{self.value}'
     
+    def __eq__(self, other):
+        """When is a HSPParam equal to another"""
+        return self.value == other.value
+    
     
     def query(self):
         """Query the user for parameter

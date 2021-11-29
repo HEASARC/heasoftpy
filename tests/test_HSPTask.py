@@ -88,6 +88,16 @@ class TestHSPTask(unittest.TestCase):
         with self.assertRaises(ValueError):
             hsp.number = 'wrong_type'
     
+    # simple write
+    def test__write_pfile__write(self):
+        hsp  = heasoftpy.HSPTask(self.taskname)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
+        tmpfile = f'{self.taskname}.2.par'
+        hsp.write_pfile(tmpfile)
+        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(newpars[0].value, 'IN_FILE')
+        self.assertEqual(newpars[1].value, 4)
+        os.remove(tmpfile)
         
 if __name__ == '__main__':
     unittest.main()
