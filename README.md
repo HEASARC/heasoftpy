@@ -76,6 +76,8 @@ hsp.fdump(fdump_task)
 fdump_task = hsp.HSPTask('fdump')
 fdump_task.infile = 'input2.fits'
 fdump_task.outfile = 'STDOUT'
+... # other parameters
+fdump_task()
 
 # or a combination of the above
 
