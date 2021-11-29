@@ -39,18 +39,48 @@ class HSPTask:
         # first read the par file as a starter
         pfile  = HSPTask.find_pfile(name)
         params = HSPTask.read_pfile(pfile)
-     
-        # add extra useful keys
-        default_mode = params['mode']['default'] if 'mode' in params.keys() else 'h'
-        for pname, pdesc in params.items():
-            isReq = 'q' in pdesc['mode'] or ('a' in pdesc['mode'] and 'q' in default_mode)
-            pdesc['required'] = isReq
+        par_names = []
+        for par in params:
+            setattr(self, par.pname, par)
+            par_names.append(par.pname)
         
-        self.all_params = params
-        self.params = None
+     
+        # add extra useful keys to parameters
+        default_mode = self.mode.value if hasattr(self, 'mode') else 'h'
+        for pname in par_names:
+            par = getattr(self, pname)
+            if not hasattr(par, 'mode'):
+                isReq = False
+            else:
+                isReq = 'q' in par.mode or ('a' in par.mode and 'q' in default_mode)
+            par.isReq = isReq
+        
+        
+        self.par_names = par_names
+        self.params = {}
         self.pfile = pfile
         self.__doc__ = self._generate_fcn_docs()
 
+        
+    def __setattr__(self, attr, val):
+        """Enable setting a parameter by setting HSPParam equal to some value
+        Doing it this way because for non-class attributes (task parameters that
+        are defined in __init__ and not the in class), setting and getting them
+        is not accessible for an class instance, unless we do it this way.
+        
+        """
+        try:
+            attrObj = super(HSPTask, self).__getattribute__(attr)
+        except AttributeError:
+            # setting for the first time
+            super(HSPTask, self).__setattr__(attr, val)
+        else:
+            if hasattr(attrObj, '__set__'):
+                attrObj.__set__(self, val)
+                self.params[attr] = val
+            else:
+                super(HSPTask, self).__setattr__(attr, val)
+        
     
     def __call__(self, args=None, **kwargs):
         """Call the task.
@@ -94,6 +124,10 @@ class HSPTask:
         # any commandLine arguments in sys.argv should be passed in kwargs
         user_pars.update(kwargs)
         
+        # also add any parameters in self.params from a previous call
+        # or entered by hand
+        user_pars.update(self.params)
+        
         # do we have an explicit stderr
         stderr = user_pars.get('stderr', False)
         if not type(stderr) == bool:
@@ -105,10 +139,10 @@ class HSPTask:
         
         # now check the user input against expectations, and query if incomplete
         usr_params = self.build_params(user_pars)
+
         
         # create a dict for all model parameters
-        params = {p:pdesc['default'] for p,pdesc in self.all_params.items()}
-        params.update(usr_params)
+        params = {p:getattr(self, p).value for p in self.par_names}
         self.params = usr_params if self.noprompt else params
         
         
@@ -123,7 +157,7 @@ class HSPTask:
             # write new params to the user .par file
             # do this before calling in case the task also updates the .par file
             usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
-            HSPTask.write_pfile(usr_pfile, self.params, self.all_params)
+            self.write_pfile(usr_pfile)
             
             verbose = kwargs.get('verbose', False)
             result = self.exec_task(verbose)
@@ -132,8 +166,8 @@ class HSPTask:
             # re-read the pfile in case it has been modified by the task
             if os.path.exists(usr_pfile):
                 params_after = HSPTask.read_pfile(usr_pfile)
-                for k,desc in params_after.items():
-                    self.params[k] = desc['default']
+                for ipar, par_name in enumerate(self.par_names):
+                    setattr(self, par_name, params_after[ipar].value)
             
             
             # now we are ready to call the task
@@ -271,133 +305,70 @@ class HSPTask:
             dict of {pname:pvalue} for the values either passed by user or queried if required
         """
         
-        aParams = self.all_params
         
         # ----------------------------------------------------------- #
         # handle relation between parameters. these are task-specifc
         # and need to be done in a better way
         
         # page/more
-        page  = aParams.get('page', None)
+        page  = self.page if 'page' in self.par_names else None
         upage = user_pars.get('page', None) 
         if not page is None:
-            if aParams['page']['default'] == 'no' or upage == 'no':
+            if self.page.value == 'no' or upage == 'no':
                 user_pars['more'] = 'yes'
-        
         noprompt = self.noprompt
         # ----------------------------------------------------------- #
                 
         
         # loop through task parameters and either:
         params  = {}
-        for pname, pdesc in self.all_params.items():
+        #for pname, pdesc in self.all_params.items():
+        for par_name in self.par_names:
+            par = getattr(self, par_name)
+            isReq = par.isReq
             
-            isReq = pdesc['required']
-            
-            if pname in user_pars:
-                params[pname] = HSPTask.param_type(user_pars[pname], pdesc['type'])
+            if par_name in user_pars:
+                setattr(self, par_name, user_pars[par_name])
+                params[par_name] = par.value
+
             elif isReq and not noprompt:
                 # query parameter
-                params[pname] = HSPTask.query_param(self.name, pname, pdesc)
+                par.query()
+                params[par_name] = par.value
             else:
                 # parameter not needed and not given
                 pass
         return params
     
     
-    @staticmethod
-    def query_param(taskname, pname, pdesc):
-        """Query the user for parameter pname in task taskname
-        
-        Args:
-            taksname: name of the task
-            pname: name of the parameter
-            pdesc: a dict containing the description of the paramter
-        
-        Return:
-            The queried parameter value
-            
-        TODO: handle nan, None, INDEF etc
-            
-        """
-        querymsg = f':: {taskname}:{pname} ::\n{pdesc["prompt"]} ({pdesc["default"]}) > '
-        done = False
-        while not done:
-            
-            user_inp = input(querymsg)
-            
-            # special cases
-            if user_inp == '':
-                user_inp = pdesc['default']
-            if pdesc['type'] == 'b':
-                user_inp = 'no' if user_inp.lower() in ['n', 'no', 'false'] else 'yes'
-            
-            try:
-                user_inp = HSPTask.param_type(user_inp, pdesc['type'])
-                done = True
-            except ValueError:
-                print(f'value {user_inp} cannot be processed. Try again!')
-        return user_inp
-    
-    
-    @staticmethod
-    def write_pfile(pfile, usr_params, all_params):
+    def write_pfile(self, pfile):
         """Write .par file of some task, typically after executing
         
         Args:
             pfile: path and name of the .par file. If it doesn't exist, create it
-            usr_params: dict of par:value supplied by user to be updated
-            all_params: OrderedDict of par:desc containing all parameters of the task
             
         Return:
             None
         
         """
         
-        # check the file exists or create one #
-        if not os.path.exists(pfile):
-            try:
-                open(pfile, 'w').write('')
-            except:
-                raise IOError(f'Cannot write to {pfile}. Check folder and permission')
-            old_params = all_params
-        else:
-            old_params = HSPTask.read_pfile(pfile)
-        
-        # check that all_params and params in existing .par are consistent
-        if len(old_params) != len(all_params):
-            raise HSPTaksExecption(f'Number of parameters in all_params '
-                                   f'({len(all_params)}) differ from those '
-                                   'in existing {pfile} ({len(old_params)})')
-        # ----------------------------------- #
-        
-        # update previous pars with those given by user #
-        for pname,pval in usr_params.items():
-            if pname in all_params:
-                all_params[pname]['default'] = pval
-            else:
-                print(f'parameter {pname} does not exist in task parameter list. Skipping')
-        # --------------------------------------------- #
-        
-        
-        
-        # now write the updated parameter list #
+        # write the updated parameter list #
         ptxt = ''
-        for pname,pdesc in all_params.items():
-            val = pdesc["default"]
+        for par_name in self.par_names:
+            par = getattr(self, par_name)
+            val = par.value
             
             # make any style changes to the values to be printed #
-            if pdesc['type'] == 's' and (' ' in val or val == ''):
+            if par.type == 's' and (' ' in val or val == ''):
                 val = f'"{val}"'
             
             # write #
-            ptxt += (f'{pname},{pdesc["type"]},{pdesc["mode"]},'
-                     f'{val},{pdesc["min"]},{pdesc["max"]},'
-                     f'\"{pdesc["prompt"]}\"\n')
+            ptxt += (f'{par.pname},{par.type},{par.mode},'
+                     f'{val},{par.min},{par.max},\"{par.prompt}\"\n')
             
         with open(pfile, 'w') as pf:
             pf.write(ptxt)
-        # ------------------------------------ #
+        # -------------------------------- #
         
         
     @staticmethod
@@ -417,72 +388,15 @@ class HSPTask:
         if not os.path.exists(pfile):
             raise IOError(f'parameter file {pfile} not found')
         
-        params = OrderedDict()
+        params = []
         for line in open(pfile, 'r'):
             
             # make sure we have a line with information
-            info = line.strip().split(',')
-            if line.startswith('#') or len(info) < 6:
+            if line.startswith('#') or len(line.split(',')) < 6:
                 continue
             
-            # extract information about the parameter
-            pname = info[0]
-            pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
-            par   = {key: info[ikey+1].strip().strip('"') for ikey,key in enumerate(pkeys)}
-            
-            for k in ['default']:
-                par[k] = HSPTask.param_type(par[k], par['type'])
-            
-            params[pname] = par
+            params.append(HSPParam(line))
         return params
-    
-    
-    @staticmethod
-    def param_type(value, inType):
-        """Find the correct type from pfiles
-        
-        Args:
-            value: The value to be converted; typically a str
-            inType: a str representing the type in the .par files.
-                One of: {i, s, f, b, r, fr, b}
-        
-        Returns:
-            the value in the correct type
-        
-        """
-        
-        # handle special cases first
-        if not isinstance(value, str):
-            # already done
-            return value
-        
-        if value == 'INDEF' and inType in ['r', 'i']:
-            return None
-        
-        if value == '' and inType in ['r', 'i']:
-            value = 0
-            
-        if inType == 'b':
-            value = 1 if value.lower() in ['yes', 'true'] else 0
-        
-        if inType in ['r', 'i']:
-            value = str(value).replace("'", "").replace('"', '')
-        
-        
-        # now proceed with the conversion
-        switcher = { 'i': int, 's': str , 'f': str, 'b': bool,
-                     'r': float, 'fr':str, 'd': str, 'g': str, 'fw': str}
-        
-        if not inType in switcher.keys():
-            raise ValueError(f'parameter type {inType} is not recognized.')
-        
-        # TODO: more error trapping here
-        result = switcher[inType](value)
-        
-        # keep boolean as yes/no not True/False
-        if inType == 'b':
-            result = 'yes' if result else 'no'
-        return result
     
     
     @staticmethod
@@ -533,14 +447,16 @@ class HSPTask:
         """
 
 
-        name = self.name
-        params = self.all_params
-
         # parameter description #
-        parsDesc = '\n'.join([
-                        f'     {par:12} {"(Req)" if desc["required"] else "":6}: '
-                        f'{desc["prompt"]} (default: {desc["default"]})'
-            for par,desc in params.items()])
+#         parsDesc = '\n'.join([
+#                         f'     {par:12} {"(Req)" if desc["required"] else "":6}: '
+#                         f'{desc["prompt"]} (default: {desc["default"]})'
+#             for par,desc in params.items()])
+        parsDesc = ''
+        for par_name in self.par_names:
+            par = getattr(self, par_name)
+            parsDesc += f'\n{par.pname} {"(Req)" if par.isReq else "":6}:'
+            parsDesc += f'  {par.prompt} (default: {par.default}): '
         # --------------------- #
 
         # get extra docs from the task #
@@ -548,7 +464,7 @@ class HSPTask:
 
         # put it all together #
         docs = f"""
-    Automatically generated function for Heasoft task {name}.
+    Automatically generated function for Heasoft task {self.name}.
     Additional help may be provided below.
 
     Args:
@@ -645,3 +561,102 @@ class HSPResult:
     def output(self):
         """Return the standard output as a list of line"""
         return self.stdout.split('\n')
+    
+    
+class HSPParam():
+    
+    def __init__(self, line):
+        
+        info = line.strip().split(',')
+
+        # extract information about the parameter
+        self.pname = info[0]
+        pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
+        for ikey,key in enumerate(pkeys):
+            setattr(self, key, info[ikey+1].strip().strip('"'))
+        
+        self.default = HSPParam.param_type(self.default, self.type)
+        self.value   = self.default 
+
+    
+    def __set__(self, obj, new_value):
+        if obj is None:
+            return self
+        self.value = HSPParam.param_type(new_value, self.type)
+        
+    def __repr__(self):
+        return f'param:{self.pname}:{self.value}'
+    
+    
+    def query(self):
+        """Query the user for parameter
+        
+        Sets the value in self.value
+            
+        TODO: handle nan, None, INDEF etc
+            
+        """
+        querymsg = f':: {self.pname} ::\n{self.prompt} ({self.value}) > '
+        done = False
+        while not done:
+            
+            user_inp = input(querymsg)
+            
+            # special cases
+            if user_inp == '':
+                user_inp = self.value
+            if self.type == 'b':
+                user_inp = 'no' if user_inp.lower() in ['n', 'no', 'false'] else 'yes'
+            
+            try:
+                self.value = HSPParam.param_type(user_inp, self.type)
+                done = True
+            except ValueError:
+                print(f'value {user_inp} cannot be processed. Try again!')
+
+    @staticmethod
+    def param_type(value, inType):
+        """Find the correct type from pfiles
+        
+        Args:
+            value: The value to be converted; typically a str
+            inType: a str representing the type in the .par files.
+                One of: {i, s, f, b, r, fr, b}
+        
+        Returns:
+            the value in the correct type
+        
+        """
+        
+        # handle special cases first
+        if not isinstance(value, str):
+            # already done
+            return value
+        
+        if value == 'INDEF' and inType in ['r', 'i']:
+            return None
+        
+        if value == '' and inType in ['r', 'i']:
+            value = 0
+            
+        if inType == 'b':
+            value = 1 if value.lower() in ['yes', 'true'] else 0
+        
+        if inType in ['r', 'i']:
+            value = str(value).replace("'", "").replace('"', '')
+        
+        
+        # now proceed with the conversion
+        switcher = { 'i': int, 's': str , 'f': str, 'b': bool,
+                     'r': float, 'fr':str, 'd': str, 'g': str, 'fw': str}
+        
+        if not inType in switcher.keys():
+            raise ValueError(f'parameter type {inType} is not recognized.')
+        
+        # TODO: more error trapping here
+        result = switcher[inType](value)
+        
+        # keep boolean as yes/no not True/False
+        if inType == 'b':
+            result = 'yes' if result else 'no'
+        return result

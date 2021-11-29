@@ -62,7 +62,7 @@ class TestPyTasks(unittest.TestCase):
         task = heasoftpy.HSPTask('fstruct')
         # we force isfits=no, which should be updated after running the task
         res  = task(infile='tests/test.fits', isfits='no')
-        self.assertEqual(res.params['isfits'], 'yes')
+        self.assertEqual(task.isfits.value, 'yes')
         
         
 if __name__ == '__main__':

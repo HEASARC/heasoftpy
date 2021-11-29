@@ -7,23 +7,50 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import heasoftpy
 
 
+# class HSPParam():
+    
+#     def __init__(self, line):
+#         self.name = line[0]
+#         self.value = line[1]
+
+    
+#     def __set__(self, obj, new_value):
+#         if obj is None:
+#             return self
+#         self.value = new_value
+        
+#     def __repr__(self):
+#         return f'{self.value}'
+
+# class Dum():
+    
+#     def __init__(self):
+#         self.i1 = HSPParam(['name1', 33])
+#         self.i2 = HSPParam(['name2', 44])
+    
+        
+#     def __getattribute__(self, name):
+#         attrObj = super(Dum, self).__getattribute__(name)
+#         if hasattr(attrObj, '__get__'):
+#             return attrObj.__get__(self, Dum)
+#         return attrObj
+    
+#     def __setattr__(self, attr, val):
+#         try:
+#             attrObj = super(Dum, self).__getattribute__(attr)
+#         except AttributeError:
+#             # setting for the first time
+#             super(Dum, self).__setattr__(attr, val)
+#         else:
+#             if hasattr(attrObj, '__set__'):
+#                 attrObj.__set__(self, val)
+#             else:
+#                 super(Dum, self).__setattr__(attr, val)
+
 
 
 if __name__ == '__main__':
 
-    #hsp = heasoftpy.HSPTask('nupipeline')
-    #r = hsp(indir='60001111003', outdir='60001111003_p', steminputs='nu60001111003', noprompt=True, verbose=True)
-    #hsp = heasoftpy.HSPTask('nicerl2')
-    #r = hsp(indir='4693021901', clobber='yes', verbose=False)
-    hsp = heasoftpy.HSPTask('fdump')
-    r = hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', more='yes', 
-            prhead='no', stderr=False, verbose=False)
-    print('stdout:', r.stdout)
-    #print('stderr:', r.stderr)
-    #print(r.params)
-    #hsp.write_pfile(hsp.pfile, hsp.params, hsp.all_params)
-    #hsp(infile='test')
-    #print(hsp.all_params)
-    #fcn = hsp.generate_fcn_code()
-    #with open('heasoftpy/fcn/fdump.py', 'w') as fp: fp.write(fcn)
-    #heasoftpy.utils.generate_py_code(['ftlist'])
+    ftlist = heasoftpy.HSPTask('ftlist')
+    ftlist.infile = 'tests/test.fits'
+    ftlist(option='T', verbose=True)

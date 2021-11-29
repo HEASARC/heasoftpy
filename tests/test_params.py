@@ -10,56 +10,56 @@ class TestParamType(unittest.TestCase):
 
     def test__param_type__b(self):
         # this is a yes/no string
-        test_result = heasoftpy.HSPTask.param_type('', 'b')
+        test_result = heasoftpy.HSPParam.param_type('', 'b')
         self.assertIsInstance(test_result, str)
 
     def test__param_type__f(self):
-        test_result = heasoftpy.HSPTask.param_type('', 'f')
+        test_result = heasoftpy.HSPParam.param_type('', 'f')
         self.assertIsInstance(test_result, str)
 
     def test__param_type__i(self):
-        test_result = heasoftpy.HSPTask.param_type('', 'i')
+        test_result = heasoftpy.HSPParam.param_type('', 'i')
         self.assertIsInstance(test_result, int)
         
     def test__param_type__r(self):
-        test_result = heasoftpy.HSPTask.param_type('', 'r')
+        test_result = heasoftpy.HSPParam.param_type('', 'r')
         self.assertIsInstance(test_result, float)
         
     def test__param_type__s(self):
-        test_result = heasoftpy.HSPTask.param_type('', 's')
+        test_result = heasoftpy.HSPParam.param_type('', 's')
         self.assertIsInstance(test_result, str)
         
     def test__param_type__bYes(self):
-        test_result = heasoftpy.HSPTask.param_type('yes', 'b')
+        test_result = heasoftpy.HSPParam.param_type('yes', 'b')
         self.assertEqual(test_result, 'yes')
         
     def test__param_type__bTrue(self):
-        test_result = heasoftpy.HSPTask.param_type('True', 'b')
+        test_result = heasoftpy.HSPParam.param_type('True', 'b')
         self.assertEqual(test_result, 'yes')
         
     def test__param_type__bNo(self):
-        test_result = heasoftpy.HSPTask.param_type('no', 'b')
+        test_result = heasoftpy.HSPParam.param_type('no', 'b')
         self.assertEqual(test_result, 'no')
         
     def test__param_type__bFalse(self):
-        test_result = heasoftpy.HSPTask.param_type('False', 'b')
+        test_result = heasoftpy.HSPParam.param_type('False', 'b')
         self.assertEqual(test_result, 'no')
 
     def test__param_type__iInt(self):
-        test_result = heasoftpy.HSPTask.param_type('42', 'i')
+        test_result = heasoftpy.HSPParam.param_type('42', 'i')
         self.assertEqual(test_result, 42)
         
     def test__param_type__iFloat(self):
-        test_result = heasoftpy.HSPTask.param_type('0.42', 'r')
+        test_result = heasoftpy.HSPParam.param_type('0.42', 'r')
         self.assertEqual(test_result, 0.42)
         
     def test__param_type__sTxt(self):
-        test_result = heasoftpy.HSPTask.param_type('a simple text', 's')
+        test_result = heasoftpy.HSPParam.param_type('a simple text', 's')
         self.assertEqual(test_result, 'a simple text')
     
     def test__param_type__failCast(self):
         with self.assertRaises(ValueError):
-            heasoftpy.HSPTask.param_type('Text', 'r')
+            heasoftpy.HSPParam.param_type('Text', 'r')
 
 
 class TestPFile(unittest.TestCase):
@@ -98,28 +98,34 @@ class TestReadPFile(unittest.TestCase):
         wTxt = 'infile,s,a,,,,"Name of file"'
         tmpfile = 'tmp.simpleFile.par'
         open(tmpfile, 'w').write(wTxt)
-        pars = dict(heasoftpy.HSPTask.read_pfile(tmpfile))
+        pars = heasoftpy.HSPTask.read_pfile(tmpfile)
         expected = {'infile': {'type':'s', 'mode':'a', 'default':'',
                                'min': '', 'max': '', 'prompt': 'Name of file'}}
-        self.assertEqual(pars, expected)
+        self.assertEqual(pars[0].pname, 'infile')
+        self.assertEqual(pars[0].type, 's')
+        self.assertEqual(pars[0].mode, 'a')
+        self.assertEqual(pars[0].default, '')
+        self.assertEqual(pars[0].min, '')
+        self.assertEqual(pars[0].max, '')
+        self.assertEqual(pars[0].prompt, 'Name of file')
         os.remove(tmpfile)
 
-class TestWritePFile(unittest.TestCase):
-    """Tests for writing pfiles"""
+# class TestWritePFile(unittest.TestCase):
+#     """Tests for writing pfiles"""
     
-    # simple write
-    def test__write_pfile__write(self):
-        wTxt = 'infile,s,a,,,,"Name of file"\nang,s,a," ",,,"Some interesting parameter"'
-        all_pars = {'infile': {'type':'s', 'mode':'a', 'default':'',
-                               'min': '', 'max': '', 'prompt': 'Name of file'},
-                    'ang': {'type':'s', 'mode':'a', 'default':' ',
-                               'min': '', 'max': '', 'prompt': 'Some interesting parameter'}}
+#     # simple write
+#     def test__write_pfile__write(self):
+#         wTxt = 'infile,s,a,,,,"Name of file"\nang,s,a," ",,,"Some interesting parameter"'
+#         all_pars = {'infile': {'type':'s', 'mode':'a', 'default':'',
+#                                'min': '', 'max': '', 'prompt': 'Name of file'},
+#                     'ang': {'type':'s', 'mode':'a', 'default':' ',
+#                                'min': '', 'max': '', 'prompt': 'Some interesting parameter'}}
         
-        tmpfile = 'tmp.simpleFile.par'
-        heasoftpy.HSPTask.write_pfile(tmpfile, {}, all_pars)        
-        pars = dict(heasoftpy.HSPTask.read_pfile(tmpfile))
-        self.assertEqual(all_pars, pars)
-        os.remove(tmpfile)
+#         tmpfile = 'tmp.simpleFile.par'
+#         heasoftpy.HSPTask.write_pfile(tmpfile, {}, all_pars)        
+#         pars = dict(heasoftpy.HSPTask.read_pfile(tmpfile))
+#         self.assertEqual(all_pars, pars)
+#         os.remove(tmpfile)
 
         
 if __name__ == '__main__':

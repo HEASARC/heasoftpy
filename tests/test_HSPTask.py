@@ -71,8 +71,22 @@ class TestHSPTask(unittest.TestCase):
             def dummyf(_): raise ValueError
             __builtins__['input'] = dummyf
             hsp  = heasoftpy.HSPTask(self.taskname)
-            hsp(infile='IN_FILE')
+            hsp(infile='IN_FILE', do_exec=False)
         __builtins__['input'] = orig_input_f
+        
+    # case: fill params by hand
+    def test__init_HSPTask__dict(self):
+        hsp  = heasoftpy.HSPTask(self.taskname)
+        hsp.infile = 'INFILE'
+        hsp.number = 7
+        self.assertEqual(hsp.params['infile'], 'INFILE')
+        self.assertEqual(hsp.params['number'], 7)
+    
+    # case: fill params by hand; wrong type
+    def test__init_HSPTask__dict(self):
+        hsp  = heasoftpy.HSPTask(self.taskname)
+        with self.assertRaises(ValueError):
+            hsp.number = 'wrong_type'
     
         
 if __name__ == '__main__':
