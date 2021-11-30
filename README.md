@@ -2,15 +2,15 @@ Python interface to HeaSoft
 ===========================
 
 ## Content
-- [1. About](#about)
-- [2. Usage](#usage)
-    - [2.1 Different Ways of Calling the Tasks](#different-ways-of-calling-the-tasks)
-    - [2.2 Different Ways of Passing Parameters](#different-ways-of-passing-parameters)
-    - [2.3 Common `HEASoftpy` Parameters](#common-heasoftpy-parameters)
-    - [2.4 Finding Help for the Tasks](#finding-help-for-the-tasks)
-- [3. Installation](#installation)
-- [4. Writing Python Tasks](#writing-python-tasks)
-- [5. User Guide and Other Tutorials](#tutorials)
+- [1. About](#1-about)
+- [2. Usage](#2-usage)
+    - [2.1 Different Ways of Calling the Tasks](#21-different-ways-of-calling-the-tasks)
+    - [2.2 Different Ways of Passing Parameters](#22-different-ways-of-passing-parameters)
+    - [2.3 Common `HEASoftpy` Parameters](#23-common-heasoftpy-parameters)
+    - [2.4 Finding Help for the Tasks](#24-finding-help-for-the-tasks)
+- [3. Installation](#3-installation)
+- [4. Writing Python Tasks](#4-writing-python-tasks)
+- [5. User Guide and Other Tutorials](#5-tutorials)
 
 
 ## 1. About:
@@ -210,7 +210,7 @@ You can also define a method `task_docs` in `SampleTask` that returns a string o
         return docs
 ```
 
-## Tutorials:
+## 5. Tutorials:
 The [notebooks](notebooks) folder contains some jupyter notebook tutorials and usage examples.
 
 - [Getting Started](notebooks/gettting-started.ipynb): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
