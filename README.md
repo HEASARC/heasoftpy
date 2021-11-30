@@ -2,31 +2,36 @@ Python interface to HeaSoft
 ===========================
 
 ## Content
-- [About](#about)
-- [Usage](#usage)
-- [Installation](#installation)
-- [Writing Python Tasks](#writing-python-tasks)
+- [1. About](#about)
+- [2. Usage](#usage)
+    - [2.1 Different Ways of Calling the Tasks](#different-ways-of-calling-the-tasks)
+    - [2.2 Different Ways of Passing Parameters](#different-ways-of-passing-parameters)
+    - [2.3 Common `HEASoftpy` Parameters](#common-heasoftpy-parameters)
+    - [2.4 Finding Help for the Tasks](#finding-help-for-the-tasks)
+- [3. Installation](#installation)
+- [4. Writing Python Tasks](#writing-python-tasks)
+- [5. User Guide and Other Tutorials](#tutorials)
 
 
-## About:
+## 1. About:
 `HEASoftpy` is a Python 3 package that gives access to the `HEASoft` 
 tools using python. It provies python wrappers that call the 
 `HEASoft` tools, allowing for easy integration into other python
 code.
 
-`HEASoftpy` also provides the framework that allows for pure-python
-tools to be integrated within the `HEASoft` system.
+`HEASoftpy` also provides a framework that allows for pure-python
+tools to be developed and integrated within the `HEASoft` system (see [Writing Python Tasks](#writing-python-tasks)).
 
-Although `HEASoftpy` is written in pure python, it does NOT rewrite 
+Although `HEASoftpy` is written in pure python, it does not rewrite 
 the functions and tools already existing in `HEASoft`. A working
 installation of `HEASoft` is therefore required.
 
 
-## Usage
-After intallation (see [installation](#installation)), `HEASoftpy` can
+## 2. Usage
+After intallation (see [Installation](#installation)), `HEASoftpy` can
 be used is several ways.
 
-### Different way of usage:
+### 2.1 Different Ways of Calling the Tasks:
 1- Importing the task methods:
 ```python
 
@@ -46,12 +51,11 @@ fdump(infile='input.fits', outfile='STDOUT', ...)
 
 3- Using it directly from the command line, similar to the standard `HEASoft` tools:
 ```bash
-
 fdump.py infile=input.fits outfile=STDOUT ...
 
 ```
 
-### Different ways to pass parameters:
+### 2.2 Different Ways of Passing Parameters:
 Additionally, the task methods handle different types in inputs. For example:
 
 ```python
@@ -86,23 +90,21 @@ fdump_task()
 Whenver a task in called, if any of the required parameters is missing, 
 the user is prompted to enter a value.
 
-Note that ceatting a task object with `fdump_task = hsp.HSPTask('fdump')` does
-not actually call the task. Only doing `fdump_task(...)` that it is called and 
-paramters are queried if necessary.
+Note that creatting a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and paramters are queried if necessary.
 
 
-### Common `heasoftpy` Parameters:
-There are a few parameters that can be used by all tasks:
-- verbose: If True, print the task output to screen. Default is False
-- noprompt: Typically, HSPTask would check the input parameters and 
+### 2.3 Common `HEASoftpy` Parameters:
+There are a few parameters that are common between all tasks:
+- `verbose`: If `True`, print the task output to screen as the task runs. Default is `False`
+- `noprompt`: Typically, HSPTask would check the input parameters and 
     queries any missing ones. Some tasks (e.g. pipelines) can run by using
-    default values. Setting noprompt=True, disables checking and quering 
-    the parameters. Default is False.
-- stderr: If True, make stderr separate from stdout. The default
-    is False, so stderr is written to stdout.
+    default values. Setting `noprompt=True`, disables checking and quering 
+    the parameters. Default is `False`.
+- `stderr`: If `True`, make `stderr` separate from `stdout`. The default
+    is `False`, so `stderr` is written to `stdout`.
 
 
-### Finding help for the tasks
+### 2.4 Finding Help for the Tasks:
 The help for the tasks can be accessed in the standard python way.
 ```python
 hsp.fdump?
@@ -160,14 +162,14 @@ DESCRIPTION
 ```
 
 
-## Installation
+## 3. Installation
 TODO
 
 ---
-## Writing Python Tasks
-The core of `HEASoftpy` os the class `HSPTask`, which handles the `.par` parameter reading and setting.
+## 4. Writing Python Tasks
+The core of `HEASoftpy` is the class `HSPTask`, which handles the parameter reading and setting (from to to the `.par` file).
 
-It was written in a way to make it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create subclass of `HSPTask` and implements a method `exec_task` that does the task function. An example is given in `contrib/sample.py`. The following is short snippet:
+It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `contrib/sample.py`. The following is short snippet:
 
 ```python
 
@@ -190,15 +192,14 @@ class SampleTask(hsp.HSPTask):
         return hsp.HSPResult(0, out, None, usr_params)
         
 ```
-The `HSPTask` class provides two variables that hold the parameters:
-- `usr_params`: is a dict for the task parameters
+The `HSPTask` class provides a dictionary of input parameters in the variable `self.params`.
 
-`HSPResult` is a simple container of the task output, which contains:
-- `returncode`: a return code: 0 if the task executed smoothly (int).
+`HSPResult` is a simple container for the task output, which defines:
+- `returncode`: a return code: 0 if the task executed without errors (int).
 - `stdout`: standard output (str).
 - `stderr`: standard error message (str).
 - `params`: dict of user parameters in case the task changed them, used to update the .par file.
-- `custom`: dict of any other variables to returned by the task.
+- `custom`: dict of any other variables returned by the task.
 
 You can also define a method `task_docs` in `SampleTask` that returns a string of the documentations of the task. This will be appended to the docstring automatically generated from the `.par` parameter. For example:
 
@@ -208,3 +209,10 @@ You can also define a method `task_docs` in `SampleTask` that returns a string o
         docs = "*** Documentation for the sample code goes here! ***"
         return docs
 ```
+
+## Tutorials:
+The [notebooks](notebooks) folder contains some jupyter notebook tutorials and usage examples.
+
+- [Getting Started](notebooks/gettting-started.ipynb): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
+
+- [NuSTAR Data Analysis Example](notebooks/nustar_example.ipynb): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
