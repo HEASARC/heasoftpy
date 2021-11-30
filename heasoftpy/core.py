@@ -589,7 +589,10 @@ class HSPParam():
     
     def __eq__(self, other):
         """When is a HSPParam equal to another"""
-        return self.value == other.value
+        if isinstance(other, HSPParam):
+            return self.value == other.value
+        else:
+            return self.value == other
     
     
     def query(self):
