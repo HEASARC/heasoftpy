@@ -5,7 +5,7 @@ Python interface to HeaSoft
 - [About](#about)
 - [Usage](#usage)
 - [Installation](#installation)
-- [Writing Python Tasks](#writing-Python-Tasks)
+- [Writing Python Tasks](#writing-python-tasks)
 
 
 ## About:
