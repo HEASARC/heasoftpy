@@ -213,6 +213,6 @@ You can also define a method `task_docs` in `SampleTask` that returns a string o
 ## 5. Tutorials:
 The [notebooks](notebooks) folder contains some jupyter notebook tutorials and usage examples.
 
-- [Getting Started](notebooks/gettting-started.ipynb): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
+- [Getting Started](notebooks/getting-started.ipynb): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
 
 - [NuSTAR Data Analysis Example](notebooks/nustar_example.ipynb): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
