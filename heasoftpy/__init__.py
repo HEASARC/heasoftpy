@@ -92,7 +92,7 @@ installation of HEASoft is therefore required.
 
 
 """
-from .core import HSPTask, HSPTaskException, HSPResult, HSPParam
+from .core import HSPTask, HSPTaskException, HSPResult, HSPParam, HSPLogger
 from . import utils
 
 from .fcn import *

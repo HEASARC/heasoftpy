@@ -165,6 +165,9 @@ class HSPTask:
             usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
             self.write_pfile(usr_pfile)
             
+            
+            self.logger = HSPLogger(self.stderr, self.verbose)
+            
             result = self.exec_task()
             
             
@@ -219,34 +222,35 @@ class HSPTask:
         # keeping track of stdout and stderr                   #
         # ---------------------------------------------------- #
         if verbose:
-            # selectors handle multiple io streams
-            # https://stackoverflow.com/questions/31833897/python-read-from-subprocess-stdout-and-stderr-separately-while-preserving-order
-            selector = selectors.DefaultSelector()
-            selector.register(proc.stdout, selectors.EVENT_READ)
-            outBuf = io.StringIO()
-            if self.stderr:
-                selector.register(proc.stderr, selectors.EVENT_READ)
-                errBuf = io.StringIO()
+            proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr)
+#             # selectors handle multiple io streams
+#             # https://stackoverflow.com/questions/31833897/python-read-from-subprocess-stdout-and-stderr-separately-while-preserving-order
+#             selector = selectors.DefaultSelector()
+#             selector.register(proc.stdout, selectors.EVENT_READ)
+#             outBuf = io.StringIO()
+#             if self.stderr:
+#                 selector.register(proc.stderr, selectors.EVENT_READ)
+#                 errBuf = io.StringIO()
             
-            # while task is running, print/capture output #
-            while proc.poll() is None:
-                for key, _ in selector.select():
-                    line = key.fileobj.read1().decode()
-                    if not line:
-                        break
-                    if not self.stderr or key.fileobj is proc.stdout:
-                        sys.stdout.write(line)
-                        outBuf.write(line)
-                    else:
-                        sys.stderr.write(line)
-                        errBuf.write(line)
+#             # while task is running, print/capture output #
+#             while proc.poll() is None:
+#                 for key, _ in selector.select():
+#                     line = key.fileobj.read1().decode()
+#                     if not line:
+#                         break
+#                     if not self.stderr or key.fileobj is proc.stdout:
+#                         sys.stdout.write(line)
+#                         outBuf.write(line)
+#                     else:
+#                         sys.stderr.write(line)
+#                         errBuf.write(line)
 
-            proc_out = outBuf.getvalue()
-            outBuf.close()
-            proc_err = None
-            if self.stderr:
-                proc_err = errBuf.getvalue()
-                errBuf.close()
+#             proc_out = outBuf.getvalue()
+#             outBuf.close()
+#             proc_err = None
+#             if self.stderr:
+#                 proc_err = errBuf.getvalue()
+#                 errBuf.close()
         else:
             proc_out, proc_err = proc.communicate()
             if isinstance(proc_out, bytes): proc_out = proc_out.decode()
@@ -443,7 +447,47 @@ class HSPTask:
         # not strictly accurate, but use it for now
         pfile = loc_pfile if (os.path.exists(loc_pfile) or return_user) else sys_pfile
         return pfile
-        
+    
+    @staticmethod
+    def handle_io_stream(ioObj, stderr=False):
+        """
+
+        Args:
+            ioObj: proc from subprocess or sys; i.e. it has ioObj.stdout and ioObj.stderr
+            stderr: bool user input of whether to use stderr or not
+
+        """
+        # selectors handle multiple io streams
+        # https://stackoverflow.com/questions/31833897/python-read-from-subprocess-stdout-and-stderr-separately-while-preserving-order
+        selector = selectors.DefaultSelector()
+        selector.register(ioObj.stdout, selectors.EVENT_READ)
+        outBuf = io.StringIO()
+        if stderr:
+            selector.register(ioObj.stderr, selectors.EVENT_READ)
+            errBuf = io.StringIO()
+
+        # while task is running, print/capture output #
+        done = False
+        while not done:
+            for key, _ in selector.select():
+                line = key.fileobj.read1().decode()
+                if not line:
+                    done = True
+                if not stderr or key.fileobj is ioObj.stdout:
+                    sys.stdout.write(line)
+                    outBuf.write(line)
+                else:
+                    sys.stderr.write(line)
+                    errBuf.write(line)
+
+        ioObj_out = outBuf.getvalue()
+        outBuf.close()
+        ioObj_err = None
+        if stderr:
+            ioObj_err = errBuf.getvalue()
+            errBuf.close()
+        return ioObj_out, ioObj_err    
+    
         
     def _generate_fcn_docs(self):
         """Generation standard function docstring from .par file
@@ -674,3 +718,87 @@ class HSPParam():
         if inType == 'b':
             result = 'yes' if result else 'no'
         return result
+    
+
+
+class HSPLogger:
+    """A simple logger class to handle logging in python-only tasks"""
+    
+    def __init__(self, stderr=False, verbose=False):
+        """Initialize a new instance of the logger
+        
+        Args:
+            stderr: bool of whether to write errors to stderr instead
+                of stdout (default is False)
+            verbose: if True, write progress on screen as the task runs
+                in addition to capturing it and returning it to the user.
+                
+        
+        """
+        # the user input
+        self.verbose = verbose
+        self.useStderr = stderr
+        
+        # the screen output handle
+        # by default, stderr -> stdout unless useStderr==True
+        self.stdout  = sys.stdout
+        self.stderr  = self.stdout
+        
+        # these stream buffers capture the output to be returned
+        # to the user
+        self.outBuf = io.StringIO()
+        self.errBuf = self.outBuf
+        
+        # if stderr, make sterr separate
+        if self.useStderr:
+            self.errBuf = io.StringIO()
+            self.stderr = sys.stderr
+        
+        
+    def message(self, message):
+        """Write a progress message
+        
+        Args:
+            message: is a message string (typically one line).
+                It should iclude a newline if desired.
+            
+        
+        """
+        # save to buffer, and if verbose, print too
+        self.outBuf.write(message)
+        if self.verbose:
+            self.stdout.write(message)
+    
+    def error(self, message):
+        """Write error message
+        
+        Args:
+            message: is a message string (typically one line).
+                It should iclude a newline if desired.
+        """
+        # save to buffer, and if verbose, print too
+        self.errBuf.write(message)
+        if self.verbose:
+            self.stderr.write(message)   
+    
+    
+    def getValue(self):
+        """return the value of the captured output
+        
+        Returns:
+            (outMsg, errMsg) as strings. If stderr was not requested,
+                errMsg is None.
+        """
+        
+        outMsg = self.outBuf.getvalue()
+        self.outBuf.close()
+        
+        errMsg = None
+        if self.useStderr:
+            errMsg = self.errBuf.getvalue()
+            self.errBuf.close()
+        
+        return outMsg, errMsg
+            
+        
+        
