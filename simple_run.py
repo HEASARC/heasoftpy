@@ -4,11 +4,10 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 
-import heasoftpy
+import heasoftpy as hsp
+from heasoftpy import contrib as hspC
 
 
 if __name__ == '__main__':
 
-    ftlist = heasoftpy.HSPTask('ftlist')
-    ftlist.infile = 'tests/test.fits'
-    ftlist(option='T', verbose=True)
+    print(hspC.__dir__())
