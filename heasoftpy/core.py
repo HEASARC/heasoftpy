@@ -128,6 +128,8 @@ class HSPTask:
         # or entered by hand
         user_pars.update(self.params)
         
+        # ----------------------------- #
+        # handle common task parameters #
         # do we have an explicit stderr
         stderr = user_pars.get('stderr', False)
         if not type(stderr) == bool:
@@ -137,14 +139,18 @@ class HSPTask:
         # noprompt?
         self.noprompt = user_pars.get('noprompt', False)
         
+        # verbose?
+        self.verbose = user_pars.get('verbose', False)
+        # ----------------------------- #
+        
+        
         # now check the user input against expectations, and query if incomplete
         usr_params = self.build_params(user_pars)
-
         
         # create a dict for all model parameters
         params = {p:getattr(self, p).value for p in self.par_names}
         self.params = usr_params if self.noprompt else params
-        
+    
         
         # do_exec is a hidden parameter used for debugging and testing
         # Set to True, unless we are testing and debugging.
@@ -159,8 +165,7 @@ class HSPTask:
             usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
             self.write_pfile(usr_pfile)
             
-            verbose = kwargs.get('verbose', False)
-            result = self.exec_task(verbose)
+            result = self.exec_task()
             
             
             # re-read the pfile in case it has been modified by the task
@@ -174,7 +179,7 @@ class HSPTask:
             return result
     
     
-    def exec_task(self, verbose=False):
+    def exec_task(self):
         """Run the Heasoft task
         
         This method can be overriden by python-only tasks that subclass HSPTask
@@ -194,6 +199,8 @@ class HSPTask:
         
         # put the parameters in to a list of par=value
         usr_params = self.params
+        
+        verbose = self.verbose
         
         # do we have stderr?
         stderr = subprocess.PIPE if self.stderr else subprocess.STDOUT
