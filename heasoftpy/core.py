@@ -223,34 +223,6 @@ class HSPTask:
         # ---------------------------------------------------- #
         if verbose:
             proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr)
-#             # selectors handle multiple io streams
-#             # https://stackoverflow.com/questions/31833897/python-read-from-subprocess-stdout-and-stderr-separately-while-preserving-order
-#             selector = selectors.DefaultSelector()
-#             selector.register(proc.stdout, selectors.EVENT_READ)
-#             outBuf = io.StringIO()
-#             if self.stderr:
-#                 selector.register(proc.stderr, selectors.EVENT_READ)
-#                 errBuf = io.StringIO()
-            
-#             # while task is running, print/capture output #
-#             while proc.poll() is None:
-#                 for key, _ in selector.select():
-#                     line = key.fileobj.read1().decode()
-#                     if not line:
-#                         break
-#                     if not self.stderr or key.fileobj is proc.stdout:
-#                         sys.stdout.write(line)
-#                         outBuf.write(line)
-#                     else:
-#                         sys.stderr.write(line)
-#                         errBuf.write(line)
-
-#             proc_out = outBuf.getvalue()
-#             outBuf.close()
-#             proc_err = None
-#             if self.stderr:
-#                 proc_err = errBuf.getvalue()
-#                 errBuf.close()
         else:
             proc_out, proc_err = proc.communicate()
             if isinstance(proc_out, bytes): proc_out = proc_out.decode()

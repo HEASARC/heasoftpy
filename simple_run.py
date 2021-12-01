@@ -10,4 +10,6 @@ from heasoftpy import contrib as hspC
 
 if __name__ == '__main__':
 
-    print(hspC.__dir__())
+    ftlist = hsp.HSPTask('ftlist')
+    r = ftlist(infile='tests/test.fits', option='T', verbose=False)
+    print(r)
