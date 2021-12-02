@@ -25,24 +25,21 @@ class TemplateTask(HSPTask):
         ## ----------------- ##
         ##  start code here  ##
         ## ----------------- ##
-        msg = f"""\nResetting the foo parameter from {params['foo']} to {params['bar']}.\n"""        
-        logger.info(msg)
+        logger.info(f"Resetting the foo parameter from {params['foo']} to {params['bar']}.")
         
         params['foo'] = f"{params['bar']}" #  stringify the int
-        msg = f"Now foo = {params['foo']}."
-        logger.info(msg)
+        logger.info(f"Now foo = {params['foo']}.")
         
-        params['bar'] = _some_addition_function(params['bar'])
-        msg = f" and bar = {params['bar']}.\n"
-        logger.info(msg)
+        params['bar'] = _some_additional_function(params['bar'])
+        logger.info(f"and bar = {params['bar']}.")
         
-        logger.error('No error, but checking the logger works\n')
+        logger.error('testing error logging')
         returncode = 0
         ## ----------------- ##
         ##  end code  ##
         ## ----------------- ##
 
-        outMsg, errMsg = logger.get_output()
+        outMsg, errMsg = self.logger.output
         return HSPResult(returncode, outMsg, errMsg, params)
     
     
@@ -54,7 +51,7 @@ class TemplateTask(HSPTask):
         return template.__doc__
 
 
-def _some_addition_function(inval):
+def _some_additional_function(inval):
     return inval+1
 
 

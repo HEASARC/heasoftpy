@@ -6,6 +6,7 @@ import re
 import sys
 import io
 import selectors
+import logging
 
 
 
@@ -132,8 +133,9 @@ class HSPTask:
         # handle common task parameters #
         # do we have an explicit stderr
         stderr = user_pars.get('stderr', False)
-        if not type(stderr) == bool:
-            stderr = True
+        if not isinstance(stderr, bool):
+            stderr = ((isinstance(stderr, str) and stderr.strip().lower() in ['y', 'yes', 'true'])
+                      or isinstance(stderr, int) and stderr > 0)
         self.stderr = stderr
         
         # noprompt?
@@ -142,6 +144,16 @@ class HSPTask:
         # verbose?
         self.verbose = user_pars.get('verbose', False)
         # ----------------------------- #
+        
+        # prepare the logger #
+        if isinstance(self.verbose, bool) and self.verbose:
+            level = [1,2]
+        elif isinstance(self.verbose, int) and self.verbose >= 3:
+            level = [1,2,3]
+        else:
+            level = 1
+        self.logger = HSPLogger(self.name, level=level, stderr=self.stderr).get_logger()
+        # ------------------ #
         
         
         # now check the user input against expectations, and query if incomplete
@@ -165,9 +177,7 @@ class HSPTask:
             usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
             self.write_pfile(usr_pfile)
             
-            
-            self.logger = HSPLogger(self.stderr, self.verbose)
-            
+            # now call the task #
             result = self.exec_task()
             
             
@@ -471,10 +481,6 @@ class HSPTask:
 
 
         # parameter description #
-#         parsDesc = '\n'.join([
-#                         f'     {par:12} {"(Req)" if desc["required"] else "":6}: '
-#                         f'{desc["prompt"]} (default: {desc["default"]})'
-#             for par,desc in params.items()])
         parsDesc = ''
         for par_name in self.par_names:
             par = getattr(self, par_name)
@@ -572,7 +578,8 @@ class HSPResult:
         txt  = ('-'*21) + '\n:: Execution Result ::\n' + ('-'*21)
         txt += f'\n> Return Code: {self.returncode}'
         txt += f'\n> Output:\n{self.stdout}'
-        txt += f'\n> Errors: {(self.stderr if self.stderr else "None")}'
+        if not self.stderr is None:
+            txt += f'\n> Errors: {self.stderr}'
         ptxt = '\n\t'.join([f'{par:10}: {val}' for par,val in self.params.items()])
         txt += f'\n> Parameters:\n\t{ptxt}'
         return txt
@@ -670,7 +677,7 @@ class HSPParam():
             value = 0
             
         if inType == 'b':
-            value = 1 if value.lower() in ['yes', 'true'] else 0
+            value = 1 if value.lower() in ['y', 'yes', 'true'] else 0
         
         if inType in ['r', 'i']:
             value = str(value).replace("'", "").replace('"', '')
@@ -690,87 +697,107 @@ class HSPParam():
         if inType == 'b':
             result = 'yes' if result else 'no'
         return result
-    
-
-
+            
+        
 class HSPLogger:
-    """A simple logger class to handle logging in python-only tasks"""
     
-    def __init__(self, stderr=False, verbose=False):
-        """Initialize a new instance of the logger
-        
+    def __init__(self, name, **kwargs):
+        """Setup and return a general logger
+    
         Args:
-            stderr: bool of whether to write errors to stderr instead
-                of stdout (default is False)
-            verbose: if True, write progress on screen as the task runs
-                in addition to capturing it and returning it to the user.
+            name: name of the logger
+
+        Keyword Args:
+            level: 1: basic, 2: short, 3: long. This should an integer
+                or a list of integers, if different levels are considered
+            file_name: file name to use when level==3. Default is {name}.log
+            stderr: pipe errors to a separate stream. Default is False, so 
+                errors are written to stdout
+
+        """
+        level       = kwargs.get('level', 1)
+        file_name   = kwargs.get('file_name', f'{name}.log')
+        self.stderr = kwargs.get('stderr', False)
+        
+        if not isinstance(level, (int, list)):
+            raise ValueError('level should be int or a list')
+        if isinstance(level, int):
+            level = [level]
+        
+        # a wrapper to give logger access to stored output
+        class _Logger(logging.getLoggerClass()):
+            def _set_container(self, obj):
+                self.obj = obj
+            @property
+            def output(self):
+                return self.obj.output
+        
+        # main logger 
+        self.logger = _Logger(name)
+        self.logger._set_container(self)
+        self.logger.setLevel(logging.DEBUG)
+        
+        # Stream to capture the output
+        self.oStream = io.StringIO()
+        if self.stderr:
+            self.eStream = io.StringIO()
+        
+        
+        # filters to handle errors separately if needed
+        def error_filter(record):
+            return record.levelname in ['ERROR', 'CRITICAL']
+        def noerror_filter(record):
+            return not error_filter(record)
+        
+        
+        # handlers:
+        if 1 in level:
+            # Stream to a string
+            handler = logging.StreamHandler(self.oStream)
+            handler.setLevel(logging.INFO)
+            handler.setFormatter(logging.Formatter('%(message)s'))
+            if self.stderr:
+                handler.addFilter(noerror_filter)
                 
+                # add an error-only handler #
+                ehandler = logging.StreamHandler(self.eStream)
+                ehandler.setLevel(logging.DEBUG)
+                ehandler.setFormatter(logging.Formatter('%(message)s'))
+                ehandler.addFilter(error_filter)
+                self.logger.addHandler(ehandler)
+                
+            self.logger.addHandler(handler)
         
-        """
-        # the user input
-        self.verbose = verbose
-        self.useStderr = stderr
+
+        if 2 in level:
+            # Console handler to print progress
+            handler = logging.StreamHandler()
+            handler.setLevel(logging.INFO)
+            handler.setFormatter(logging.Formatter('%(levelname)s|%(message)s'))
+            self.logger.addHandler(handler)
+
+        if 3 in level:
+            # print progress to a file
+            handler = logging.FileHandler(file_name, mode='a')
+            handler.setLevel(logging.DEBUG)
+            handler.setFormatter(
+                logging.Formatter('%(asctime)s|%(levelname)s|%(filename)s|%(funcName)s|%(message)s')
+            )
+            self.logger.addHandler(handler)  
+                    
         
-        # the screen output handle
-        # by default, stderr -> stdout unless useStderr==True
-        self.stdout  = sys.stdout
-        self.stderr  = self.stdout
-        
-        # these stream buffers capture the output to be returned
-        # to the user
-        self.outBuf = io.StringIO()
-        self.errBuf = self.outBuf
-        
-        # if stderr, make sterr separate
-        if self.useStderr:
-            self.errBuf = io.StringIO()
-            self.stderr = sys.stderr
-        
-        
-    def info(self, message):
-        """Write a progress message
-        
-        Args:
-            message: is a message string (typically one line).
-                It should iclude a newline if desired.
-            
-        
-        """
-        # save to buffer, and if verbose, print too
-        self.outBuf.write(message)
-        if self.verbose:
-            self.stdout.write(message)
+    def get_logger(self):
+        """return the logger"""
+        return self.logger
     
-    def error(self, message):
-        """Write error message
+    @property
+    def output(self):
+        """Return the content of the string stream, and flush it"""
+        out = self.oStream.getvalue()
+        self.oStream.close()
+        err = None
+        if self.stderr:
+            err = self.eStream.getvalue()
+            self.eStream.close()
         
-        Args:
-            message: is a message string (typically one line).
-                It should iclude a newline if desired.
-        """
-        # save to buffer, and if verbose, print too
-        self.errBuf.write(message)
-        if self.verbose:
-            self.stderr.write(message)   
-    
-    
-    def get_output(self):
-        """return the value of the captured output
-        
-        Returns:
-            (outMsg, errMsg) as strings. If stderr was not requested,
-                errMsg is None.
-        """
-        
-        outMsg = self.outBuf.getvalue()
-        self.outBuf.close()
-        
-        errMsg = None
-        if self.useStderr:
-            errMsg = self.errBuf.getvalue()
-            self.errBuf.close()
-        
-        return outMsg, errMsg
-            
-        
-        
+        return out,err
