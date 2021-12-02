@@ -142,7 +142,11 @@ class HSPTask:
         self.noprompt = user_pars.get('noprompt', False)
         
         # verbose?
-        self.verbose = user_pars.get('verbose', False)
+        verbose = user_pars.get('verbose', False)
+        if not isinstance(verbose, bool):
+            verbose = ((isinstance(verbose, str) and verbose.strip().lower() in ['y', 'yes', 'true'])
+                      or isinstance(verbose, int) and verbose > 0)
+        self.verbose = verbose
         # ----------------------------- #
         
         # prepare the logger #
