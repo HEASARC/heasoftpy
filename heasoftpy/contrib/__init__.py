@@ -14,11 +14,6 @@ can be used within the packages
 
 """
 
-# import the core modules of heasoftly #
-from .. import core
-from .. import utils 
-from .. import fcn
-
 
 # import the sub-packages.
 from .template import *

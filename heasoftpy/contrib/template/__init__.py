@@ -28,7 +28,11 @@ The package should include the following:
     to the user.
     The requirement here is that the same class (e.g. `TemplateTask`) 
     defined in `template.py` is used, along with the matching task name.
-    
+
+- below import all classes and methods that you wish to be availabe to the
+user in heasoftpy.contrib.*; Classes and methods that are only relevent to 
+this task should not be directly exposed, and should remain accessible only
+though this task module: e.g. heasoftpy.contrib.template_lib.*.
 
 """
 

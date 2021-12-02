@@ -2,8 +2,8 @@
 
 import sys
 
-from ...core import HSPTask, HSPResult, HSPLogger
-from ... import fcn, utils
+from heasoftpy.core import HSPTask, HSPResult
+from heasoftpy import fcn, utils
 
 
 class TemplateTask(HSPTask):
