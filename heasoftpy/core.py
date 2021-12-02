@@ -727,7 +727,7 @@ class HSPLogger:
             self.stderr = sys.stderr
         
         
-    def message(self, message):
+    def info(self, message):
         """Write a progress message
         
         Args:
@@ -754,7 +754,7 @@ class HSPLogger:
             self.stderr.write(message)   
     
     
-    def getValue(self):
+    def get_output(self):
         """return the value of the captured output
         
         Returns:

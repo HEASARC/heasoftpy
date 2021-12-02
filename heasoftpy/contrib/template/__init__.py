@@ -9,7 +9,7 @@ The package should include the following:
 - __init__.py: to indicate what modules, and methods are to be exposed
     to the user.
 
-- template.py (or taskname.py): This is the main module that acts
+- template_lib.py (or taskname_lib.py): This is the main module that acts
     as a wrapper for your code to integrate it within heasoftpy.
     It should define:
         ++ a class `TemplateTask` (or `TasknameTaks`) that inherits 
@@ -22,7 +22,7 @@ The package should include the following:
     or it could contain calls to other modules or sub-packages created
     under the `template` package.
     
-- template_exec.py (or generally taskname_exec.py): This is a short 
+- template.py (or generally taskname.py): This is a short 
     executable script that has the `__name__ == '__main__'`. This will 
     be moved $HEADAS/bin during the installation, and become available 
     to the user.
@@ -33,6 +33,6 @@ The package should include the following:
 """
 
 
-from .template import TemplateTask, template
+from .template_lib import TemplateTask, template
 
 __all__ = ['TemplateTask', 'template']
