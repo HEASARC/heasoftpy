@@ -182,7 +182,12 @@ class HSPTask:
             self.write_pfile(usr_pfile)
             
             # now call the task #
-            result = self.exec_task()
+            try:
+                result = self.exec_task()
+            except:
+                self.logger.exception('Failed Running the task')
+                raise
+                
             
             
             # re-read the pfile in case it has been modified by the task
