@@ -496,7 +496,7 @@ class HSPTask:
         parsDesc = ''
         for par_name in self.par_names:
             par = getattr(self, par_name)
-            parsDesc += f'\n{par.pname} {"(Req)" if par.isReq else "":6}:'
+            parsDesc += f'\n{par.pname:12} {"(Req)" if par.isReq else "":6}:'
             parsDesc += f'  {par.prompt} (default: {par.default}): '
         # --------------------- #
 

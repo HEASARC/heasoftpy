@@ -21,6 +21,15 @@ The package should include the following:
     This file can contain other methods that are needed to run the task,
     or it could contain calls to other modules or sub-packages created
     under the `template` package.
+    For the task to integrate with heasoftpy, feedback text should be 
+    
+    communicated with the provided logger, which uses the standard python
+    logging library. Inside TemplateTask, the logger can be accessed with
+    `logger = self.logger`, while outside TemplateTask, it can be invoked
+    from the logging with logging.getLogger(taskname) (taskname=template here).
+    Once loaded, simple informational messages can be written as: 
+    `logger.info(message)` amd errors as `logger.error(message)`.
+    
     
 - template.py (or generally taskname.py): This is a short 
     executable script that has the `__name__ == '__main__'`. This will 
