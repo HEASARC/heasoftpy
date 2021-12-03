@@ -156,7 +156,10 @@ class HSPTask:
             level = [1,2,3]
         else:
             level = 1
-        self.logger = HSPLogger(self.name, level=level, stderr=self.stderr).get_logger()
+
+        logging.setLoggerClass(HSPLogger)
+        self.logger = logging.getLogger(self.name)
+        self.logger.setup(level=level, stderr=self.stderr)
         # ------------------ #
         
         
@@ -706,15 +709,31 @@ class HSPParam():
         if inType == 'b':
             result = 'yes' if result else 'no'
         return result
-            
+
+
+class HSPLogger(logging.getLoggerClass()):
+    """A logger for the tasks. 
+    The same as the main logger in logging, but we add a setup
+    method to setup the handlers, and an output attribute to return
+    the string captured.
+    
+    """
+    
+    def __init__(self, name):
+        """initilize by calling the parent initializer"""
+        self.name = name
+        super().__init__(name)
+    
+    
+    def setup(self, **kwargs):
+        """Setup the logger by:
+        - creating a string stream for all levels to capture output
+        - creating a string stream for errors if stderr=True
+        - creating a console stream if level 2 is requested
+        - creating a file stream if level 3 is request. This prints
+            more debuging details
         
-class HSPLogger:
     
-    def __init__(self, name, **kwargs):
-        """Setup and return a general logger
-    
-        Args:
-            name: name of the logger
 
         Keyword Args:
             level: 1: basic, 2: short, 3: long. This should an integer
@@ -722,29 +741,21 @@ class HSPLogger:
             file_name: file name to use when level==3. Default is {name}.log
             stderr: pipe errors to a separate stream. Default is False, so 
                 errors are written to stdout
-
         """
+        
+        # inputs are in keywords #
         level       = kwargs.get('level', 1)
-        file_name   = kwargs.get('file_name', f'{name}.log')
+        file_name   = kwargs.get('file_name', f'{self.name}.log')
         self.stderr = kwargs.get('stderr', False)
         
+        # check the values of level
         if not isinstance(level, (int, list)):
             raise ValueError('level should be int or a list')
         if isinstance(level, int):
             level = [level]
-        
-        # a wrapper to give logger access to stored output
-        class _Logger(logging.getLoggerClass()):
-            def _set_container(self, obj):
-                self.obj = obj
-            @property
-            def output(self):
-                return self.obj.output
-        
-        # main logger 
-        self.logger = _Logger(name)
-        self.logger._set_container(self)
-        self.logger.setLevel(logging.DEBUG)
+    
+        # starting level
+        self.setLevel(logging.DEBUG)
         
         # Stream to capture the output
         self.oStream = io.StringIO()
@@ -775,7 +786,7 @@ class HSPLogger:
                 ehandler.addFilter(error_filter)
                 self.logger.addHandler(ehandler)
                 
-            self.logger.addHandler(handler)
+            self.addHandler(handler)
         
 
         if 2 in level:
@@ -783,7 +794,7 @@ class HSPLogger:
             handler = logging.StreamHandler()
             handler.setLevel(logging.INFO)
             handler.setFormatter(logging.Formatter('%(levelname)s|%(message)s'))
-            self.logger.addHandler(handler)
+            self.addHandler(handler)
 
         if 3 in level:
             # print progress to a file
@@ -792,16 +803,12 @@ class HSPLogger:
             handler.setFormatter(
                 logging.Formatter('%(asctime)s|%(levelname)s|%(filename)s|%(funcName)s|%(message)s')
             )
-            self.logger.addHandler(handler)  
-                    
-        
-    def get_logger(self):
-        """return the logger"""
-        return self.logger
+            self.addHandler(handler)  
+    
     
     @property
     def output(self):
-        """Return the content of the string stream, and flush it"""
+        """Return the content captured in the log stream, and flush it"""
         out = self.oStream.getvalue()
         self.oStream.close()
         err = None

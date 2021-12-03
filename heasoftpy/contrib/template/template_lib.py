@@ -1,6 +1,7 @@
 
 
 import sys
+import logging
 
 from heasoftpy.core import HSPTask, HSPResult
 from heasoftpy import fcn, utils
@@ -16,7 +17,9 @@ class TemplateTask(HSPTask):
         params = self.params
         
         # logger
-        logger = self.logger
+        logger = logging.getLogger(self.name)
+        # or logger = self.logger
+        # or logger = logging.getLogger('template')
         
         # return code: 0 if task runs sucessful; set to 0 at the end
         returncode = 1
