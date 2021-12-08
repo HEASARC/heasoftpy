@@ -102,3 +102,6 @@ def help(): return print(__doc__)
 
 # version
 from .version import __version__
+
+# packages:
+from .packages.template import *
