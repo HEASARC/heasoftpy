@@ -17,7 +17,7 @@ The package should include the following:
            runs the task code, and returns an HSPResult object.
         ++ a method `template` (or `taskname`) that creates an instance
             of `TemplateTask` and calls to run the task. This will be 
-            accessible to the user though: `heasoftpy.contrib.template`
+            accessible to the user though: `heasoftpy.packages.template`
     This file can contain other methods that are needed to run the task,
     or it could contain calls to other modules or sub-packages created
     under the `template` package.
@@ -39,9 +39,9 @@ The package should include the following:
     defined in `template.py` is used, along with the matching task name.
 
 - below import all classes and methods that you wish to be availabe to the
-user in heasoftpy.contrib.*; Classes and methods that are only relevent to 
+user in heasoftpy.packages.*; Classes and methods that are only relevent to 
 this task should not be directly exposed, and should remain accessible only
-though this task module: e.g. heasoftpy.contrib.template_lib.*.
+though this task module: e.g. heasoftpy.packages.template_lib.*.
 
 """
 

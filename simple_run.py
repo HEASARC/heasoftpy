@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 
 import heasoftpy as hsp
-from heasoftpy import contrib as hspC
+import heasoftpy.packages as hspP
 
 
 if __name__ == '__main__':
