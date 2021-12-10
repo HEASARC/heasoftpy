@@ -4,14 +4,7 @@ import sys
 import os
 import subprocess
 
-if __name__ == '__main__':
-    # this will be updated depending on where we want this installed
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-    from heasoftpy.core import HSPTask, HSPTaskException
-    from heasoftpy.utils import process_cmdLine
-else:    
-    from ..core import HSPTask, HSPTaskException
-
+from ..core import HSPTask, HSPTaskException
 
 
 def ftlist(args=None, **kwargs):
@@ -21,20 +14,21 @@ def ftlist(args=None, **kwargs):
     Additional help may be provided below.
 
     Args:
-     infile       (Req) : Input file name  (default: ../tests/test.fits)
-     option       (Req) : Print options: H C K I T  (default: T)
-     outfile            : Optional output file  (default: -)
-     clobber            : Overwrite existing output file?  (default: no)
-     include            : Include keywords list  (default: *)
-     exclude            : Exclude keywords list  (default: )
-     section            : Image section to print (default: *)
-     columns            : Table columns to print  (default: *)
-     rows               : Table rows or ranges to print (default: -)
-     vector             : Vector range to print (default: -)
-     separator          : Column separator string  (default:  )
-     rownum             : Print row number?  (default: no)
-     colheader          : Print column header?  (default: no)
-     mode               : Mode  (default: ql)
+
+    infile       (Req) :  Input file name  (default: tests/test.fits): 
+    option       (Req) :  Print options: H C K I T  (default: T): 
+    outfile            :  Optional output file  (default: -): 
+    clobber            :  Overwrite existing output file?  (default: no): 
+    include            :  Include keywords list  (default: *): 
+    exclude            :  Exclude keywords list  (default: ): 
+    section            :  Image section to print (default: *): 
+    columns            :  Table columns to print  (default: *): 
+    rows               :  Table rows or ranges to print (default: -): 
+    vector             :  Vector range to print (default: -): 
+    separator          :  Column separator string  (default:  ): 
+    rownum             :  Print row number?  (default: no): 
+    colheader          :  Print column header?  (default: no): 
+    mode               :  Mode  (default: ql): 
 
 
 
@@ -273,11 +267,5 @@ LAST MODIFIED
 
     ftlist_task = HSPTask(name="ftlist")
     return ftlist_task(args, **kwargs)
-
-
-if __name__ == '__main__':
-    ftlist_task = HSPTask(name="ftlist")
-    cmd_args = process_cmdLine(ftlist_task)
-    ftlist_task(**cmd_args)
 
         

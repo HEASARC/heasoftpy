@@ -440,6 +440,7 @@ class HSPTask:
     
         # not strictly accurate, but use it for now
         pfile = loc_pfile if (os.path.exists(loc_pfile) or return_user) else sys_pfile
+        
         return pfile
     
     @staticmethod
@@ -496,7 +497,7 @@ class HSPTask:
         parsDesc = ''
         for par_name in self.par_names:
             par = getattr(self, par_name)
-            parsDesc += f'\n{par.pname:12} {"(Req)" if par.isReq else "":6}:'
+            parsDesc += f'\n    {par.pname:12} {"(Req)" if par.isReq else "":6}:'
             parsDesc += f'  {par.prompt} (default: {par.default}): '
         # --------------------- #
 
@@ -532,14 +533,7 @@ import sys
 import os
 import subprocess
 
-if __name__ == '__main__':
-    # this will be updated depending on where we want this installed
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-    from heasoftpy.core import HSPTask, HSPTaskException
-    from heasoftpy.utils import process_cmdLine
-else:    
-    from ..core import HSPTask, HSPTaskException
-
+from ..core import HSPTask, HSPTaskException
 
 
 def {task_pyname}(args=None, **kwargs):
@@ -549,12 +543,6 @@ def {task_pyname}(args=None, **kwargs):
 
     {task_pyname}_task = HSPTask(name="{task_name}")
     return {task_pyname}_task(args, **kwargs)
-
-
-if __name__ == '__main__':
-    {task_pyname}_task = HSPTask(name="{task_name}")
-    cmd_args = process_cmdLine({task_pyname}_task)
-    {task_pyname}_task(**cmd_args)
 
         """
 
