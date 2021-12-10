@@ -438,8 +438,15 @@ class HSPTask:
         # user pfile; assumed to be the first one in pfiles
         loc_pfile = os.path.join(pfiles[0], f'{name}.par')
     
-        # not strictly accurate, but use it for now
-        pfile = loc_pfile if (os.path.exists(loc_pfile) or return_user) else sys_pfile
+        pfile = loc_pfile if os.path.exists(loc_pfile) else sys_pfile
+        
+        # if return_user, we should never return sys_pfile because, now we preparing to write
+        # create ~/pfiles if needed.
+        if return_user and pfile == sys_pfile:
+            pfile = os.path.expanduser('~/pfiles')
+            if not os.path.isdir(pfile):
+                os.mkdir(pfile)
+            pfile = f'{pfile}/{name}.par'
         
         return pfile
     
