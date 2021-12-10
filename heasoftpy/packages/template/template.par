@@ -1,0 +1,4 @@
+infile,s,a,input.fits,,,"Name of FITS file and [ext#]"
+foo,s,a,def1,,,"Foo parameter"
+bar,i,a,0,,,"Bar parameter"
+mode,s,h,ql,,,""
