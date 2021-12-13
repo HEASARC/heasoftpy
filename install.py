@@ -55,8 +55,7 @@ logger.info('Starting heasoftpy installation ...')
 logger.info('-'*30)
 logger.info('Creating python wrappers ...')
 try:
-    #generate_py_code()
-    pass
+    generate_py_code()
 except:
     logger.error('Failed in generating python wrappers')
     raise
@@ -129,14 +128,14 @@ for package in packages:
         
         # copy files to their right location #
         logger.info('     copying task files')
-        exe_dist = os.path.join(exe_install_dir, os.path.basename(exe_file))
-        par_dist = os.path.join(par_install_dir, os.path.basename(par_file))
+        exe_dest = os.path.join(exe_install_dir, os.path.basename(exe_file))
+        par_dest = os.path.join(par_install_dir, os.path.basename(par_file))
         
         # copy files make the exe file executable
         # uncomment the following once it is real install
-        #shutil.copyfile(exe_file, exe_dist)
-        #shutil.copyfile(par_file, par_dist)
-        #subprocess.call(['chmod', '777', exe_dist])
+        shutil.copyfile(exe_file, exe_dest)
+        shutil.copyfile(par_file, par_dest)
+        subprocess.call(['chmod', '777', exe_dest])
 
 logger.info('Pure-python tools installed sucessfully')
 ## ---------------------------- ##
