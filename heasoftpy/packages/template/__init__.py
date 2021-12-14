@@ -1,47 +1,72 @@
 __description__ = """
 This is a template package for a python-only tasks.
 
-The package should include the following:
+The structure of the package for a single task should be:
+packages/template/
+            |-- __init__.py
+            |-- setup.py
+            |-- template.py
+            |-- template_lib.py
+            |-- template.par
+
+
+For multiple tasks that are related to a mission for example, the 
+recommended structure is:
+packages/mission/
+            |-- __init__.py
+            |-- setup.py
+            |-- template1
+                |-- template1.py
+                |-- template1_lib.py
+                |-- template1.par
+            |-- template2
+                |-- template2.py
+                |-- template2_lib.py
+                |-- template2.par
+
+Where:
+-----
+(replace "template" or "Template" with the name of your tool)
+
+- __init__.py: should import the relevant modules to be exposed
+    to the user, and include them in __all__.
+    
+- setup.py: This will be used during the installation, and should define a variable
+    called `tasks` that contains a list of tasks provided by the package.
+    If the above file structure is used, `tasks` should be a simple list of strings.
+    So in the above 'complex' example. It is: 
+    tasks = ['template1', 'template2']
+    If the package structure is different, then the entry in the list is a dictionary of the form:
+    [{taskname: [location_of_executable, location_of_parameter_file]}]. 
+    See the example in template/setup.py.
 
 - template.par: This is a standard parameter file that will be used
     to integrate the task into HEASoft.
 
-- __init__.py: to indicate what modules, and methods are to be exposed
-    to the user.
-
-- template_lib.py (or taskname_lib.py): This is the main module that acts
-    as a wrapper for your code to integrate it within heasoftpy.
+- template_lib.py: This is the main module that acts as a wrapper for your 
+    code to integrate it within heasoftpy.
     It should define:
-        ++ a class `TemplateTask` (or `TasknameTaks`) that inherits 
-           from `HSPTask`, and define a method called `exec_task`, that 
-           runs the task code, and returns an HSPResult object.
-        ++ a method `template` (or `taskname`) that creates an instance
-            of `TemplateTask` and calls to run the task. This will be 
-            accessible to the user though: `heasoftpy.packages.template`
+        ++ a class `TemplateTask` that inherits from `HSPTask`, and defines 
+            a method called `exec_task`, that runs the task code, and returns an 
+            HSPResult object. The class should also define the `name` attribute.
+            
+        ++ a method `template` that creates an instance of `TemplateTask` and 
+            calls to run the task. This will be accessible to the user though: 
+            `heasoftpy.template`.
     This file can contain other methods that are needed to run the task,
-    or it could contain calls to other modules or sub-packages created
-    under the `template` package.
+    or it could contain calls to other modules or sub-packages.
     For the task to integrate with heasoftpy, feedback text should be 
-    
-    communicated with the provided logger, which uses the standard python
+    communicated through the provided logger, which uses the standard python
     logging library. Inside TemplateTask, the logger can be accessed with
     `logger = self.logger`, while outside TemplateTask, it can be invoked
-    from the logging with logging.getLogger(taskname) (taskname=template here).
-    Once loaded, simple informational messages can be written as: 
-    `logger.info(message)` amd errors as `logger.error(message)`.
+    with logging.getLogger(template). Once loaded, simple informational messages 
+    can be written as: `logger.info(message)` and errors as `logger.error(message)`.
     
     
-- template.py (or generally taskname.py): This is a short 
-    executable script that has the `__name__ == '__main__'`. This will 
-    be moved $HEADAS/bin during the installation, and become available 
-    to the user.
+- template.py: This is a short executable script. This will be moved $HEADAS/bin 
+    during installation, and become available to the user.
     The requirement here is that the same class (e.g. `TemplateTask`) 
-    defined in `template.py` is used, along with the matching task name.
-
-- below import all classes and methods that you wish to be availabe to the
-user in heasoftpy.packages.*; Classes and methods that are only relevent to 
-this task should not be directly exposed, and should remain accessible only
-though this task module: e.g. heasoftpy.packages.template_lib.*.
+    defined in `template_lib.py` is used, along with the matching task name.
 
 """
 

@@ -31,7 +31,7 @@ installation of `HEASoft` is therefore required.
 After intallation (see [Installation](#3-installation)), `HEASoftpy` can
 be used is several ways.
 
-### 2.1 Different Ways of Calling the Tasks:
+### 2.1 Calling the Tasks:
 1- Importing the task methods:
 ```python
 
@@ -51,7 +51,7 @@ fdump(infile='input.fits', outfile='STDOUT', ...)
 
 3- Using it directly from the command line, similar to the standard `HEASoft` tools:
 ```bash
-fdump.py infile=input.fits outfile=STDOUT ...
+calcfov.py ra=... dec=...
 
 ```
 
