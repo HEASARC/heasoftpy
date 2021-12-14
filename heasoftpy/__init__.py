@@ -92,6 +92,7 @@ installation of HEASoft is therefore required.
 
 
 """
+import os
 from .core import HSPTask, HSPTaskException, HSPResult, HSPParam, HSPLogger
 from . import utils
 
@@ -103,5 +104,8 @@ def help(): return print(__doc__)
 # version
 from .version import __version__
 
-# packages:
-from .packages.template import *
+# load sub-packages, only if we are not installing the main package:
+# __INSTALLING_HSP is created in install.py during installation
+if not '__INSTALLING_HSP' in os.environ:
+    
+    from .packages.template import *

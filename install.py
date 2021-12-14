@@ -10,6 +10,10 @@ import subprocess
 # add heasoftpy location to sys.path as it is not installed yet
 current_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, current_dir)
+
+# the following prevents sub-package in heasoftpy.packages from being imported
+# as they may depend on the functions in heasoftpy.fcn, that we will install here
+os.environ['__INSTALLING_HSP'] = 'yes'
 from heasoftpy.utils import generate_py_code
 
 # Where to install the pure-python executable and parameter file #
