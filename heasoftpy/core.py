@@ -28,7 +28,10 @@ class HSPTask:
                 
         """
         
-        # task name is required #
+        # if self.name is defined by a subclass, use it.
+        if hasattr(self, 'name') and name is None:
+            name = self.name
+        # task name is required #    
         if name is None:
             raise HSPTaskException('Task name is required')
         
@@ -235,7 +238,16 @@ class HSPTask:
         
         # the task executable
         exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
-        cmd_list = [exec_cmd] + cmd_params
+        
+        if os.path.exists(exec_cmd):
+            exec_cmd = [exec_cmd]
+        elif os.path.exists(exec_cmd + '.py'):
+            exec_cmd = ['python', exec_cmd + '.py']
+        else:
+            raise HSPTaskException(f'There is no task file {exec_cmd} to run')
+            
+        
+        cmd_list = exec_cmd + cmd_params
         # using encoding, so we get str instead of byte as output
         proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr)
         

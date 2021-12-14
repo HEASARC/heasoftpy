@@ -10,6 +10,7 @@ from heasoftpy import fcn, utils
 class TemplateTask(HSPTask):
     """Sample python-based task"""
     
+    name = 'template'
     
     def exec_task(self):
         
