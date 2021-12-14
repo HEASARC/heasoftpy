@@ -1,6 +1,0 @@
-This repository is intended to house the Python interface for HEASoft.
-
-Note: As of this writing (October 4, 2019): If you are looking for the 
-actual code, please checkout the develop branch using:
-
-> git checkout develop

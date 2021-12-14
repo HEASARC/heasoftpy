@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import glob
+import logging
 from .core import HSPTask, HSPTaskException
     
 
@@ -46,12 +47,16 @@ def generate_py_code(tasks=None):
         None
     """
     
+    logger = logging.getLogger('heasoftpy-install')
+    
     # here we are assuming HEADAS is defined. 
     # TODO: check this is the case when we are installying heasoftpy for the firs time
     if 'HEADAS' in os.environ:
         pfile_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
     else:
-        raise HSPTaskException('HEADAS not defined. Please initialize Heasoft!')
+        msg = 'HEADAS not defined. Please initialize Heasoft!'
+        logger.error(msg)
+        raise HSPTaskException(msg)
         
     
     # list of tasks
@@ -60,22 +65,24 @@ def generate_py_code(tasks=None):
         tasks     = [os.path.basename(file[:-4]) for file in par_files]
     else:
         if not isinstance(tasks, (list, )) and not isinstance(tasks[0], str):
-            raise HSPTaskException('tasks has to be a list of task names')
+            msg = 'tasks has to be a list of task names'
+            logger.error(msg)
+            raise HSPTaskException(msg)
     
     
     ntasks = len(tasks)
-    print(f'Installying python wrappers. There are {ntasks} tasks!')
+    logger.info(f'Installying python wrappers. There are {ntasks} tasks!')
     
     # loop through the tasks and generate and save the code #
     outDir = os.path.join(os.path.dirname(__file__), 'fcn')
     
     for it,task_name in enumerate(tasks):
-        print(f'.. {it+1}/{ntasks} install {task_name} ... ', end='')
+        logger.info(f'.. {it+1}/{ntasks} install {task_name} ... ')
         hsp = HSPTask(task_name)
         fcn = hsp.generate_fcn_code()
         with open(f'{outDir}/{hsp.pyname}.py', 'w') as fp: 
             fp.write(fcn)
-        print('done!')
+        logger.info('done!')
     
 
 def local_pfiles(par_dir=None):

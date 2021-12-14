@@ -87,7 +87,7 @@ for package in packages:
     try:
         setup = importlib.import_module(f'heasoftpy.packages.{package}.setup')
     except ModuleNotFoundError:
-        logger.warning(f'Package {package} has no step.py file. Skipping')
+        logger.warning(f'Package {package} has no setup.py file. Skipping')
         continue
     
     # loop through the task, and install them one by one.

@@ -20,7 +20,7 @@ tools using python. It provies python wrappers that call the
 code.
 
 `HEASoftpy` also provides a framework that allows for pure-python
-tools to be developed and integrated within the `HEASoft` system (see [Writing Python Tasks](#writing-python-tasks)).
+tools to be developed and integrated within the `HEASoft` system (see [Writing Python Tasks](#4-writing-python-tasks)).
 
 Although `HEASoftpy` is written in pure python, it does not rewrite 
 the functions and tools already existing in `HEASoft`. A working
@@ -28,7 +28,7 @@ installation of `HEASoft` is therefore required.
 
 
 ## 2. Usage
-After intallation (see [Installation](#installation)), `HEASoftpy` can
+After intallation (see [Installation](#3-installation)), `HEASoftpy` can
 be used is several ways.
 
 ### 2.1 Different Ways of Calling the Tasks:
@@ -87,7 +87,7 @@ fdump_task()
 
 ```
 
-Whenver a task in called, if any of the required parameters is missing, 
+Whenever a task in called, if any of the required parameters is missing, 
 the user is prompted to enter a value.
 
 Note that creatting a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and paramters are queried if necessary.
@@ -163,7 +163,43 @@ DESCRIPTION
 
 
 ## 3. Installation
-TODO
+Assuming you have `HEASoft` initialized and the environment variable `\$HEADAS` is defined, you can install `heasoftpy` in two ways:
+
+#### - Install within the `HEASoft` tree:
+
+1- Download the [latest version of heasoftpy](https://sed-gitlab.gsfc.nasa.gov/azoghbi/heasoftpy/-/archive/refactor/heasoftpy-refactor.tar.gz) to `$HEADAS/lib/python` (if `$HEADAS/lib/python` doesn't exist, please create it).
+
+2- Rename or remove the `heasoftpy` folder if it exists.
+
+3- Untar the downloaded file (creates a `heasoftpy` directory)
+    
+4- Rename the created `heasoftpy` folder to `heasoftpy_src`
+    
+5- From within `$HEADAS/lib/python`: make a soft link for `heasoftpy_src/heasofpy` : 
+```sh
+ln -s heasoftpy_src/heasofpy heasoftpy
+```
+    
+6- Run the installer from the command line:
+```sh
+cd heasoftpy_src
+python install.py
+```
+This process, which may take a few minutes, will install the python wrappers for the `HEASoft` tools, and any python-only tasks.
+
+7- Lastly, make sure that `$HEADAS/lib/python` is included in your `PYTHONPATH` environment variable (so python can find the installed package), you may need to re-initialize `HEASoft` by sourcing the standard `HEASoft` setup script:
+```sh
+source $HEADAS/headas-init.sh  (Bourne shell variants)
+#Or
+source $HEADAS/headas-init.csh (C-shell variants)
+```
+
+#### - Install outside the `HEASoft` tree:
+
+`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-6, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
+
+
+While the `install.py` script is running, check the screen or the `heasoftpy-install.log` for errors.
 
 ---
 ## 4. Writing Python Tasks
