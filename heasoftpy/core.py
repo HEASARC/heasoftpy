@@ -618,6 +618,10 @@ class HSPParam():
         
         info = line.strip().split(',')
 
+        # handle comma (,) in the prompt text
+        if len(info) > 6:
+            info = info[:6] + [','.join(info[6:])]
+
         # extract information about the parameter
         self.pname = info[0]
         pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
