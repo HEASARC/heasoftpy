@@ -111,5 +111,78 @@ class TestReadPFile(unittest.TestCase):
         os.remove(tmpfile)
 
         
+class TestWritePFile(unittest.TestCase):
+    """Tests for reading pfiles"""
+        
+    # don't write a parameter with h, mode=ql.
+    def test__write_pfile__nowrite_h1(self):
+        taskname = 'testtask'
+        pfiles = os.environ['PFILES']
+        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        
+        wTxt = 'infile,s,a,,,,"Name"\nnumber,r,h,2.0,,,"Fraction"\nmode,s,h,"ql",,,'
+        open(f'{taskname}.par', 'w').write(wTxt)
+        # --- #
+        
+        hsp  = heasoftpy.HSPTask(taskname)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
+        tmpfile = f'{taskname}.2.par'
+        hsp.write_pfile(tmpfile)
+        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(newpars[0].value, 'IN_FILE')
+        self.assertEqual(newpars[1].value, 2.0)
+        os.remove(tmpfile)
+        
+        # --- #
+        os.environ['PFILES'] = pfiles
+        os.remove(f'{taskname}.par')
+
+    # don't write a parameter with h, mode=q.
+    def test__write_pfile__nowrite_h2(self):
+        taskname = 'testtask'
+        pfiles = os.environ['PFILES']
+        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        
+        wTxt = 'infile,s,a,,,,"Name"\nnumber,r,h,2.0,,,"Fraction"\nmode,s,h,"q",,,'
+        open(f'{taskname}.par', 'w').write(wTxt)
+        # --- #
+        
+        hsp  = heasoftpy.HSPTask(taskname)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
+        tmpfile = f'{taskname}.2.par'
+        hsp.write_pfile(tmpfile)
+        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(newpars[0].value, '')
+        self.assertEqual(newpars[1].value, 2.0)
+        os.remove(tmpfile)
+        
+        # --- #
+        os.environ['PFILES'] = pfiles
+        os.remove(f'{taskname}.par')
+
+
+    # write a parameter with ql, al, mode=q
+    def test__write_pfile__nowrite_3(self):
+        taskname = 'testtask'
+        pfiles = os.environ['PFILES']
+        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        
+        wTxt = 'infile,s,al,,,,"Name"\nnumber,r,ql,2.0,,,"Fraction"\nmode,s,h,"q",,,'
+        open(f'{taskname}.par', 'w').write(wTxt)
+        # --- #
+        
+        hsp  = heasoftpy.HSPTask(taskname)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
+        tmpfile = f'{taskname}.2.par'
+        hsp.write_pfile(tmpfile)
+        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(newpars[0].value, 'IN_FILE')
+        self.assertEqual(newpars[1].value, 4)
+        os.remove(tmpfile)
+        
+        # --- #
+        os.environ['PFILES'] = pfiles
+        os.remove(f'{taskname}.par')
+        
 if __name__ == '__main__':
     unittest.main()

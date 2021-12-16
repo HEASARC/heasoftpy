@@ -62,6 +62,7 @@ class HSPTask:
         
         self.par_names = par_names
         self.params = {}
+        self.default_params = {pname:getattr(self, pname).value for pname in par_names}
         self.pfile = pfile
         self.__doc__ = self._generate_fcn_docs()
 
@@ -370,10 +371,13 @@ class HSPTask:
         """
         
         # write the updated parameter list #
+        defaults = self.default_params
         ptxt = ''
         for par_name in self.par_names:
             par = getattr(self, par_name)
             val = par.value
+            if par.mode == 'h' or (par.mode == 'a' and defaults['mode'] in ['h', 'q']):
+                val = defaults[par_name]
             
             # make any style changes to the values to be printed #
             if par.type == 's' and (' ' in val or val == ''):
@@ -413,6 +417,10 @@ class HSPTask:
                 continue
             
             params.append(HSPParam(line))
+        
+        # if no mode, assume ql
+        if params[-1].pname != 'mode':
+            params.append(HSPParam('mode,s,h,"ql",,,'))
         return params
     
     
