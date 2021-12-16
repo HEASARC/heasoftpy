@@ -27,7 +27,10 @@ def process_cmdLine(hspTask=None):
         if len(val_list) == 1:
             raise ValueError(f'Unable to parse parameter {val}. Please use: param=value')
         args[val_list[0]] = val_list[1]
-        
+    
+    # make verbose=1 default
+    if not 'verbose' in args.keys():
+        args['verbose'] = 1
     return args
 
 

@@ -146,24 +146,50 @@ class HSPTask:
         self.noprompt = user_pars.get('noprompt', False)
         
         # verbose?
-        verbose = user_pars.get('verbose', False)
-        if not isinstance(verbose, bool):
-            verbose = ((isinstance(verbose, str) and verbose.strip().lower() in ['y', 'yes', 'true'])
-                      or isinstance(verbose, int) and verbose > 0)
+        verbose = user_pars.get('verbose', 0)
+        logfile = user_pars.get('logfile', None)
+        if isinstance(verbose, bool):
+            verbose = 1 if verbose else 0
+        elif isinstance(verbose, str):
+            if verbose.strip().lower() in ['y', 'yes', 'true']:
+                verbose = 1
+            elif verbose.strip().lower() in ['n', 'no', 'false']:
+                verbose = 0
+            else:
+                try:
+                    verbose = int(verbose)
+                except ValueError:
+                    verbose = 1
         self.verbose = verbose
         # ----------------------------- #
         
         # prepare the logger #
-        if isinstance(self.verbose, bool) and self.verbose:
-            level = [1,2]
-        elif isinstance(self.verbose, int) and self.verbose >= 3:
-            level = [1,2,3]
-        else:
+        if verbose <= 0:
+            # capture only
             level = 1
-
-        logging.setLoggerClass(HSPLogger)
-        self.logger = logging.getLogger(self.name)
-        self.logger.setup(level=level, stderr=self.stderr)
+            logfile = None
+        elif verbose == 1:
+            # capture & screen
+            level = [1, 2]
+            logfile = None
+        elif verbose == 20:
+            # capture and logfile
+            level = [1, 3]
+            if logfile is None:
+                logfile = f'{self.name}.log'
+        else:
+            # capture, screen and logfile
+            level = [1, 2, 3]
+            if logfile is None:
+                logfile = f'{self.name}.log'
+            
+        self.logfile = logfile
+        
+        # setup logger only for pure-python calls, not for native heasoft tools
+        if self.__module__ != 'heasoftpy.core':
+            logging.setLoggerClass(HSPLogger)
+            self.logger = logging.getLogger(self.name)
+            self.logger.setup(level=level, stderr=self.stderr, file_name=logfile)
         # ------------------ #
         
         
@@ -189,11 +215,7 @@ class HSPTask:
             self.write_pfile(usr_pfile)
             
             # now call the task #
-            try:
-                result = self.exec_task()
-            except:
-                self.logger.exception('Failed Running the task')
-                raise
+            result = self.exec_task()
                 
             
             
@@ -256,8 +278,8 @@ class HSPTask:
         # if verbose, we need to both print and capture output #
         # keeping track of stdout and stderr                   #
         # ---------------------------------------------------- #
-        if verbose:
-            proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr)
+        if verbose > 0:
+            proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr, verbose, self.logfile)
         else:
             proc_out, proc_err = proc.communicate()
             if isinstance(proc_out, bytes): proc_out = proc_out.decode()
@@ -472,7 +494,7 @@ class HSPTask:
         return pfile
     
     @staticmethod
-    def handle_io_stream(ioObj, stderr=False):
+    def handle_io_stream(ioObj, stderr, verbose, logfile):
         """
 
         Args:
@@ -488,6 +510,9 @@ class HSPTask:
         if stderr:
             selector.register(ioObj.stderr, selectors.EVENT_READ)
             errBuf = io.StringIO()
+        file = None
+        if not logfile is None:
+            file = open(logfile, 'a')
 
         # while task is running, print/capture output #
         done = False
@@ -497,11 +522,13 @@ class HSPTask:
                 if not line:
                     done = True
                 if not stderr or key.fileobj is ioObj.stdout:
-                    sys.stdout.write(line)
+                    if verbose != 20: sys.stdout.write(line)
                     outBuf.write(line)
+                    if file: file.write(line)
                 else:
-                    sys.stderr.write(line)
+                    if verbose != 20: sys.stderr.write(line)
                     errBuf.write(line)
+                    if file: file.write(line)
 
         ioObj_out = outBuf.getvalue()
         outBuf.close()
@@ -509,6 +536,8 @@ class HSPTask:
         if stderr:
             ioObj_err = errBuf.getvalue()
             errBuf.close()
+        if file:
+            file.close()
         return ioObj_out, ioObj_err    
     
         
@@ -743,6 +772,7 @@ class HSPLogger(logging.getLoggerClass()):
         """initilize by calling the parent initializer"""
         self.name = name
         super().__init__(name)
+        self.isSetup = False
     
     
     def setup(self, **kwargs):
@@ -765,8 +795,21 @@ class HSPLogger(logging.getLoggerClass()):
         
         # inputs are in keywords #
         level       = kwargs.get('level', 1)
-        file_name   = kwargs.get('file_name', f'{self.name}.log')
+        file_name   = kwargs.get('file_name', None)
         self.stderr = kwargs.get('stderr', False)
+        
+        # setup only once: #
+        if self.isSetup:
+            # only clean the streams
+            self.oStream = io.StringIO()
+            if self.stderr:
+                self.eStream = io.StringIO()
+        self.isSetup = True
+        if not file_name is None and os.path.exists(file_name):
+            os.remove(file_name)
+        # ---------------- #
+        
+        
         
         # check the values of level
         if not isinstance(level, (int, list)):
@@ -813,7 +856,7 @@ class HSPLogger(logging.getLoggerClass()):
             # Console handler to print progress
             handler = logging.StreamHandler()
             handler.setLevel(logging.INFO)
-            handler.setFormatter(logging.Formatter('%(levelname)s|%(message)s'))
+            handler.setFormatter(logging.Formatter('%(message)s'))
             self.addHandler(handler)
 
         if 3 in level:
@@ -821,7 +864,7 @@ class HSPLogger(logging.getLoggerClass()):
             handler = logging.FileHandler(file_name, mode='a')
             handler.setLevel(logging.DEBUG)
             handler.setFormatter(
-                logging.Formatter('%(asctime)s|%(levelname)s|%(filename)s|%(funcName)s|%(message)s')
+                logging.Formatter('%(asctime)s|%(levelname)5s|%(filename)s|%(funcName)s|%(message)s')
             )
             self.addHandler(handler)  
     
