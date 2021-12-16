@@ -77,6 +77,9 @@ logger.info('Installing pure-python tools ...')
 package_dir = os.path.join(current_dir, 'heasoftpy', 'packages')
 packages = glob.glob(f'{package_dir}/*')
 packages = [os.path.basename(p) for p in packages if not '__' in p]
+# remove template from the list of packages.
+if 'template' in packages:
+    packages.remove('template')
 
 
 logger.info(f'Found {len(packages)} in heasoftpy/packages')
