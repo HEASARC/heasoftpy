@@ -375,8 +375,9 @@ class HSPTask:
         ptxt = ''
         for par_name in self.par_names:
             par = getattr(self, par_name)
+            
             val = par.value
-            if par.mode == 'h' or (par.mode == 'a' and defaults['mode'] in ['h', 'q']):
+            if par.mode in ['h', 'q'] or (par.mode == 'a' and not 'l' in defaults['mode']):
                 val = defaults[par_name]
             
             # make any style changes to the values to be printed #

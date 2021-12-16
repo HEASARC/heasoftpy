@@ -112,77 +112,168 @@ class TestReadPFile(unittest.TestCase):
 
         
 class TestWritePFile(unittest.TestCase):
-    """Tests for reading pfiles"""
+    """Tests for write_pfile"""
+    
         
-    # don't write a parameter with h, mode=ql.
-    def test__write_pfile__nowrite_h1(self):
+    # test:mode=q.
+    def test__write_pfile__mode_q(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
         os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
         
-        wTxt = 'infile,s,a,,,,"Name"\nnumber,r,h,2.0,,,"Fraction"\nmode,s,h,"ql",,,'
+        # a, q, h, ql, hl
+        wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
+                'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"q",,,')
         open(f'{taskname}.par', 'w').write(wTxt)
         # --- #
         
         hsp  = heasoftpy.HSPTask(taskname)
-        hsp(infile='IN_FILE', number=4, do_exec=False)
+        hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500, do_exec=False)
         tmpfile = f'{taskname}.2.par'
         hsp.write_pfile(tmpfile)
         newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
-        self.assertEqual(newpars[0].value, 'IN_FILE')
-        self.assertEqual(newpars[1].value, 2.0)
-        os.remove(tmpfile)
         
-        # --- #
-        os.environ['PFILES'] = pfiles
-        os.remove(f'{taskname}.par')
-
-    # don't write a parameter with h, mode=q.
-    def test__write_pfile__nowrite_h2(self):
-        taskname = 'testtask'
-        pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
-        
-        wTxt = 'infile,s,a,,,,"Name"\nnumber,r,h,2.0,,,"Fraction"\nmode,s,h,"q",,,'
-        open(f'{taskname}.par', 'w').write(wTxt)
-        # --- #
-        
-        hsp  = heasoftpy.HSPTask(taskname)
-        hsp(infile='IN_FILE', number=4, do_exec=False)
-        tmpfile = f'{taskname}.2.par'
-        hsp.write_pfile(tmpfile)
-        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        # a: mode:q; no write
         self.assertEqual(newpars[0].value, '')
+        
+        # q: mode:q; no write
         self.assertEqual(newpars[1].value, 2.0)
+        
+        # h: mode:q; no write
+        self.assertEqual(newpars[2].value, 3.0)
+        
+        # ql: mode:q; write
+        self.assertEqual(newpars[3].value, 400)
+        
+        # hl: mode:q; write
+        self.assertEqual(newpars[4].value, 500)
+
         os.remove(tmpfile)
         
         # --- #
         os.environ['PFILES'] = pfiles
         os.remove(f'{taskname}.par')
 
-
-    # write a parameter with ql, al, mode=q
-    def test__write_pfile__nowrite_3(self):
+        
+    # test:mode=ql.
+    def test__write_pfile__mode_ql(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
         os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
         
-        wTxt = 'infile,s,al,,,,"Name"\nnumber,r,ql,2.0,,,"Fraction"\nmode,s,h,"q",,,'
+        # a, q, h, ql, hl
+        wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
+                'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"ql",,,')
         open(f'{taskname}.par', 'w').write(wTxt)
         # --- #
         
         hsp  = heasoftpy.HSPTask(taskname)
-        hsp(infile='IN_FILE', number=4, do_exec=False)
+        hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500, do_exec=False)
         tmpfile = f'{taskname}.2.par'
         hsp.write_pfile(tmpfile)
         newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        
+        # a: mode:ql; write
         self.assertEqual(newpars[0].value, 'IN_FILE')
-        self.assertEqual(newpars[1].value, 4)
+        
+        # q: mode:ql; no write
+        self.assertEqual(newpars[1].value, 2.0)
+        
+        # h: mode:ql; no write
+        self.assertEqual(newpars[2].value, 3.0)
+        
+        # ql: mode:ql; write
+        self.assertEqual(newpars[3].value, 400)
+        
+        # hl: mode:ql; write
+        self.assertEqual(newpars[4].value, 500)
+
         os.remove(tmpfile)
         
         # --- #
         os.environ['PFILES'] = pfiles
         os.remove(f'{taskname}.par')
+        
+        
+    # test:mode=h.
+    def test__write_pfile__mode_h(self):
+        taskname = 'testtask'
+        pfiles = os.environ['PFILES']
+        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        
+        # a, q, h, ql, hl
+        wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
+                'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"h",,,')
+        open(f'{taskname}.par', 'w').write(wTxt)
+        # --- #
+        
+        hsp  = heasoftpy.HSPTask(taskname)
+        hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500, do_exec=False)
+        tmpfile = f'{taskname}.2.par'
+        hsp.write_pfile(tmpfile)
+        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        
+        # a: mode:h; no write
+        self.assertEqual(newpars[0].value, '')
+        
+        # q: mode:h; no write
+        self.assertEqual(newpars[1].value, 2.0)
+        
+        # h: mode:h; no write
+        self.assertEqual(newpars[2].value, 3.0)
+        
+        # ql: mode:h; write
+        self.assertEqual(newpars[3].value, 400)
+        
+        # hl: mode:h; write
+        self.assertEqual(newpars[4].value, 500)
+
+        os.remove(tmpfile)
+        
+        # --- #
+        os.environ['PFILES'] = pfiles
+        os.remove(f'{taskname}.par')
+        
+        
+    # test:mode=hl.
+    def test__write_pfile__mode_hl(self):
+        taskname = 'testtask'
+        pfiles = os.environ['PFILES']
+        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        
+        # a, q, h, ql, hl
+        wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
+                'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"hl",,,')
+        open(f'{taskname}.par', 'w').write(wTxt)
+        # --- #
+        
+        hsp  = heasoftpy.HSPTask(taskname)
+        hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500, do_exec=False)
+        tmpfile = f'{taskname}.2.par'
+        hsp.write_pfile(tmpfile)
+        newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        
+        # a: mode:h; write
+        self.assertEqual(newpars[0].value, 'IN_FILE')
+        
+        # q: mode:h; no write
+        self.assertEqual(newpars[1].value, 2.0)
+        
+        # h: mode:h; no write
+        self.assertEqual(newpars[2].value, 3.0)
+        
+        # ql: mode:h; write
+        self.assertEqual(newpars[3].value, 400)
+        
+        # hl: mode:h; write
+        self.assertEqual(newpars[4].value, 500)
+
+        os.remove(tmpfile)
+        
+        # --- #
+        os.environ['PFILES'] = pfiles
+        os.remove(f'{taskname}.par')
+ 
         
 if __name__ == '__main__':
     unittest.main()
