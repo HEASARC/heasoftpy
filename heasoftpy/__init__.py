@@ -67,12 +67,13 @@ Help for tasks can be accesed by:
 
 ADDIING PYTHON TASKS
 --------------------
-The core of HEASoftpy os the class HSPTask, which handles the .par 
-parameter reading and setting. It was written in a way to make it 
-easy for writing new codes that can be easily integrated within 
-HEASoft. All that is needed, in addition to creating a .par file, 
-is to create subclass of HSPTask and implements a method exec_task 
-that does the task function. 
+The core of HEASoftpy is the class HSPTask, which handles the
+parameter reading from the paramater files and parameter setting.
+It was written in a way to make it
+easier to integrate new code within
+HEASoft. All that is needed is to creating a .par file and
+to create subclass of HSPTask and implement a method called exec_task
+that performs the desired task function.
 
 >>> class SampleTask(hsp.HSPTask):
 >>>     def exec_task(self):
@@ -88,8 +89,6 @@ NOTES:
 Although HEASoftpy is written in pure python, it does NOT rewrite
 the functions and tools already existing in HEASoft. A working
 installation of HEASoft is therefore required.
-
-
 
 """
 import os
