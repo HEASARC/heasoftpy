@@ -101,7 +101,7 @@ There are a few parameters that are common between all tasks:
     - `1` (also `True` or `yes`): In addition to capturing and returning the text,
         task text will printed into the screen as the task runs.
     - `2`: Similar to `1`, but also prints the text to a log file.
-    - `20`: In additioa to capturing and returning the text, log it to a file, 
+    - `20`: In addition to capturing and returning the text, log it to a file, 
         but not to the screen. 
         In both cases of `2` and `20`, the default log file name is {taskname}.log. 
         A `logfile` parameter can be passed to the task to override the file name.

@@ -29,8 +29,13 @@ class HSPTask:
         """
         
         # if self.name is defined by a subclass, use it.
-        if hasattr(self, 'name') and name is None:
-            name = self.name
+        if hasattr(self, 'name'):
+            if name is None:
+                name = self.name
+            # if name given is different from that defined in the class; fail
+            if name != self.name:
+                raise HSPTaskException(f'given task name "{name}" does not '
+                                       f'match the name in the class "{self.name}"')
         # task name is required #    
         if name is None:
             raise HSPTaskException('Task name is required')
@@ -40,9 +45,12 @@ class HSPTask:
         self.pyname = name.replace('-', '_')
             
         
-        # first read the par file as a starter
+        # first read the parameter file
         pfile  = HSPTask.find_pfile(name)
         params = HSPTask.read_pfile(pfile)
+        
+        # par_names: holds a list of the parameter names as strings
+        # make each parameter accessible as: task.par_name
         par_names = []
         for par in params:
             setattr(self, par.pname, par)
@@ -68,7 +76,7 @@ class HSPTask:
 
         
     def __setattr__(self, attr, val):
-        """Enable setting a parameter by setting HSPParam equal to some value
+        """Enable setting a parameter by setting HSPParam equal to some value.
         Doing it this way because for non-class attributes (task parameters that
         are defined in __init__ and not the in class), setting and getting them
         is not accessible for an class instance, unless we do it this way.
@@ -103,12 +111,21 @@ class HSPTask:
             **kwargs: individual task parameters given as: paramter=value.
             
         Common Keywords:
-            verbose: If True, print the task output to screen. Default is False
-            noprompt: Typically, HSPTask would check the input parameters and 
+            - verbose: This can take several values. In all cases, the text printed by the
+                task is captured, and returned in HSPResult.stdout/stderr. Addionally:
+                - 0 (also False or 'no'): Just return the text, no progress prining.
+                - 1 (also True or 'yes'): In addition to capturing and returning the text,
+                    task text will printed into the screen as the task runs.
+                - 2: Similar to 1, but also prints the text to a log file.
+                - 20: In addition to capturing and returning the text, log it to a file, 
+                    but not to the screen. 
+                    In both cases of 2 and 20, the default log file name is {taskname}.log. 
+                    A logfile parameter can be passed to the task to override the file name.
+            - noprompt: Typically, HSPTask would check the input parameters and 
                 queries any missing ones. Some tasks (e.g. pipelines) can run by using
-                default values. Setting noprompt=True, disables checking and quering 
+                default values. Setting `noprompt=True`, disables checking and quering 
                 the parameters. Default is False.
-            stderr: If True, make stderr separate from stdout. The default
+            - stderr: If True, make stderr separate from stdout. The default
                 is False, so stderr is written to stdout.
             
         Returns:
@@ -126,7 +143,7 @@ class HSPTask:
             raise HSPTaskException('Unrecognized input in initializing HSPTask')
         
         # add all keywords if present
-        # any commandLine arguments in sys.argv should be passed in kwargs
+        # any commandLine arguments in sys.argv should have already been processed into kwargs
         user_pars.update(kwargs)
         
         # also add any parameters in self.params from a previous call
@@ -143,7 +160,11 @@ class HSPTask:
         self.stderr = stderr
         
         # noprompt?
-        self.noprompt = user_pars.get('noprompt', False)
+        noprompt = user_pars.get('noprompt', False)
+        if not isinstance(stderr, bool):
+            noprompt = ((isinstance(noprompt, str) and noprompt.strip().lower() in ['y', 'yes', 'true'])
+                          or isinstance(noprompt, int) and noprompt > 0)
+        self.noprompt = noprompt
         
         # verbose?
         verbose = user_pars.get('verbose', 0)
@@ -160,10 +181,13 @@ class HSPTask:
                     verbose = int(verbose)
                 except ValueError:
                     verbose = 1
+        if not isinstance(verbose, int):
+            raise HSPTaskException(f'confusing verbose value. Allowed types are: bool, str or int')
         self.verbose = verbose
         # ----------------------------- #
         
         # prepare the logger #
+        # note that verbose takes precedence over logile
         if verbose <= 0:
             # capture only
             level = 1
@@ -186,6 +210,7 @@ class HSPTask:
         self.logfile = logfile
         
         # setup logger only for pure-python calls, not for native heasoft tools
+        # those are handeled separately by handle_io_stream
         if self.__module__ != 'heasoftpy.core':
             logging.setLoggerClass(HSPLogger)
             self.logger = logging.getLogger(self.name)
@@ -216,7 +241,10 @@ class HSPTask:
             
             # now call the task #
             result = self.exec_task()
-                
+            
+            # ensure we are returning the correct type
+            if not isinstance(result, HSPResult):
+                raise HSPTaskException(f'Returned result type {type(result)} is not HSPResult')
             
             
             # re-read the pfile in case it has been modified by the task
@@ -224,9 +252,7 @@ class HSPTask:
                 params_after = HSPTask.read_pfile(usr_pfile)
                 for ipar, par_name in enumerate(self.par_names):
                     setattr(self, par_name, params_after[ipar].value)
-            
-            
-            # now we are ready to call the task
+                        
             return result
     
     
@@ -239,16 +265,14 @@ class HSPTask:
                 
         Here, we just call the heasoft task as a subprocess
         
-        Args:
-            verbose: if True, print progress.
                 
         Returns:
             This method should return HSPResult object.
-            e.g. HSPResult(ret_code, std_out, std_err, params)
+            e.g. HSPResult(ret_code, std_out, std_err, params, custom_dict)
         
         """
         
-        # put the parameters in to a list of par=value
+        # Get the task parameters
         usr_params = self.params
         
         verbose = self.verbose
@@ -271,12 +295,12 @@ class HSPTask:
             
         
         cmd_list = exec_cmd + cmd_params
-        # using encoding, so we get str instead of byte as output
         proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr)
         
         # ---------------------------------------------------- #
         # if verbose, we need to both print and capture output #
         # keeping track of stdout and stderr                   #
+        # pass this to handle_io_stream to deal with it        #
         # ---------------------------------------------------- #
         if verbose > 0:
             proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr, verbose, self.logfile)
@@ -651,9 +675,15 @@ class HSPResult:
     
     
 class HSPParam():
+    """Class for holding task parameters """
     
     def __init__(self, line):
+        """Initialize a parameter object with a line from the .par file
         
+        Args:
+            line: a line from the parameter file
+            
+        """
         info = line.strip().split(',')
 
         # handle comma (,) in the prompt text
@@ -694,7 +724,8 @@ class HSPParam():
         TODO: handle nan, None, INDEF etc
             
         """
-        querymsg = f':: {self.pname} ::\n{self.prompt} ({self.value}) > '
+        #querymsg = f':: {self.pname} ::\n{self.prompt} ({self.value}) > '
+        querymsg = f'{self.prompt} [{self.value}] '
         done = False
         while not done:
             
