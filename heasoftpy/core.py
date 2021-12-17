@@ -457,13 +457,14 @@ class HSPTask:
             raise IOError(f'parameter file {pfile} not found')
         
         params = []
-        for line in open(pfile, 'r'):
-            
-            # make sure we have a line with information
-            if line.startswith('#') or len(line.split(',')) < 6:
-                continue
-            
-            params.append(HSPParam(line))
+        with open(pfile, 'r') as fp:
+            for line in fp:
+
+                # make sure we have a line with information
+                if line.startswith('#') or len(line.split(',')) < 6:
+                    continue
+
+                params.append(HSPParam(line))
         
         # if no mode, assume ql
         if params[-1].pname != 'mode':

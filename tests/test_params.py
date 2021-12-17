@@ -97,7 +97,7 @@ class TestReadPFile(unittest.TestCase):
     def test__find_pfile__simpleFile(self):
         wTxt = 'infile,s,a,,,,"Name of file"'
         tmpfile = 'tmp.simpleFile.par'
-        open(tmpfile, 'w').write(wTxt)
+        with open(tmpfile, 'w') as fp: fp.write(wTxt)
         pars = heasoftpy.HSPTask.read_pfile(tmpfile)
         expected = {'infile': {'type':'s', 'mode':'a', 'default':'',
                                'min': '', 'max': '', 'prompt': 'Name of file'}}
@@ -124,7 +124,7 @@ class TestWritePFile(unittest.TestCase):
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
                 'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"q",,,')
-        open(f'{taskname}.par', 'w').write(wTxt)
+        with open(f'{taskname}.par', 'w') as fp: fp.write(wTxt)
         # --- #
         
         hsp  = heasoftpy.HSPTask(taskname)
@@ -164,7 +164,7 @@ class TestWritePFile(unittest.TestCase):
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
                 'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"ql",,,')
-        open(f'{taskname}.par', 'w').write(wTxt)
+        with open(f'{taskname}.par', 'w') as fp: fp.write(wTxt)
         # --- #
         
         hsp  = heasoftpy.HSPTask(taskname)
@@ -204,7 +204,7 @@ class TestWritePFile(unittest.TestCase):
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
                 'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"h",,,')
-        open(f'{taskname}.par', 'w').write(wTxt)
+        with open(f'{taskname}.par', 'w') as fp: fp.write(wTxt)
         # --- #
         
         hsp  = heasoftpy.HSPTask(taskname)
@@ -244,7 +244,7 @@ class TestWritePFile(unittest.TestCase):
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
                 'par4,r,ql,4.0,,,"Par4"\npar5,r,hl,5.0,,,"Par5"\nmode,s,h,"hl",,,')
-        open(f'{taskname}.par', 'w').write(wTxt)
+        with open(f'{taskname}.par', 'w') as fp: fp.write(wTxt)
         # --- #
         
         hsp  = heasoftpy.HSPTask(taskname)

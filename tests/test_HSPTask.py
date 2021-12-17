@@ -14,7 +14,7 @@ class TestHSPTask(unittest.TestCase):
         cls.taskname = 'testtask'
         
         wTxt = 'infile,s,a,,,,"Name"\nnumber,r,q,2.0,,,"Fraction"'
-        open(f'{cls.taskname}.par', 'w').write(wTxt)
+        with open(f'{cls.taskname}.par', 'w') as fp: fp.write(wTxt)
         
         cls.pfiles = os.environ['PFILES']
         os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
