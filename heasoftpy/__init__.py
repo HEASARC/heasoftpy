@@ -2,7 +2,7 @@
 
 DESCRIPTION:
 -----------
-HEASoftpy is a Python package to wrap the HEASoft tools so that 
+HEASoftpy is a Python package to wrap the HEASoft tools so that
 they can be called from python scripts, interactive ipython 
 sessions, or Jupyter Notebooks.  
 
@@ -14,6 +14,10 @@ sessions, or Jupyter Notebooks.
 >>> print(result.stdout)
 ...
 
+REQUIREMENTS:
+--------------
+python (versions later than 3.7)
+astropy
 
 EXAMPLE USAGE:
 --------------
@@ -67,13 +71,14 @@ Help for tasks can be accessed by:
 
 ADDIING PYTHON TASKS
 --------------------
-The core of HEASoftpy is the class HSPTask, which handles the
-parameter reading from the paramater files and parameter setting.
-It was written in a way to make it
-easier to integrate new code within
-HEASoft. All that is needed is to creating a .par file and
-to create subclass of HSPTask and implement a method called exec_task
-that performs the desired task function.
+The core of HEASoftpy is the HSPTask class, which handles the
+parameter reading from the parameter files and parameter setting.
+This class makes it easier to integrate new code within
+HEASoft. To create a new task, all that is needed is to create a .par file in the user's
+PFILES directory (usually $HOME/pfiles) and to create subclass of HSPTask
+and implement a method called exec_task that performs the desired task function.
+
+For example
 
 >>> class SampleTask(hsp.HSPTask):
 >>>     def exec_task(self):
