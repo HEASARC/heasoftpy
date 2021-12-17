@@ -281,6 +281,9 @@ class HSPTask:
         stderr = subprocess.PIPE if self.stderr else subprocess.STDOUT
         
         # the :<1 ensures that empty str gets an extra space
+        for par in usr_params.keys():
+            if isinstance(usr_params[par], bool):
+                usr_params[par] = 'yes' if usr_params[par] else 'no'
         cmd_params = [f'{par}={val:<1}' for par,val in usr_params.items()]
         
         # the task executable
