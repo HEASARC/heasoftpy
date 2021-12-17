@@ -142,13 +142,13 @@ class HSPTask:
         else:
             raise HSPTaskException('Unrecognized input in initializing HSPTask')
         
+        # also any parameters in self.params from a previous call
+        # or entered by hand
+        user_pars.update(self.params)
+        
         # add all keywords if present
         # any commandLine arguments in sys.argv should have already been processed into kwargs
         user_pars.update(kwargs)
-        
-        # also add any parameters in self.params from a previous call
-        # or entered by hand
-        user_pars.update(self.params)
         
         # ----------------------------- #
         # handle common task parameters #
