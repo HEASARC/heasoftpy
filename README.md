@@ -107,7 +107,7 @@ There are a few parameters that are common between all tasks:
         A `logfile` parameter can be passed to the task to override the file name.
 - `noprompt`: Typically, HSPTask would check the input parameters and 
     queries any missing ones. Some tasks (e.g. pipelines) can run by using
-    default values. Setting `noprompt=True`, disables checking and quering 
+    default values. Setting `noprompt=True`, disables checking and querying 
     the parameters. Default is `False`.
 - `stderr`: If `True`, make `stderr` separate from `stdout`. The default
     is `False`, so `stderr` is written to `stdout`.

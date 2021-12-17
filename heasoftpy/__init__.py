@@ -19,21 +19,18 @@ REQUIREMENTS:
 python (versions later than 3.7)
 astropy
 
+
 EXAMPLE USAGE:
 --------------
 Using tasks in heasoftpy offer flexibility in usage.
 
-- Built-in tasks can be called directly:
+- Built-in tasks can be called directly (if installed in heasoftpy/fcn):
 >>> result = hsp.ftlist(infile='input.fits', option='T')
 
 
-- A task object can be created and called:
+- A task object can be created and called (even if not installed in heasoftpy/fcn):
 >>> ftlist = hsp.HSPTask('ftlist')
 >>> result = ftlist(infile='input.fits', option='T')
-
-
-- Or the python scripts can be called directly from the command Line:
->>> ftlist.py infile=input.fits option=T
 
 
 The input to the functions is also flexible:
@@ -53,13 +50,23 @@ The input to the functions is also flexible:
 
 
 All tasks take additional optional parameters:
-- verbose: If True, print the task output to screen. Default is False
+- verbose: This can take several values. In all cases, the text printed by the
+    task is captured, and returned in HSPResult.stdout/stderr. Addionally:
+    - 0 (also False or 'no'): Just return the text, no progress prining.
+    - 1 (also True or 'yes'): In addition to capturing and returning the text,
+        task text will printed into the screen as the task runs.
+    - 2: Similar to 1, but also prints the text to a log file.
+    - 20: In addition to capturing and returning the text, log it to a file, 
+        but not to the screen. 
+        In both cases of 2 and 20, the default log file name is {taskname}.log. 
+        A logfile parameter can be passed to the task to override the file name.
 - noprompt: Typically, HSPTask would check the input parameters and 
     queries any missing ones. Some tasks (e.g. pipelines) can run by using
-    default values. Setting noprompt=True, disables checking and querying
+    default values. Setting noprompt=True, disables checking and querying 
     the parameters. Default is False.
-- stderr: If True, make stderr separate from stdout. The default
+- stderr: If True, make `stderr` separate from `stdout`. The default
     is False, so stderr is written to stdout.
+
 
 
 
