@@ -19,7 +19,7 @@ from heasoftpy.utils import generate_py_code
 # Where to install the pure-python executable and parameter file #
 # Not sure if HEADAS is defined yet.
 if not 'HEADAS' in os.environ:
-    raise RunTimeError('heasoft needs to be initialized before running this script')
+    raise RuntimeError('heasoft needs to be initialized before running this script')
 exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
 par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
 
@@ -142,7 +142,7 @@ for package in packages:
         # uncomment the following once it is real install
         shutil.copyfile(exe_file, exe_dest)
         shutil.copyfile(par_file, par_dest)
-        subprocess.call(['chmod', '777', exe_dest])
-
-logger.info('Pure-python tools installed sucessfully')
+        subprocess.call(['chmod', '755', exe_dest])
+if len(packages) > 0:
+    logger.info('Pure-python tools installed sucessfully')
 ## ---------------------------- ##
