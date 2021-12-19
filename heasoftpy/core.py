@@ -252,6 +252,7 @@ class HSPTask:
                 params_after = HSPTask.read_pfile(usr_pfile)
                 for ipar, par_name in enumerate(self.par_names):
                     setattr(self, par_name, params_after[ipar].value)
+                result.params.update(self.params)
                         
             return result
     
@@ -376,13 +377,6 @@ class HSPTask:
         # ----------------------------------------------------------- #
         # handle relation between parameters. these are task-specifc
         # and need to be done in a better way
-        
-        # page/more
-        page  = self.page if 'page' in self.par_names else None
-        upage = user_pars.get('page', None) 
-        if not page is None:
-            if self.page.value == 'no' or upage == 'no':
-                user_pars['more'] = 'yes'
         noprompt = self.noprompt
         # ----------------------------------------------------------- #
                 
@@ -654,8 +648,8 @@ class HSPResult:
         self.returncode = returncode
         self.stdout     = stdout
         self.stderr     = stderr
-        self.params     = params
-        self.custom     = custom
+        self.params     = dict(params) if isinstance(params, dict) else params
+        self.custom     = dict(custom) if isinstance(custom, dict) else custom
         
     def __str__(self):
         """Print the result object in a clean way"""
