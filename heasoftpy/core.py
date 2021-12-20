@@ -314,6 +314,7 @@ class HSPTask:
         # ---------------------------------------------------- #
         if verbose > 0:
             proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr, verbose, self.logfile)
+            proc.wait() # needed to ensure the returncode is set correctly
         else:
             proc_out, proc_err = proc.communicate()
             if isinstance(proc_out, bytes): proc_out = proc_out.decode()
@@ -519,21 +520,21 @@ class HSPTask:
         return pfile
     
     @staticmethod
-    def handle_io_stream(ioObj, stderr, verbose, logfile):
+    def handle_io_stream(proc, stderr, verbose, logfile):
         """
 
         Args:
-            ioObj: proc from subprocess or sys; i.e. it has ioObj.stdout and ioObj.stderr
+            proc: proc from subprocess or sys; i.e. it has proc.stdout and proc.stderr
             stderr: bool user input of whether to use stderr or not
 
         """
         # selectors handle multiple io streams
         # https://stackoverflow.com/questions/31833897/python-read-from-subprocess-stdout-and-stderr-separately-while-preserving-order
         selector = selectors.DefaultSelector()
-        selector.register(ioObj.stdout, selectors.EVENT_READ)
+        selector.register(proc.stdout, selectors.EVENT_READ)
         outBuf = io.StringIO()
         if stderr:
-            selector.register(ioObj.stderr, selectors.EVENT_READ)
+            selector.register(proc.stderr, selectors.EVENT_READ)
             errBuf = io.StringIO()
         file = None
         if not logfile is None:
@@ -546,7 +547,7 @@ class HSPTask:
                 line = key.fileobj.read1().decode()
                 if not line:
                     done = True
-                if not stderr or key.fileobj is ioObj.stdout:
+                if not stderr or key.fileobj is proc.stdout:
                     if verbose != 20: sys.stdout.write(line)
                     outBuf.write(line)
                     if file: file.write(line)
@@ -554,16 +555,15 @@ class HSPTask:
                     if verbose != 20: sys.stderr.write(line)
                     errBuf.write(line)
                     if file: file.write(line)
-
-        ioObj_out = outBuf.getvalue()
+        proc_out = outBuf.getvalue()
         outBuf.close()
-        ioObj_err = None
+        proc_err = None
         if stderr:
-            ioObj_err = errBuf.getvalue()
+            proc_err = errBuf.getvalue()
             errBuf.close()
         if file:
             file.close()
-        return ioObj_out, ioObj_err    
+        return proc_out, proc_err    
     
         
     def _generate_fcn_docs(self):
