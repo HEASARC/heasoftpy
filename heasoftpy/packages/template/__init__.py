@@ -53,6 +53,7 @@ Where:
         ++ a method `template` that creates an instance of `TemplateTask` and 
             calls to run the task. This will be accessible to the user though: 
             `heasoftpy.template`.
+    
     This file can contain other methods that are needed to run the task,
     or it could contain calls to other modules or sub-packages.
     For the task to integrate with heasoftpy, feedback text should be 
@@ -62,6 +63,16 @@ Where:
     with logging.getLogger(template). Once loaded, simple informational messages 
     can be written as: `logger.info(message)` and errors as `logger.error(message)`.
     
+    The task parameters are available inside TemplateTask in a dictionary called `params`.
+    If you wish the task to update these parameters and write them to the user's .par file
+    after execution (typically not needed), you can update the params dict like: 
+    `self.params['some_parameter'] = new_value`.
+    Then, inside `exec_task`, just before returning an HSPResult object, run the following
+    to write to the parameter file:
+    ```
+    usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
+    self.write_pfile(usr_pfile)
+    ```
     
 - template.py: This is a short executable script. This will be moved $HEADAS/bin 
     during installation, and become available to the user.
