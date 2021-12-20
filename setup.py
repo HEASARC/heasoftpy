@@ -22,12 +22,13 @@ class HSPCleanCommand(clean):
         super().run()
         fcn = os.path.join('heasoftpy', 'fcn')
         print(f'cleaning wrappers in {fcn}')
-        filelist = [f for f in os.listdir(fcn) if not '__' in f]
+        filelist = [f for f in os.listdir(fcn) if '.py' == f[-3:] and not '__' in f]
         for f in filelist:
             file = os.path.join(fcn, f)
             print(f'removing {file}')
             os.remove(file)
-        for d in ['build', 'heasoftpy.egg-info', '__pycache__', 'dist', 'heasoftpy-install.log']:
+        for d in ['build', 'heasoftpy.egg-info', '__pycache__', 'dist', 
+                  'heasoftpy-install.log', f'{fcn}/__pycache__']:
             if os.path.exists(d):
                 os.system(f'rm -rf {d}')
 
