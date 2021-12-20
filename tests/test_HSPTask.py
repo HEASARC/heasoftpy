@@ -87,7 +87,26 @@ class TestHSPTask(unittest.TestCase):
         hsp  = heasoftpy.HSPTask(self.taskname)
         with self.assertRaises(ValueError):
             hsp.number = 'wrong_type'
+            
+    # check we have mode even if absent from par file
+    def test__init_HSPTask__absent_mode(self):
+        hsp  = heasoftpy.HSPTask(self.taskname)
+        self.assertIn('mode', hsp.par_names)
     
+    
+    # keyword params take priority over inline params
+    def test__init_HSPTask__keyword_priority(self):
+        hsp  = heasoftpy.HSPTask(self.taskname)
+        hsp.infile = 'infile-1'
+        res = hsp(infile='infile-2', number=4, do_exec=False)
+        self.assertEqual(hsp.params['infile'], 'infile-2')
+        
+    # raise error if HSPTask given the wrong name
+    def test__init_HSPTask__wrong_taskname(self):
+        class HSP(heasoftpy.HSPTask):
+            name = 'name-1'
+        with self.assertRaises(heasoftpy.HSPTaskException):
+            hsp = HSP('wrong-name')
         
 if __name__ == '__main__':
     unittest.main()

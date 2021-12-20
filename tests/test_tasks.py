@@ -32,7 +32,8 @@ class TestPyTasks(unittest.TestCase):
         self.assertEqual(out[3], '    1 TIME               D [d]                label for field   1')
         self.assertEqual(out[4], '    2 RATE               E [counts/s]         label for field   8')
         self.assertEqual(out[5], '    3 ERROR              E [counts/s]         label for field   9')
-        
+    
+    
     def test__tasks__flistT(self):
         task = heasoftpy.HSPTask('ftlist')
         result = task(infile='tests/test.fits', option='T', colheader='no', rownum='no', separator=" ", outfile='-')
@@ -63,7 +64,28 @@ class TestPyTasks(unittest.TestCase):
         # we force isfits=no, which should be updated after running the task
         res  = task(infile='tests/test.fits', isfits='no')
         self.assertEqual(task.isfits.value, 'yes')
+
         
+    # re-read pfile, ensure HSPTask.params match HSPResult.params
+    def test__write_pfile__fstruct_rereadPfile_updateHSPResult(self):
+        task = heasoftpy.HSPTask('fstruct')
+        # we force isfits=no, which should be updated after running the task
+        res  = task(infile='tests/test.fits', isfits='no')
+        self.assertEqual(task.isfits.value, res.params['isfits'])
+        
+        
+    # make sure returncode is not None when verbose=True
+    def test__tasks__returncode_w_verbose(self):
+        task = heasoftpy.HSPTask('ftlist')
+        result = task(infile='tests/test.fits', option='C', outfile='-', verbose=True)
+        self.assertIsNotNone(result.returncode)
+        
+    # ensure True/False are converted to yes/not in bool params
+    def test__tasks__boolParam_conversion(self):
+        task = heasoftpy.HSPTask('ftlist')
+        res1 = task(infile='tests/test.fits', option='T', colheader=False, rownum=True, separator=" ", outfile='-')
+        res2 = task(infile='tests/test.fits', option='T', colheader='no', rownum='yes', separator=" ", outfile='-')
+        self.assertEqual(res1.stdout, res2.stdout)
         
 if __name__ == '__main__':
     unittest.main()
