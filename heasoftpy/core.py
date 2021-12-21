@@ -20,11 +20,13 @@ class HSPTaskException(Exception):
 class HSPTask:
     """A class for handling a Heasoftpy (HSP) task"""
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, executable=True):
         """Initialize an HSPTask with a given name.
         
         Args:
             name (str): The name of the task to be called. Required
+            executable (bool): called from an executable file? if so don't 
+                generate fhelp docs.
                 
         """
         
@@ -43,6 +45,10 @@ class HSPTask:
         # to handle "_" and "-" in names, we also create pyname
         self.name   = name
         self.pyname = name.replace('-', '_')
+        
+        # is this called from an excutable file. 
+        # if exec, don't generate fhelp docs
+        self.executable = executable
             
         
         # first read the parameter file
@@ -610,8 +616,9 @@ class HSPTask:
         # --------------------- #
 
         # get extra docs from the task #
-        # do this only if fhelp is True; i.e. genearating wrappers
-        task_docs = self.task_docs() if fhelp else ''
+        # do this only if we are not called from an executable,
+        # if executable, docs are not used by anyone, generating them just slows the run
+        task_docs = '' if self.executable else self.task_docs()
 
         # put it all together #
         docs = f"""
@@ -650,7 +657,7 @@ def {task_pyname}(args=None, **kwargs):
 {docs}
     \"""
 
-    {task_pyname}_task = HSPTask(name="{task_name}")
+    {task_pyname}_task = HSPTask(name="{task_name}", executable=True)
     return {task_pyname}_task(args, **kwargs)
 
         """
