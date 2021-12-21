@@ -410,7 +410,7 @@ class HSPTask:
             if self.page.value == 'no' or upage == 'no':
                 user_pars['more'] = 'yes'
         
-        noprompt = self._noprompt
+        noprompt = self.noprompt
         # ----------------------------------------------------------- #
                 
         
