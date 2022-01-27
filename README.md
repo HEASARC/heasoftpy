@@ -55,15 +55,15 @@ ixpecalcfov.py ra=... dec=...
 
 ```
 
-#### Task Names
+#### Task Names:
 Native `heasoft` tasks have the same names in `heasfotpy`. So a task like `nicerclean` 
 is called by `heasoftpy.nicerclean`, except for tasks that have the dash symbol `-` in the name,
 which is replaced by an underscore `_`. So for example, the task `ut-swifttime` is available
 with `heasoftpy.ut_swifttime`, etc.
 
 
-### 2.2 Different Ways of Passing Parameters
-The task methods handle different types in inputs. For example:
+### 2.2 Different Ways of Passing Parameters:
+Additionally, the task methods handle different types in inputs. For example:
 
 ```python
 
