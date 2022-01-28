@@ -2,15 +2,15 @@ Python interface to HeaSoft
 ===========================
 
 ## Content
-- [1. About](#1.-About)
-- [2. Usage](#2.-Usage)
-    - [2.1 Calling the Tasks](#2.1-Calling-the-Tasks)
-    - [2.2 Different Ways of Passing Parameters](#2.2-Different-Ways-of-Passing-Parameters)
-    - [2.3 `HEASoftpy` Control Parameters](#2.3-HEAsoftpy-Control-Parameters)
-    - [2.4 Finding Help for the Tasks](#2.4-Finding-Help-for-the-Tasks)
-- [3. Installation](#3.-Installation)
-- [4. Writing Python Tasks](#4.-Writing-Python-Tasks)
-- [5. User Guide and Tutorials](#5.-Tutorials)
+- [1. About](#1-about)
+- [2. Usage](#2-usage)
+    - [2.1 Different Ways of Calling the Tasks](#21-different-ways-of-calling-the-tasks)
+    - [2.2 Different Ways of Passing Parameters](#22-different-ways-of-passing-parameters)
+    - [2.3 `HEASoftpy` Control Parameters](#23-heasoftpy-control-parameters)
+    - [2.4 Finding Help for the Tasks](#24-finding-help-for-the-tasks)
+- [3. Installation](#3-installation)
+- [4. Writing Python Tasks](#4-writing-python-tasks)
+- [5. User Guide and Other Tutorials](#5-tutorials)
 
 
 ## 1. About
@@ -100,7 +100,7 @@ the user is prompted to enter a value.
 Note that creatting a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and paramters are queried if necessary.
 
 
-### 2.3 `HEASoftpy` Control Parameters
+### 2.3 `HEASoftpy` Control Parameters:
 There are a few parameters that are common between all tasks:
 - `verbose`: This can take several values. In all cases, the text printed by the
     task is captured, and returned in `HSPResult.stdout/stderr`. Addionally:
@@ -119,7 +119,7 @@ There are a few parameters that are common between all tasks:
 - `stderr`: If `True`, make `stderr` separate from `stdout`. The default
     is `False`, so `stderr` is written to `stdout`.
 
-#### 2.3.1 Special cases
+#### 2.3.1 Special cases:
 If the `heasoftpy` task being called has an input parameter with a name `verbose`, `noprompt`
 or `logfile`, then the above control parameters can be accessed by prepending them with `py_`,
 so `verbose` becomes `py_verbose` etc. For example: the task `batsurvey_catmux` has a parameter
@@ -128,6 +128,7 @@ called `logfile`. If the you want to use both parameters, the call would be:
 heasoftpy.batsurvey_catmux(..., logfile='task.log', py_logfile='pytask.log')
 ```
 with `'task.log'` logging the task activity, and `'pytask.log'` logging the python wrapper activity.
+
 
 
 ### 2.4 Finding Help for the Tasks
