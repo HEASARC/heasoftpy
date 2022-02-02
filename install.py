@@ -80,14 +80,14 @@ def _create_py_wrappers():
 ## ---------------------------- ##
 ## installing pure-python tools ##
 
-def _find_py_packages():
-    """Get a list of python sub-packages to be installed"""
-    # get a list of package names
-    packages = glob.glob(f'{package_dir}/*')
-    packages = [os.path.basename(p) for p in packages if not '__' in p and p[-3:] != '.py']
-    # remove template from the list of packages.
-    if 'template' in packages:
-        packages.remove('template')
+
+# get a list of package names
+package_dir = os.path.join(current_dir, 'heasoftpy', 'packages')
+packages = glob.glob(f'{package_dir}/*')
+packages = [os.path.basename(p) for p in packages if not '__' in p]
+# remove template from the list of packages.
+if 'template' in packages:
+    packages.remove('template')
 
     # exclude python packages that are not requested by the user.
     # Find the list from the list of folders in the component-level directory
@@ -100,16 +100,12 @@ def _find_py_packages():
                 # remove package from the list of packages to be installed
                 packages.remove(package)
 
-                # remove the folder completely
-                os.rmdir(os.path.join(package_dir, package))
-    
-    logger.info(f'Number of packages in heasoftpy/packages: {len(packages)}')
-    
-    return packages
+logger.info(f'Found {len(packages)} in heasoftpy/packages')
 
-
-def _read_package_setup(package):
-    """Read setup.py in packages/{package}/"""
+exe_list, par_list = [], []
+for package in packages:
+    logger.info(f'     installing package: {package} ...')
+    # do we have a setup.py file?
     setupfile = os.path.join('heasoftpy', 'packages', package, 'setup.py')
     if not os.path.exists(setupfile):
         logger.error(f'Package {package} has no setup.py file. Stopping.')
@@ -119,86 +115,33 @@ def _read_package_setup(package):
         # try reading the setup.py file
         try:
             with open(setupfile) as fp:
-                # reads variables: tasks, requirements
-                pars = {}
-                exec(fp.read(), pars)
-                # do we have a tasks variable?
-                if not 'tasks' in pars:
-                    logger.error(f'No tasks variable defined in {package}/setup.py. Stopping.')
-                    sys.exit(1)
-                tasks = pars['tasks']
-                
-                # do we have a requirements variable?
-                requirements = pars.get('requirements', [])
-                reqfile = os.path.join('heasoftpy', 'packages', package, 'requirements.txt')
-                if len(requirements) == 0 and os.path.exists(reqfile):
-                    # try requirements.txt
-                    with open(reqfile) as fp:
-                        requirements = [r.strip() for r in fp.readlines() 
-                                        if not r.startswith('#') or len(r) == 0]
-                if len(requirements) == 0:
-                    logger.info(f'No requirements found for {package}. Assume None')
-                
+                exec(fp.read())
         except:
             logger.error(f'Cannot process setup.py in {package}. Stopping.')
             raise
-    return tasks, requirements
-
-
-def _install_packages(packages):
-    """Install a list of python sub-packages.
     
-    The installation includes:
-        - reading the package/setup.py to find the list of tasks
-        - for each task, make sure we have .par and an executable file
-        - move the .par and executable to their locations.
-    """
-    logger.info('-'*30)
-    logger.info('Installing pure-python tools ...')
+    # try importing the package
+    try:
+        tmpmod = importlib.import_module(f'heasoftpy.packages.{package}')
+    except:
+        logger.error(f'Attempting to import "{package}" failed. See error message below.')
+        raise
+    logger.info(f'     package "{package}" sucessfully imported.')
 
-    exe_list, par_list = [], []
-    for package in packages:
-        logger.info(f'     installing package: {package} ...')
-        # do we have a setup.py file?
-        tasks, requirements = _read_package_setup(package)
-        logger.info(f'     Found {len(tasks)} tasks in {package} ...')
-
-        # try importing the package
-        try:
-            tmpmod = importlib.import_module(f'heasoftpy.packages.{package}')
-        except:
-            logger.error(f'Attempting to import "{package}" failed. See error message below.')
-            raise
-        logger.info(f'     package "{package}" sucessfully imported.')
-
-
-        # loop through the task, and install them one by one.
-        for task in tasks:
-
-            # if task is str, we look for task files in the package
-            # or a directory that has the name of the task
-            if isinstance(task, str):
-                logger.info(f'     installing task: {task}')
-                # look for exec, par and help file:
-                taskdir = os.path.join(package_dir, package, task)
-                if os.path.isdir(taskdir):
-                    logger.info(f'     found task package: {taskdir}')
-                    exe_file = os.path.join(taskdir, f'{task}.py')
-                    par_file = os.path.join(taskdir, f'{task}.par')
-                    hlp_file = os.path.join(taskdir, f'{task}.py.html')
-                else:
-                    logger.info(f'     searching for task module: {task}')
-                    exe_file = os.path.join(package_dir, package, f'{task}.py')
-                    par_file = os.path.join(package_dir, package, f'{task}.par')
-                    hlp_file = os.path.join(package_dir, package, f'{task}.py.html')
-
-            # we have an explicit dict that points to location of executable and par files
-            elif isinstance(task, dict):
-                logger.info(f'     installing: {list(task.keys())[0]}')
-                exe_file, par_file, hlp_file = [os.path.join(package_dir, package, p) 
-                                          for p in list(task.values())[0]]
-
-            # we don't know how to install the task
+    
+    # loop through the task, and install them one by one.
+    for task in tasks:
+        
+        # if task is str, we look for task files in the package
+        # or a directory that has the name of the task
+        if isinstance(task, str):
+            logger.info(f'     installing task: {task}')
+            # look for exec and par file:
+            taskdir = os.path.join(package_dir, package, task)
+            if os.path.isdir(taskdir):
+                logger.info(f'     found task package: {taskdir}')
+                exe_file = os.path.join(taskdir, f'{task}.py')
+                par_file = os.path.join(taskdir, f'{task}.par')
             else:
                 msg = f'Failed processing the setup file for task: {task}'
                 logger.error(msg)
