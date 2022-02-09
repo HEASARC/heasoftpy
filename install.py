@@ -14,12 +14,8 @@ sys.path.insert(0, current_dir)
 # Where to install the pure-python executable and parameter file #
 if not 'HEADAS' in os.environ:
     raise RuntimeError('heasoft needs to be initialized before running this script')
-#exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
-#par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
-#help_install_dir = os.path.join(os.environ['HEADAS'], 'help')
-exe_install_dir = os.path.join('build', 'bin')
-par_install_dir = os.path.join('build', 'syspfiles')
-help_install_dir = os.path.join('build', 'help')
+exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
+par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
 package_dir = os.path.join(current_dir, 'heasoftpy', 'packages')
 
 
@@ -73,7 +69,6 @@ def _create_py_wrappers():
 def _find_py_packages():
     """Get a list of python sub-packages to be installed"""
     # get a list of package names
-    package_dir = os.path.join(current_dir, 'heasoftpy', 'packages')
     packages = glob.glob(f'{package_dir}/*')
     packages = [os.path.basename(p) for p in packages if not '__' in p and p[-3:] != '.py']
     # remove template from the list of packages.
@@ -94,7 +89,7 @@ def _find_py_packages():
                 # remove the folder completely
                 os.rmdir(os.path.join(package_dir, package))
     
-    logger.info(f'Found {len(packages)} in heasoftpy/packages')
+    logger.info(f'Number of packages in heasoftpy/packages: {len(packages)}')
     
     return packages
 
@@ -121,9 +116,18 @@ def _read_package_setup(package):
         try:
             with open(setupfile) as fp:
                 # reads variables: tasks, requirements
-                tasks = []
-                requirements = []
-                exec(fp.read())
+                pars = {}
+                exec(fp.read(), pars)
+                # do we have a tasks variable?
+                if not 'tasks' in pars:
+                    logger.error(f'No tasks variable defined in {package}/setup.py. Stopping.')
+                    sys.exit(1)
+                tasks = pars['tasks']
+                
+                # do we have a requirements variable?
+                if not 'requirements' in pars:
+                    logger.info(f'No requirements variable defined in {package}/setup.py. Assume None')
+                requirements = pars.get('requirements', [])
         except:
             logger.error(f'Cannot process setup.py in {package}. Stopping.')
             raise

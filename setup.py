@@ -32,12 +32,9 @@ class HSPCleanCommand(clean):
             os.remove(file)
         cwd = os.getcwd()
         for d in ['build', 'heasoftpy.egg-info', '__pycache__', 'dist', 
-                  'heasoftpy-install.log', f'{fcn}/__pycache__', '.pytest_cache',
-                 '.eggs', '*.pyc', '.ipynb_checkpoints']:
-            #[os.remove(x) for x in glob.iglob(os.path.join(cwd, "**", d), recursive=True)]
-            for f in glob.iglob(os.path.join(cwd, "**", d), recursive=True):
-                if os.path.exists(f):
-                    os.system(f'rm -rf {f}')
+                  'heasoftpy-install.log', f'{fcn}/__pycache__']:
+            if os.path.exists(d):
+                os.system(f'rm -rf {d}')
 
 def build_requirements():
     """Build a list of requirements from the main and sub-packages"""
@@ -57,6 +54,7 @@ def build_requirements():
             if not r in requirements:
                 requirements.append(r)
     return requirements
+
 
 
 class HSPTestCommand(test):
@@ -86,7 +84,7 @@ setup(
     url='https://heasarc.gsfc.nasa.gov/docs/software/heasoft',
     license=license,
     packages=find_packages(exclude=('tests', 'notebooks')),
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     install_requires=build_requirements(),
     
     cmdclass={

@@ -40,12 +40,11 @@ Where:
     So in the above 'complex' example. It is: 
     tasks = ['template1', 'template2']
     If the package structure is different, then the entry in the list is a dictionary of the form:
-    [{taskname: [location_of_executable, location_of_parameter_file, location_of_help_file]}]. 
+    [{taskname: [location_of_executable, location_of_parameter_file]}]. 
 
     Additionally, if the package uses external packages that are not
     dependencies of heasoftpy, a variable called `requirements` must also
     be defined in setup.py, which defines a list of these dependencies.
-    The list of dependecies can also be specified in a requirements.txt file.
     
     See the example in template/setup.py.
 
