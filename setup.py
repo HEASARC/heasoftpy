@@ -32,9 +32,12 @@ class HSPCleanCommand(clean):
             os.remove(file)
         cwd = os.getcwd()
         for d in ['build', 'heasoftpy.egg-info', '__pycache__', 'dist', 
-                  'heasoftpy-install.log', f'{fcn}/__pycache__']:
-            if os.path.exists(d):
-                os.system(f'rm -rf {d}')
+                  'heasoftpy-install.log', f'{fcn}/__pycache__', '.pytest_cache',
+                 '.eggs', '*.pyc', '.ipynb_checkpoints']:
+            #[os.remove(x) for x in glob.iglob(os.path.join(cwd, "**", d), recursive=True)]
+            for f in glob.iglob(os.path.join(cwd, "**", d), recursive=True):
+                if os.path.exists(f):
+                    os.system(f'rm -rf {f}')
 
 def build_requirements():
     """Build a list of requirements from the main and sub-packages"""
