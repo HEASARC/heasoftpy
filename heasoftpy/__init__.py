@@ -128,7 +128,3 @@ if not '__INSTALLING_HSP' in os.environ:
     
     if _package_exists('template'):
         from .packages.template import *
-    
-    if _package_exists('ixpe'):
-        from .packages import ixpe
-        from .packages.ixpe import *

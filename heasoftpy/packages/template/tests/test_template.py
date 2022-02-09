@@ -1,5 +1,3 @@
-# put in the same place at the package __init__.py
-# i.e in package/{name}/
 import unittest
 import os
 

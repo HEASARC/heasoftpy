@@ -88,6 +88,21 @@ packages = [os.path.basename(p) for p in packages if not '__' in p]
 # remove template from the list of packages.
 if 'template' in packages:
     packages.remove('template')
+    
+# exclude python packages that are not requested by the user.
+# Find the list from the list of folders in the component-level directory
+component_level = glob.glob('../..')
+# first make sure we are in a standard location: heacore/heasoftpy/install.py
+# if not, do nothing
+if 'heacore' in component_level:
+    for package in packages:
+        if not package in component_level:
+            # remove package from the list of packages to be installed
+            packages.remove(package)
+            
+            # remove the folder completely
+            os.rmdir(os.path.join(package_dir, package))
+    
 
     # exclude python packages that are not requested by the user.
     # Find the list from the list of folders in the component-level directory
@@ -143,68 +158,43 @@ for package in packages:
                 exe_file = os.path.join(taskdir, f'{task}.py')
                 par_file = os.path.join(taskdir, f'{task}.par')
             else:
-                msg = f'Failed processing the setup file for task: {task}'
-                logger.error(msg)
-                raise ValueError(msg)
-
-            # checking all files exist
-            if not os.path.exists(exe_file):
-                msg = f'Could not find executable {exe_file}'
-                logger.error(msg)
-                raise FileNotFoundError(msg)
-            if not os.path.exists(par_file):
-                msg = f'Could not find parameter file {par_file}'
-                logger.error(msg)
-                raise FileNotFoundError(msg)
-            if not os.path.exists(hlp_file):
-                msg = f'Could not find help file {hlp_file}'
-                logger.error(msg)
-                raise FileNotFoundError(msg)
-
-            # copy files to their right location #
-            logger.info('     copying task files')
-            exe_dest = os.path.join(exe_install_dir, os.path.basename(exe_file))
-            par_dest = os.path.join(par_install_dir, os.path.basename(par_file))
-            hlp_dest = os.path.join(help_install_dir, os.path.basename(hlp_file))
-
-            # copy files make the exe file executable
-            # uncomment the following once it is real install
-            os.makedirs(exe_install_dir, exist_ok=True)
-            os.makedirs(par_install_dir, exist_ok=True)
-            os.makedirs(help_install_dir, exist_ok=True)
-            shutil.copyfile(exe_file, exe_dest)
-            shutil.copyfile(par_file, par_dest)
-            shutil.copyfile(hlp_file, hlp_dest)
-            subprocess.call(['chmod', '755', exe_dest])
-    if len(packages) > 0:
-        logger.info('Pure-python tools installed sucessfully')
+                logger.info(f'     searching for task module: {task}')
+                exe_file = os.path.join(package_dir, package, f'{task}.py')
+                par_file = os.path.join(package_dir, package, f'{task}.par')
+        
+        # we have an explicit dict that points to location of executable and par files
+        elif isinstance(task, dict):
+            logger.info(f'     installing: {list(task.keys())[0]}')
+            exe_file, par_file = [os.path.join(package_dir, package, p) 
+                                      for p in list(task.values())[0]]
+        
+        # we don't know how to install the task
+        else:
+            msg = f'Failed processing the setup file for task: {task}'
+            logger.error(msg)
+            raise ValueError(msg)
+        
+        # checking all files exist
+        if not os.path.exists(exe_file):
+            msg = f'Could not find executable {exe_file}'
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+        if not os.path.exists(par_file):
+            msg = f'Could not find parameter file {par_file}'
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+        
+        # copy files to their right location #
+        logger.info('     copying task files')
+        exe_dest = os.path.join(exe_install_dir, os.path.basename(exe_file))
+        par_dest = os.path.join(par_install_dir, os.path.basename(par_file))
+        
+        # copy files make the exe file executable
+        # uncomment the following once it is real install
+        shutil.copyfile(exe_file, exe_dest)
+        shutil.copyfile(par_file, par_dest)
+        subprocess.call(['chmod', '755', exe_dest])
+if len(packages) > 0:
+    logger.info('Pure-python tools installed sucessfully')
+del os.environ['__INSTALLING_HSP']
 ## ---------------------------- ##
-
-
-def _do_install():
-    
-    logger.info('-'*60)
-    logger.info('Starting heasoftpy installation ...')
-    
-    
-    # python wrappers for heasoft-native tools
-    _create_py_wrappers()
-    
-
-    # get a list of packages:
-    packages = _find_py_packages()
-    
-    
-    # install the packages
-    _install_packages(packages)
-
-
-    
-if __name__ == '__main__':
-    help_txt = """This script is not meant to run directly.
-Please use: python setup.py build
-
-Then, copy build/lib/heasoftpy to a location where python can find it,
-or add build/lib to your PYTHONPATH.
-"""
-    print(help_txt)
