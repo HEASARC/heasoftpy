@@ -17,6 +17,7 @@ if not 'HEADAS' in os.environ:
     raise RuntimeError('heasoft needs to be initialized before running this script')
 exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
 par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
+help_install_dir = os.path.join(os.environ['HEADAS'], 'help')
 package_dir = os.path.join(current_dir, 'heasoftpy', 'packages')
 
 
@@ -169,21 +170,23 @@ def _install_packages(packages):
             # or a directory that has the name of the task
             if isinstance(task, str):
                 logger.info(f'     installing task: {task}')
-                # look for exec and par file:
+                # look for exec, par and help file:
                 taskdir = os.path.join(package_dir, package, task)
                 if os.path.isdir(taskdir):
                     logger.info(f'     found task package: {taskdir}')
                     exe_file = os.path.join(taskdir, f'{task}.py')
                     par_file = os.path.join(taskdir, f'{task}.par')
+                    hlp_file = os.path.join(taskdir, f'{task}.html')
                 else:
                     logger.info(f'     searching for task module: {task}')
                     exe_file = os.path.join(package_dir, package, f'{task}.py')
                     par_file = os.path.join(package_dir, package, f'{task}.par')
+                    hlp_file = os.path.join(package_dir, package, f'{task}.html')
 
             # we have an explicit dict that points to location of executable and par files
             elif isinstance(task, dict):
                 logger.info(f'     installing: {list(task.keys())[0]}')
-                exe_file, par_file = [os.path.join(package_dir, package, p) 
+                exe_file, par_file, hlp_file = [os.path.join(package_dir, package, p) 
                                           for p in list(task.values())[0]]
 
             # we don't know how to install the task
@@ -206,11 +209,13 @@ def _install_packages(packages):
             logger.info('     copying task files')
             exe_dest = os.path.join(exe_install_dir, os.path.basename(exe_file))
             par_dest = os.path.join(par_install_dir, os.path.basename(par_file))
+            hlp_dest = os.path.join(help_install_dir, os.path.basename(hlp_file))
 
             # copy files make the exe file executable
             # uncomment the following once it is real install
             shutil.copyfile(exe_file, exe_dest)
             shutil.copyfile(par_file, par_dest)
+            shutil.copyfile(hlp_file, hlp_dest)
             subprocess.call(['chmod', '755', exe_dest])
     if len(packages) > 0:
         logger.info('Pure-python tools installed sucessfully')

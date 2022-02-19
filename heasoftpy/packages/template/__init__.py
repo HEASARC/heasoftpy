@@ -40,7 +40,7 @@ Where:
     So in the above 'complex' example. It is: 
     tasks = ['template1', 'template2']
     If the package structure is different, then the entry in the list is a dictionary of the form:
-    [{taskname: [location_of_executable, location_of_parameter_file]}]. 
+    [{taskname: [location_of_executable, location_of_parameter_file, location_of_help_file]}]. 
 
     Additionally, if the package uses external packages that are not
     dependencies of heasoftpy, a variable called `requirements` must also
@@ -91,11 +91,6 @@ Where:
     is recommended, so it can be read by fhelp, which the standard way for printing
     the help of tasks. The user can invoke the help for the template task by doing
     `fhelp template.py`
-    
-- requirements.txt: a list of required packages, one per line, that the package needs.
-    The requirements can also specified as a list of strings in variable called 
-    `requirements` in setup.py. If this variable is given, and it is not an empty list,
-    the requirements.txt file will be ignored.
 
 """
 
