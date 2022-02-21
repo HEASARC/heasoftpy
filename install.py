@@ -127,9 +127,16 @@ def _read_package_setup(package):
                 tasks = pars['tasks']
                 
                 # do we have a requirements variable?
-                if not 'requirements' in pars:
-                    logger.info(f'No requirements variable defined in {package}/setup.py. Assume None')
                 requirements = pars.get('requirements', [])
+                reqfile = os.path.join('heasoftpy', 'packages', package, 'requirements.txt')
+                if len(requirements) == 0 and os.path.exists(reqfile):
+                    # try requirements.txt
+                    with open(reqfile) as fp:
+                        requirements = [r.strip() for r in fp.readlines() 
+                                        if not r.startswith('#') or len(r) == 0]
+                if len(requirements) == 0:
+                    logger.info(f'No requirements found for {package}. Assume None')
+                
         except:
             logger.error(f'Cannot process setup.py in {package}. Stopping.')
             raise

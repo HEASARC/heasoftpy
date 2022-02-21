@@ -45,6 +45,7 @@ Where:
     Additionally, if the package uses external packages that are not
     dependencies of heasoftpy, a variable called `requirements` must also
     be defined in setup.py, which defines a list of these dependencies.
+    The list of dependecies can also be specified in a requirements.txt file.
     
     See the example in template/setup.py.
 
@@ -91,6 +92,11 @@ Where:
     is recommended, so it can be read by fhelp, which the standard way for printing
     the help of tasks. The user can invoke the help for the template task by doing
     `fhelp template.py`
+    
+- requirements.txt: a list of required packages, one per line, that the package needs.
+    The requirements can also specified as a list of strings in variable called 
+    `requirements` in setup.py. If this variable is given, and it is not an empty list,
+    the requirements.txt file will be ignored.
 
 """
 
