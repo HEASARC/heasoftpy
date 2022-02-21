@@ -10,7 +10,6 @@ import subprocess
 # add heasoftpy location to sys.path as it is not installed yet
 current_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, current_dir)
-from heasoftpy.utils import generate_py_code
 
 # Where to install the pure-python executable and parameter file #
 if not 'HEADAS' in os.environ:
@@ -52,6 +51,13 @@ logger.addHandler(ch)
 ## ---------------------------------- ##
 ## python wrappers for built-in tools ##
 def _create_py_wrappers():
+    
+    # the following prevents sub-package in heasoftpy.packages from being imported
+    # as they may depend on the functions in heasoftpy.fcn, that we will install here
+    os.environ['__INSTALLING_HSP'] = 'yes'
+    from heasoftpy.utils import generate_py_code
+    
+    
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
@@ -61,6 +67,9 @@ def _create_py_wrappers():
         raise
     logger.info('Python wrappers created sucessfully!')
     logger.info('-'*30)
+    
+    # remove the __INSTALLING_HSP variable we added at the start
+    del os.environ['__INSTALLING_HSP']
 ## ---------------------------------- ##
 
 
@@ -234,9 +243,6 @@ def _do_install():
     logger.info('-'*60)
     logger.info('Starting heasoftpy installation ...')
     
-    # the following prevents sub-package in heasoftpy.packages from being imported
-    # as they may depend on the functions in heasoftpy.fcn, that we will install here
-    os.environ['__INSTALLING_HSP'] = 'yes'
     
     # python wrappers for heasoft-native tools
     _create_py_wrappers()
@@ -249,10 +255,13 @@ def _do_install():
     # install the packages
     _install_packages(packages)
 
-    
-    # remove the __INSTALLING_HSP variable we added at the start
-    del os.environ['__INSTALLING_HSP']
 
     
 if __name__ == '__main__':
-    _do_install()
+    help_txt = """This script is not meant to run directly.
+Please use: python setup.py build
+
+Then, copy build/lib/heasoftpy to a location where python can find it,
+or add build/lib to your PYTHONPATH.
+"""
+    print(help_txt)

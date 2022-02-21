@@ -100,9 +100,6 @@ Where:
 
 """
 
-import os
 
-if not '__INSTALLING_HSP' in os.environ:
-    from .template_lib import TemplateTask, template
-
-    __all__ = ['TemplateTask', 'template']
+from .template_lib import TemplateTask, template
+__all__ = ['TemplateTask', 'template']
