@@ -192,12 +192,12 @@ def _install_packages(packages):
                     logger.info(f'     found task package: {taskdir}')
                     exe_file = os.path.join(taskdir, f'{task}.py')
                     par_file = os.path.join(taskdir, f'{task}.par')
-                    hlp_file = os.path.join(taskdir, f'{task}.html')
+                    hlp_file = os.path.join(taskdir, f'{task}.py.html')
                 else:
                     logger.info(f'     searching for task module: {task}')
                     exe_file = os.path.join(package_dir, package, f'{task}.py')
                     par_file = os.path.join(package_dir, package, f'{task}.par')
-                    hlp_file = os.path.join(package_dir, package, f'{task}.html')
+                    hlp_file = os.path.join(package_dir, package, f'{task}.py.html')
 
             # we have an explicit dict that points to location of executable and par files
             elif isinstance(task, dict):
@@ -218,6 +218,10 @@ def _install_packages(packages):
                 raise FileNotFoundError(msg)
             if not os.path.exists(par_file):
                 msg = f'Could not find parameter file {par_file}'
+                logger.error(msg)
+                raise FileNotFoundError(msg)
+            if not os.path.exists(hlp_file):
+                msg = f'Could not find help file {hlp_file}'
                 logger.error(msg)
                 raise FileNotFoundError(msg)
 
