@@ -59,6 +59,9 @@ def build_requirements():
     return requirements
 
 
+class HSPTestCommand(test):
+    def run(self):
+        self.distribution.install_requires = []
 
 class HSPTestCommand(test):
     def run(self):
@@ -87,7 +90,7 @@ setup(
     url='https://heasarc.gsfc.nasa.gov/docs/software/heasoft',
     license=license,
     packages=find_packages(exclude=('tests', 'notebooks')),
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=build_requirements(),
     
     cmdclass={
