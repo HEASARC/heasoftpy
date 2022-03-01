@@ -62,10 +62,6 @@ def build_requirements():
 class HSPTestCommand(test):
     def run(self):
         self.distribution.install_requires = []
-
-class HSPTestCommand(test):
-    def run(self):
-        self.distribution.install_requires = []
         super().run()
         
 
