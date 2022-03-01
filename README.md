@@ -49,7 +49,7 @@ fdump(infile='input.fits', outfile='STDOUT', ...)
 
 ```
 
-3- For tasks written in python (e.g. `ixpecalcfov.py`), the tools can be used as usual from the command line, similar to the standard `HEASoft` tools:
+3- For tasks written in python (e.g. ixpecalcfov.py), the tools can be used as usual from the command line, similar to the standard `HEASoft` tools:
 ```bash
 ixpecalcfov.py ra=... dec=...
 
@@ -63,7 +63,7 @@ with `heasoftpy.ut_swifttime`, etc.
 
 
 ### 2.2 Different Ways of Passing Parameters:
-Additionally, the task methods handle different types in inputs. For example:
+The task methods handle different types in inputs. For example:
 
 ```python
 
@@ -194,7 +194,7 @@ DESCRIPTION
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
-#### - Install within the `HEASoft` tree
+Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
 1- Ensure you have `python>=3.7` installed. Install the latest versions of the python dependencies:
 ```sh
@@ -229,6 +229,28 @@ This will generate the python wrappers under `build/lib/heasoftpy`. Check the `h
 mv build/lib/heasoftpy $HEADAS/lib/python
 ```
 
+2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar)
+```sh
+wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar
+```
+or 
+```sh
+curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar
+```
+
+`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
+
+4- Collect the pacakges:
+```
+python setup.py build
+```
+This will generate the python wrappers under `build/lib/heasoftpy`. Check the `heasoftpy-install.log` for errors.
+
+5- Move the created `heasoftpy` folder to `$HEADAS/lib/python` (if `$HEADAS/lib/python` doesn't exist, please create it).
+```sh
+mv build/lib/heasoftpy $HEADAS/lib/python
+```
+
 6- Move the parameter files, executables and help files (if any) to their location in the `$HEADAS` tree:
 ```sh
 mv build/bin/* $HEADAS/bin
@@ -239,7 +261,6 @@ mv build/help/* $HEADAS/help
 #### - Install outside the `HEASoft` tree
 
 `heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
-
 
 ---
 ## 4. Writing Python Tasks
@@ -270,11 +291,11 @@ class SampleTask(hsp.HSPTask):
 ```
 
 
-## 5. Tutorials
-The following notebooks contain some tutorials and usage examples.
+## 5. Tutorials:
+The [notebooks](notebooks) folder contains some jupyter notebook tutorials and usage examples.
 
-- [Getting Started](getting-started.html): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
+- [Getting Started](notebooks/getting-started.ipynb): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
 
-- [NuSTAR Data Analysis Example](nustar_example.html): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
+- [NuSTAR Data Analysis Example](notebooks/nustar_example.ipynb): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
 
-- [NICER Data Analysis Example](nicer-processing.html): This is a walkthough example of analyzing NICER data using `HEASoftpy` and `pyXspec`.
+- [NICER Data Analysis Example](notebooks/nicer-processing.ipynb): This is a walkthough example of analyzing NICER data using `HEASoftpy` and `pyXspec`.
