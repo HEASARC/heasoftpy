@@ -54,7 +54,7 @@ class BaseFitsFactory:
     MJDREFI = (57754, 'start mission MJD (integer part)')
     MJDREFF = (0.00080074074074, 'start mission MJD (fractional part)')
     TELESCOPE = ('IXPE', 'Telescope or mission, IXPE')
-    ORIGIN = ('MSFC', 'Location where the FITS file was created')
+    ORIGIN = ('MSFC', 'Location where the FITS file was created')  # TODO: Define this value as a function of FileType
     TIMESYS = ('TT', '')
     TIMEUNIT = ('s', '')
 

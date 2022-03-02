@@ -38,6 +38,12 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+"""
+Created on Thu May 16 15:30:49 2019
+
+@author: kdietz
+"""
+
 import math
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot

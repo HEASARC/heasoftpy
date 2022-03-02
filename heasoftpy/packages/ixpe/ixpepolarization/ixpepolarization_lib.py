@@ -50,7 +50,8 @@ from astropy.io import fits
 import logging
 
 from heasoftpy.core import HSPTask, HSPResult
-from ..versioning import VERSION
+
+VERSION = '1.1.0'
 
 TEMP_DIR = os.path.join(os.getcwd(), 'tmp')
 TEMP_FILE = "tmp.fits"
