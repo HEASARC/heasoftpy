@@ -48,6 +48,7 @@ from ..fits.factory import PublicExposureMap
 from ..time import Time
 import logging
 from heasoftpy.core import HSPTask, HSPResult
+from ..versioning import VERSION
 
 
 class PixelValue(enum.IntEnum):
@@ -82,9 +83,6 @@ DETECTOR_HEIGHT = 300  # Pixel space
 
 ROTATION_THRESHOLD = np.pi / 4
 SHEAR_THRESHOLD = 3 * np.pi / 4
-
-
-VERSION = '1.1.0'
 
 
 class ExpMapTask(HSPTask):

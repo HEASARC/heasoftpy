@@ -50,8 +50,7 @@ from ..event_flags import Status2
 import logging
 
 from heasoftpy.core import HSPTask, HSPResult
-
-VERSION = '1.1.0'
+from ..versioning import VERSION
 
 
 class AspcorrTask(HSPTask):

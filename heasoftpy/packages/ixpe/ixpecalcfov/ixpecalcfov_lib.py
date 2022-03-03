@@ -52,15 +52,13 @@ from ..orbit.cartesian import Vector, Quaternion
 from ..time import Time
 from scipy.spatial.transform import Rotation
 from heasoftpy.core import HSPTask, HSPResult
+from ..versioning import VERSION
 
 THRESH_ANGLE_DEG = 25.0
 THRESH_ANGLE = Angle(THRESH_ANGLE_DEG, unit='deg')
 SEP_MIN = Angle(90 - THRESH_ANGLE_DEG, unit='deg')
 SEP_MAX = Angle(90 + THRESH_ANGLE_DEG, unit='deg')
 Y_POINTING_THRESH = math.radians(THRESH_ANGLE_DEG)
-
-
-VERSION = '1.1.0'
 
 
 class CalcFOVTask(HSPTask):

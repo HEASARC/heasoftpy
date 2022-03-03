@@ -49,11 +49,11 @@ from ..orbit.cartesian import Quaternion, Vector
 from ..time import Time
 from scipy.interpolate import interp1d
 import logging
+from ..versioning import VERSION
 
 from heasoftpy.core import HSPTask, HSPResult
 SKYVIEW_WIDTH = 600
 SKYVIEW_HEIGHT = 600
-VERSION = '0.0.1'
 
 
 class Det2J2000Task(HSPTask):
