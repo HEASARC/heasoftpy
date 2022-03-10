@@ -2,15 +2,15 @@ Python interface to HeaSoft
 ===========================
 
 ## Content
-- [1. About](#1-about)
-- [2. Usage](#2-usage)
-    - [2.1 Different Ways of Calling the Tasks](#21-different-ways-of-calling-the-tasks)
-    - [2.2 Different Ways of Passing Parameters](#22-different-ways-of-passing-parameters)
-    - [2.3 `HEASoftpy` Control Parameters](#23-heasoftpy-control-parameters)
-    - [2.4 Finding Help for the Tasks](#24-finding-help-for-the-tasks)
-- [3. Installation](#3-installation)
-- [4. Writing Python Tasks](#4-writing-python-tasks)
-- [5. User Guide and Other Tutorials](#5-tutorials)
+- [1. About](#1.-About)
+- [2. Usage](#2.-Usage)
+    - [2.1 Calling the Tasks](#2.1-Calling-the-Tasks)
+    - [2.2 Different Ways of Passing Parameters](#2.2-Different-Ways-of-Passing-Parameters)
+    - [2.3 `HEASoftpy` Control Parameters](#2.3-HEAsoftpy-Control-Parameters)
+    - [2.4 Finding Help for the Tasks](#2.4-Finding-Help-for-the-Tasks)
+- [3. Installation](#3.-Installation)
+- [4. Writing Python Tasks](#4.-Writing-Python-Tasks)
+- [5. User Guide and Tutorials](#5.-Tutorials)
 
 
 ## 1. About
@@ -49,20 +49,20 @@ fdump(infile='input.fits', outfile='STDOUT', ...)
 
 ```
 
-3- For tasks written in python (e.g. ixpecalcfov.py), the tools can be used as usual from the command line, similar to the standard `HEASoft` tools:
+3- For tasks written in python (e.g. `ixpecalcfov.py`), the tools can be used as usual from the command line, similar to the standard `HEASoft` tools:
 ```bash
 ixpecalcfov.py ra=... dec=...
 
 ```
 
-#### Task Names:
+#### Task Names
 Native `heasoft` tasks have the same names in `heasfotpy`. So a task like `nicerclean` 
 is called by `heasoftpy.nicerclean`, except for tasks that have the dash symbol `-` in the name,
 which is replaced by an underscore `_`. So for example, the task `ut-swifttime` is available
 with `heasoftpy.ut_swifttime`, etc.
 
 
-### 2.2 Different Ways of Passing Parameters:
+### 2.2 Different Ways of Passing Parameters
 The task methods handle different types in inputs. For example:
 
 ```python
@@ -100,7 +100,7 @@ the user is prompted to enter a value.
 Note that creatting a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and paramters are queried if necessary.
 
 
-### 2.3 `HEASoftpy` Control Parameters:
+### 2.3 `HEASoftpy` Control Parameters
 There are a few parameters that are common between all tasks:
 - `verbose`: This can take several values. In all cases, the text printed by the
     task is captured, and returned in `HSPResult.stdout/stderr`. Addionally:
@@ -119,7 +119,7 @@ There are a few parameters that are common between all tasks:
 - `stderr`: If `True`, make `stderr` separate from `stdout`. The default
     is `False`, so `stderr` is written to `stdout`.
 
-#### 2.3.1 Special cases:
+#### 2.3.1 Special cases
 If the `heasoftpy` task being called has an input parameter with a name `verbose`, `noprompt`
 or `logfile`, then the above control parameters can be accessed by prepending them with `py_`,
 so `verbose` becomes `py_verbose` etc. For example: the task `batsurvey_catmux` has a parameter
@@ -128,7 +128,6 @@ called `logfile`. If the you want to use both parameters, the call would be:
 heasoftpy.batsurvey_catmux(..., logfile='task.log', py_logfile='pytask.log')
 ```
 with `'task.log'` logging the task activity, and `'pytask.log'` logging the python wrapper activity.
-
 
 
 ### 2.4 Finding Help for the Tasks
@@ -194,7 +193,7 @@ DESCRIPTION
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
-Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
+#### - Install within the `HEASoft` tree
 
 1- Ensure you have `python>=3.7` installed. Install the latest versions of the python dependencies:
 ```sh
@@ -229,14 +228,14 @@ This will generate the python wrappers under `build/lib/heasoftpy`. Check the `h
 mv build/lib/heasoftpy $HEADAS/lib/python
 ```
 
-2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar)
+6- Move the parameter files, executables and help files (if any) to their location in the `$HEADAS` tree:
 ```sh
-wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar
+mv build/bin/* $HEADAS/bin
+mv build/syspfiles/* $HEADAS/syspfiles
+mv build/help/* $HEADAS/help
 ```
-or 
-```sh
-curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar
-```
+
+#### - Install outside the `HEASoft` tree
 
 `heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
 
@@ -291,11 +290,11 @@ class SampleTask(hsp.HSPTask):
 ```
 
 
-## 5. Tutorials:
-The [notebooks](notebooks) folder contains some jupyter notebook tutorials and usage examples.
+## 5. Tutorials
+The following notebooks contain some tutorials and usage examples.
 
-- [Getting Started](notebooks/getting-started.ipynb): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
+- [Getting Started](getting-started.html): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
 
-- [NuSTAR Data Analysis Example](notebooks/nustar_example.ipynb): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
+- [NuSTAR Data Analysis Example](nustar_example.html): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
 
-- [NICER Data Analysis Example](notebooks/nicer-processing.ipynb): This is a walkthough example of analyzing NICER data using `HEASoftpy` and `pyXspec`.
+- [NICER Data Analysis Example](nicer-processing.html): This is a walkthough example of analyzing NICER data using `HEASoftpy` and `pyXspec`.

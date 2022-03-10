@@ -14,9 +14,12 @@ sys.path.insert(0, current_dir)
 # Where to install the pure-python executable and parameter file #
 if not 'HEADAS' in os.environ:
     raise RuntimeError('heasoft needs to be initialized before running this script')
-exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
-par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
-help_install_dir = os.path.join(os.environ['HEADAS'], 'help')
+#exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
+#par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
+#help_install_dir = os.path.join(os.environ['HEADAS'], 'help')
+exe_install_dir = os.path.join('build', 'bin')
+par_install_dir = os.path.join('build', 'syspfiles')
+help_install_dir = os.path.join('build', 'help')
 package_dir = os.path.join(current_dir, 'heasoftpy', 'packages')
 
 
@@ -233,6 +236,9 @@ def _install_packages(packages):
 
             # copy files make the exe file executable
             # uncomment the following once it is real install
+            os.makedirs(exe_install_dir, exist_ok=True)
+            os.makedirs(par_install_dir, exist_ok=True)
+            os.makedirs(help_install_dir, exist_ok=True)
             shutil.copyfile(exe_file, exe_dest)
             shutil.copyfile(par_file, par_dest)
             shutil.copyfile(hlp_file, hlp_dest)
