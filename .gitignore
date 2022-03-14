@@ -1,7 +1,6 @@
-fcn
 __pycache__
-defs
-idea
-.idea
 *.log
 .ipynb_checkpoints
+*egg*
+build
+fcn

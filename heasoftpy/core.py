@@ -167,14 +167,24 @@ class HSPTask:
         
         # noprompt?
         noprompt = user_pars.get('noprompt', False)
+        if 'noprompt' in self.par_names:
+            # in case noprompt is task parameter, we look for py_noprompt
+            noprompt = user_pars.get('py_noprompt', False)
         if not isinstance(stderr, bool):
             noprompt = ((isinstance(noprompt, str) and noprompt.strip().lower() in ['y', 'yes', 'true'])
                           or isinstance(noprompt, int) and noprompt > 0)
-        self.noprompt = noprompt
+        self._noprompt = noprompt
         
         # verbose?
         verbose = user_pars.get('verbose', 0)
         logfile = user_pars.get('logfile', None)
+        if 'verbose' in self.par_names:
+            # in case verbose is task parameter, we look for py_verbose
+            verbose = user_pars.get('py_verbose', 0)
+        if 'logfile' in self.par_names:
+            # in case logfile is task parameter, we look for py_logfile
+            logfile = user_pars.get('py_logfile', None)
+    
         if isinstance(verbose, bool):
             verbose = 1 if verbose else 0
         elif isinstance(verbose, str):
@@ -189,11 +199,11 @@ class HSPTask:
                     verbose = 1
         if not isinstance(verbose, int):
             raise HSPTaskException(f'confusing verbose value. Allowed types are: bool, str or int')
-        self.verbose = verbose
+        self._verbose = verbose
         # ----------------------------- #
         
         # prepare the logger #
-        # note that verbose takes precedence over logile
+        # note that verbose takes precedence over logfile
         if verbose <= 0:
             # capture only
             level = 1
@@ -213,7 +223,7 @@ class HSPTask:
             if logfile is None:
                 logfile = f'{self.name}.log'
             
-        self.logfile = logfile
+        self._logfile = logfile
         
         # setup logger only for pure-python calls, not for native heasoft tools
         # those are handeled separately by handle_io_stream
@@ -229,7 +239,7 @@ class HSPTask:
         
         # create a dict for all model parameters
         params = {p:getattr(self, p).value for p in self.par_names}
-        self.params = usr_params if self.noprompt else params
+        self.params = usr_params if self._noprompt else params
     
         
         # do_exec is a hidden parameter used for debugging and testing
@@ -282,7 +292,7 @@ class HSPTask:
         # Get the task parameters
         usr_params = self.params
         
-        verbose = self.verbose
+        verbose = self._verbose
         
         # do we have stderr?
         stderr = subprocess.PIPE if self.stderr else subprocess.STDOUT
@@ -291,6 +301,8 @@ class HSPTask:
         for par in usr_params.keys():
             if isinstance(usr_params[par], bool):
                 usr_params[par] = 'yes' if usr_params[par] else 'no'
+            if usr_params[par] is None:
+                usr_params[par] = 'NONE'
         cmd_params = [f'{par}={val:<1}' for par,val in usr_params.items()]
         
         # the task executable
@@ -305,7 +317,7 @@ class HSPTask:
             
         
         cmd_list = exec_cmd + cmd_params
-        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr)
+        proc = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=stderr, env=os.environ.copy())
         
         # ---------------------------------------------------- #
         # if verbose, we need to both print and capture output #
@@ -313,7 +325,7 @@ class HSPTask:
         # pass this to handle_io_stream to deal with it        #
         # ---------------------------------------------------- #
         if verbose > 0:
-            proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr, verbose, self.logfile)
+            proc_out, proc_err = HSPTask.handle_io_stream(proc, self.stderr, verbose, self._logfile)
             proc.wait() # needed to ensure the returncode is set correctly
         else:
             proc_out, proc_err = proc.communicate()
@@ -346,7 +358,13 @@ class HSPTask:
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc_out, proc_err = proc.communicate()
         except:
-            print(f'Failed in running fhelp to obtain docs for {name}')
+            # in case it is a .py task
+            try:
+                proc = subprocess.Popen([cmd, f'task={name}.py'], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                proc_out, proc_err = proc.communicate()
+            except:
+                print(f'Failed in running fhelp to obtain docs for {name}')
         # ---------- #
 
         # convert fhelp output from byte to str #
@@ -384,7 +402,15 @@ class HSPTask:
         # ----------------------------------------------------------- #
         # handle relation between parameters. these are task-specifc
         # and need to be done in a better way
-        noprompt = self.noprompt
+        
+        # if page==no, do not query for more, regardless
+        page  = self.page if 'page' in self.par_names else None
+        upage = user_pars.get('page', None) 
+        if not page is None:
+            if self.page.value == 'no' or upage == 'no':
+                user_pars['more'] = 'yes'
+        
+        noprompt = self._noprompt
         # ----------------------------------------------------------- #
                 
         
@@ -505,7 +531,7 @@ class HSPTask:
             raise HSPTaskException(f'No .par file found for task {name}')
         
         # user pfile; assumed to be the first one in pfiles
-        loc_pfile = os.path.join(pfiles[0], f'{name}.par')
+        loc_pfile = os.path.join(pf, f'{name}.par')
     
         pfile = loc_pfile if os.path.exists(loc_pfile) else sys_pfile
         
@@ -566,7 +592,7 @@ class HSPTask:
         return proc_out, proc_err    
     
         
-    def _generate_fcn_docs(self):
+    def _generate_fcn_docs(self, fhelp=False):
         """Generation standard function docstring from .par file
 
         Additional help is generated by task_docs, which, in the case of heasoft
@@ -580,11 +606,12 @@ class HSPTask:
         for par_name in self.par_names:
             par = getattr(self, par_name)
             parsDesc += f'\n    {par.pname:12} {"(Req)" if par.isReq else "":6}:'
-            parsDesc += f'  {par.prompt} (default: {par.default}): '
+            parsDesc += f'  {par.prompt} (default: {par.default}) '
         # --------------------- #
 
         # get extra docs from the task #
-        task_docs = self.task_docs()
+        # do this only if fhelp is True; i.e. genearating wrappers
+        task_docs = self.task_docs() if fhelp else ''
 
         # put it all together #
         docs = f"""
@@ -606,7 +633,7 @@ class HSPTask:
         task_pyname = self.pyname
 
         # generate docstring
-        docs = self._generate_fcn_docs()
+        docs = self._generate_fcn_docs(fhelp=True)
 
         # generate function text
         fcn = f"""

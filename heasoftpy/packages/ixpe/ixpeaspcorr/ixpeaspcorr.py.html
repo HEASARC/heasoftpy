@@ -1,0 +1,56 @@
+
+<html>
+<head>
+<style type="text/css">
+    body { margin-left: 5%; margin-right: 5%; }
+    h1,h2,h3,h4 { margin-left: -5%;}
+</style>    
+<title>ixpeaspcorr help file</title>
+</head>
+
+<body>
+
+<h2>NAME</h2>
+ixpeaspcorr -- Corrects for residual aspect errors using interpolated event position averages over time intervals of user-specified number of seconds.
+<h2>USAGE</h2>
+<tt>ixpeaspcorr.py infile n [statout] [uncorr]</tt>
+<h2>DESCRIPTION</h2> 
+ixpeaspcorr uses event time stamps and sky X,Y values from an IXPE Level 1 event FITS file (infile) to compute average position over a time width of (n) seconds. A corrected position is then given for each event by subtracting the difference between the interplolated means of the n events and the mean of all events from the uncorrected position. If x_pix_mean and/or y_pix_mean are set to values other than “-“, these values will be used instead of the mean of all events.
+<p>If statout=True, then the running mean and standard deviation for each axis position is added as columns X_AVG, X_STD, and Y_AVG, Y_STD. If uncorr=True, the original, uncorrected position columns are retained as X_UNCORR, Y_UNCORR and, if statout=True also, then the uncorrected statistics columns X_AVG_UNCORR, X_STD_UNCORR, Y_AVG_UNCORR, and Y_STD_UNCORR are also added. The input file is overwritten with these new columns added as well as a new keyword, XPASPCOR, to prevent unintentional multiple running of ixpeaspcorr.
+<p>In addition, ixpeaspcorr will optionally calculate the interpolated position of the spacecraft ponting direction on the sky plan and add these values as a new column (TXYDZ_CORR) to an attitude file if att_path=True.
+
+<h2>PARAMETERS</h2>
+<dl>
+
+<dt>infile* (str)</dt>
+<dd> Input FITS Event file</dd>
+<p>
+<dt>n* (integer)</dt>
+<dd> Duration of time to group events in for fitting.</dd>
+<p>
+<dt>statout (bool)</dt>
+<dd> Output standard deviation and mean of event positions? (default: no)</dd>
+<p>
+<dt>uncorr (bool)</dt>
+<dd> Keep uncorrected positions in output file? If statout is also True, uncorrected stats will be output. (default: no)</dd>
+<p>
+<dt>att_path (str)</dt>
+<dd> Attitude file to be corrected.</dd>
+<p>
+<dt>x_pix_mean (float)</dt>
+<dd> Average x position (in pixels) of all detectors for observation. Default is the mean of the input detector only.</dd>
+<p>
+<dt>y_pix_mean (float)</dt>
+<dd> Average y position (in pixels) of detectors for observation. Default is the mean of the input detector only.</dd>
+
+</dl>
+
+<h2>EXAMPLES</h2>
+<ol>
+</ol>
+<h2>BUGS</h2>
+<h2>SEE ALSO</h2>
+<h2>LAST MODIFIED</h2>
+Feb 2022
+</body>
+</html>

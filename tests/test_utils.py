@@ -7,6 +7,12 @@ import os
 
 class TestUtils(unittest.TestCase):
     """Tests for reading parameters"""
+    # setUp and tearDown ensures PFILES is restored to what it was
+    def setUp(self):
+        self.pfiles = os.environ['PFILES']
+    
+    def tearDown(self):
+        os.environ['PFILES'] = self.pfiles
 
     # temp file; no input to local_pfiles
     def test__utils__local_pfiles_tmpfile(self):

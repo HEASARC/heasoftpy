@@ -1,0 +1,83 @@
+
+<html>
+<head>
+<style type="text/css">
+    body { margin-left: 5%; margin-right: 5%; }
+    h1,h2,h3,h4 { margin-left: -5%;}
+</style>    
+<title>ixpecalcfov help file</title>
+</head>
+
+<body>
+
+<h2>NAME</h2>
+ixpecalcfov -- Calculates a map of the nominal sky field of view for each detector
+<h2>USAGE</h2>
+<tt>ixpecalcfov.py time ra dec outfile [roll] [refframe] [align] [teldef] [badpix1] [badpix2] [badpix3] [exc_graypix] [use_d1] [use_d2] [use_d3] [clobber]</tt>
+<h2>DESCRIPTION</h2> 
+ixpecalcfov is a stand-along mission planning tool that computes the nominal (non-dithered) field of view for a user-selectable sub-set of the three detectors, sky position (ra, dec) and observing time (time).  The output is a FITS image file (user selectable with outfile) with 1’s indicating sky pixels within the field of view and 0’s indicating sky pixels outside the field of view.  The user can customize the result by specifying a custom roll angle (roll) or position angle of the spacecraft Y-axis, the celestial reference frame (refframe), and the detectors included in the field of view image (selected by setting use_d1, use_d2, and use_d3, where setting the value to True will include the given detector in the field of view calculation).
+<p>By default, the alignment quaternions, telescope definition data, and bad pixel lists are obtained from the IXPE CALDB.  align is used to designate the name of a custom file of alignment quaternions; teldef is used to designate the name of a custom file of telescope definition data; and badpix1, badpix2, and badpix3 are used to designate the names of custom files for defining pixels of each corresponding detector to exclude from the field of view.  The bad pixel files use flags that designate various types of bad pixels as well as “gray” pixels that may be optionally selected for exclusion by setting exc_graypix=True.
+
+
+<h2>PARAMETERS</h2>
+<dl>
+
+<dt>time* (str)</dt>
+<dd> Observation date and time in ISOT format.</dd>
+<p>
+<dt>ra* (float)</dt>
+<dd> Right ascension of target in degrees.</dd>
+<p>
+<dt>dec* (float)</dt>
+<dd> Declination of target in degrees.</dd>
+<p>
+<dt>outfile* (str)</dt>
+<dd> Path name of output FITS image file.</dd>
+<p>
+<dt>roll (float)</dt>
+<dd> Position angle of the spacecraft y-axis.  Default is the computed value, which orients the y-axis toward the sun at the observation date and time.</dd>
+<p>
+<dt>refframe (str)</dt>
+<dd> Celestial reference frame of input position. (default: icrs)</dd>
+<p>
+<dt>align (str)</dt>
+<dd> Path to the align CALDB file.  (default: -).</dd>
+<p>
+<dt>teldef (str)</dt>
+<dd> Path to the teldef CALDB file.  (default: -).</dd>
+<p>
+<dt>badpix1 (str)</dt>
+<dd> Path to the detector 1 bad pixel CALDB. (default: -)</dd>
+<p>
+<dt>badpix2 (str)</dt>
+<dd> Path to the detector 2 bad pixel CALDB. (default: -)</dd>
+<p>
+<dt>badpix3 (str)</dt>
+<dd> Path to the detector 3 bad pixel CALDB. (default: -)</dd>
+<p>
+<dt>exc_graypix (bool)</dt>
+<dd> Exclude "gray" pixels from the field of view? (default: no)</dd>
+<p>
+<dt>use_d1 (bool)</dt>
+<dd> Calculate detector 1 field of view? (default: yes)</dd>
+<p>
+<dt>use_d2 (bool)</dt>
+<dd> Calculate detector 2 field of view? (default: yes)</dd>
+<p>
+<dt>use_d3 (bool)</dt>
+<dd> Calculate detector 3 field of view? (default: yes)</dd>
+<p>
+<dt>clobber</dt>
+<dd> Overwrite existing output file? (default: no)</dd>
+
+</dl>
+
+<h2>EXAMPLES</h2>
+<ol>
+</ol>
+<h2>BUGS</h2>
+<h2>SEE ALSO</h2>
+<h2>LAST MODIFIED</h2>
+Feb 2022
+</body>
+</html>

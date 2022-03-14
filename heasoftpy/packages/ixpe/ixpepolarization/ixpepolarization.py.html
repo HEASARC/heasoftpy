@@ -1,0 +1,62 @@
+<html>
+<head>
+<style type="text/css">
+    body { margin-left: 5%; margin-right: 5%; }
+    h1,h2,h3,h4 { margin-left: -5%;}
+</style>    
+<title>ixpepolarization help file</title>
+</head>
+
+<body>
+
+<h2>NAME</h2>
+ixpepolarization -- Calculates overall Stokes parameters for a user-defined region.
+<h2>USAGE</h2>
+<tt>ixpepolarization.py infile regfile t_lo t_up pi_lo pi_up color scale</tt>
+<h2>DESCRIPTION</h2> 
+ixpepolarization  computes the overall Stokes parameters Q and U for a sky region defined by the user (e.g., using the display program ds9) over a user-defined time interval and a user-defined PI energy range. The program also outputs a display region file with the polarization fraction and orientation on the sky computed from the Q and U, as well as the standard error of the resulting Q and U values for the region.
+<p>The tool requires an input IXPE event FITS file (infile) and optional sky region (regfile), time interval (t_lo, t_up), and energy bounds (pi_lo, pi_up). The default is to compute the Stokes parameters from all events in the file. Clearly, as IXPE is an imaging polarimeter, only Stokes parameters for a region of the sky will be scientifically interesting.
+<p>It is therefore highly recommended that a region file be provided to ixpepolarization. From the Stokes parameters Q and U, the polarization fraction and the position angle of the polarization vector are also computed with the vector length scaled by the parameter (scale). A modified region file is output which, when displayed in ds9, includes a vector in each of the original regions denoting the polarization fraction and orientation on the sky, as well as the standard error of the resulting Q and U values for the region, along with a scale in the top right corner.
+
+<h2>PARAMETERS</h2>
+<dl>
+
+<dt>infile* (str)</dt>
+<dd> Input FITS EVENTS file.</dd>
+<p>
+<dt>regfile (str)</dt>
+<dd> Path to ASCII region definition file. (default: -)</dd>
+<p>
+<dt>t_lo (str)</dt>
+<dd> ISOT date/time of lower time bound. (default: -)</dd>
+<p>
+<dt>t_up (str)</dt>
+<dd> ISOT date/time of upper time bound. (default: -)</dd>
+<p>
+<dt>pi_lo (str)</dt>
+<dd> Lower PI bound for event filtering. (default: -)</dd>
+<p>
+<dt>pi_lo (str)</dt>
+<dd> Upper PI bound for event filtering. (default: -)</dd>
+<p>
+<dt>color (str)</dt>
+<dd> Polarization vector display color. (default: red)</dd>
+<p>
+<dt>scale (float)</dt>
+<dd> Polarization vector length scale factor. (default: 0.1)</dd>
+<p>
+<dt>outfile (str)</dt>
+<dd> Path to output file. (default: is none)</dd>
+
+
+</dl>
+
+<h2>EXAMPLES</h2>
+<ol>
+</ol>
+<h2>BUGS</h2>
+<h2>SEE ALSO</h2>
+<h2>LAST MODIFIED</h2>
+Feb 2022
+</body>
+</html>

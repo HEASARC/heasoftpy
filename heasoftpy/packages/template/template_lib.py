@@ -3,7 +3,7 @@
 import sys
 import logging
 
-from heasoftpy.core import HSPTask, HSPResult
+from heasoftpy import HSPTask, HSPResult
 from heasoftpy import fcn, utils
 
 

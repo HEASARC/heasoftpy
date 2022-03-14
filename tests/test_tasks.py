@@ -86,6 +86,20 @@ class TestPyTasks(unittest.TestCase):
         res1 = task(infile='tests/test.fits', option='T', colheader=False, rownum=True, separator=" ", outfile='-')
         res2 = task(infile='tests/test.fits', option='T', colheader='no', rownum='yes', separator=" ", outfile='-')
         self.assertEqual(res1.stdout, res2.stdout)
+    
+    # if page=no, do no query for more (in fdump and similar tasks)
+    def test__tasks__page_no__noquery_more(self):
+        # first page=yes, 'more' will be queryied (i.e. raise ValueError in the simulated input)        
+        orig_input_f = __builtins__['input']
+        def dummyf(_): raise ValueError
+        __builtins__['input'] = dummyf
+        hsp  = heasoftpy.HSPTask('fdump')
+        with self.assertRaises(ValueError):
+            hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', page='yes')
+        # should not raise
+        hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', page='no')
+        
+        __builtins__['input'] = orig_input_f
         
 if __name__ == '__main__':
     unittest.main()
