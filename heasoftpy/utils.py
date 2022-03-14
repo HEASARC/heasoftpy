@@ -81,6 +81,13 @@ def generate_py_code(tasks=None):
     
     for it,task_name in enumerate(tasks):
         logger.info(f'.. {it+1}/{ntasks} install {task_name} ... ')
+        
+        # if it is already a python tool, skip
+        pytask = os.path.join(os.environ['HEADAS'], 'bin', f'{task_name}.py')
+        if os.path.exists(pytask):
+            logger.info(f'.. skipping python tools ... ')
+            continue
+        
         hsp = HSPTask(task_name)
         fcn = hsp.generate_fcn_code()
         with open(f'{outDir}/{hsp.pyname}.py', 'w') as fp: 

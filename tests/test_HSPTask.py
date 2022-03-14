@@ -107,6 +107,38 @@ class TestHSPTask(unittest.TestCase):
             name = 'name-1'
         with self.assertRaises(heasoftpy.HSPTaskException):
             hsp = HSP('wrong-name')
+
+    # logfile is a parameter of the task (in addition to being general heasoftpy parameter)
+    def test__logfile_in_task_pars(self):
+        taskname = 'taskwithlog'
+        pfiles = os.environ['PFILES']
+        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
         
+        # a, q, h, ql, hl
+        wTxt = ('par1,s,a,,,,"Par1"\nlogfile,s,h,"NONE",,,"log file"')
+        with open(f'{taskname}.par', 'w') as fp: fp.write(wTxt)
+        # --- #
+        
+        hsp  = heasoftpy.HSPTask(taskname)
+        
+        # no verbose, so logfile for python is ignored
+        hsp(par1='IN_FILE', logfile=f'{taskname}.log', do_exec=False)
+        self.assertEqual(hsp.logfile, f'{taskname}.log')
+        self.assertIsNone(hsp._logfile)
+        
+        
+        # verbose=20 (i.e. request python logging), no py_logfile, we should have {taskname}
+        hsp(par1='IN_FILE', logfile=f'{taskname}.log', verbose=20, do_exec=False)
+        self.assertEqual(hsp.logfile, f'{taskname}.log')
+        self.assertEqual(hsp._logfile, f'{taskname}.log')
+        
+        # verbose=20 (i.e. request python logging), with py_logfile, we should have py_logfile
+        hsp(par1='IN_FILE', logfile=f'{taskname}.log', py_logfile='somelog.log', verbose=20, do_exec=False)
+        self.assertEqual(hsp.logfile, f'{taskname}.log')
+        self.assertEqual(hsp._logfile, 'somelog.log')
+                
+        # --- #
+        os.environ['PFILES'] = pfiles
+        os.remove(f'{taskname}.par')
 if __name__ == '__main__':
     unittest.main()

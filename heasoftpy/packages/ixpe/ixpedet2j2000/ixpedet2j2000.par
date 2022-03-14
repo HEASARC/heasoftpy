@@ -1,0 +1,7 @@
+infile,s,a,,,,"Input FITS Event file"
+outfile,s,a,,,,"Output file name"
+attitude,s,a,,,,"FITS Attitude file corresponding to input Event file"
+teldef,s,h,-,,,"Path to the teldef caldb file" 
+sc,b,h,,,,"Append column of event locations in spacecraft coordinates?"
+clobber,b,h,,,,"Overwrite existing output file?"
+mode,s,h,"ql",,,""

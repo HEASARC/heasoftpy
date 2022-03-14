@@ -3,8 +3,10 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.build_py import build_py
 from distutils.command.clean import clean
+from setuptools.command.test import test
 import os
 import sys
+import glob
 
 
 class HSPInstallCommand(build_py):
@@ -14,6 +16,7 @@ class HSPInstallCommand(build_py):
         # install.py will fail is HEADAS is not initialized
         sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
         import install as hspinstall
+        hspinstall._do_install()
         super().run()
 
 class HSPCleanCommand(clean):
@@ -27,14 +30,40 @@ class HSPCleanCommand(clean):
             file = os.path.join(fcn, f)
             print(f'removing {file}')
             os.remove(file)
+        cwd = os.getcwd()
         for d in ['build', 'heasoftpy.egg-info', '__pycache__', 'dist', 
-                  'heasoftpy-install.log', f'{fcn}/__pycache__']:
-            if os.path.exists(d):
-                os.system(f'rm -rf {d}')
+                  'heasoftpy-install.log', f'{fcn}/__pycache__', '.pytest_cache',
+                 '.eggs', '*.pyc', '.ipynb_checkpoints']:
+            #[os.remove(x) for x in glob.iglob(os.path.join(cwd, "**", d), recursive=True)]
+            for f in glob.iglob(os.path.join(cwd, "**", d), recursive=True):
+                if os.path.exists(f):
+                    os.system(f'rm -rf {f}')
+
+def build_requirements():
+    """Build a list of requirements from the main and sub-packages"""
+    # requirements from the core of heasoftpy.
+    with open('requirements.txt') as fp:
+        requirements = fp.readlines()
+    requirements = [r.strip() for r in requirements 
+                    if not r.startswith('#') or len(r) == 0]
+    
+    # requirements from sub-packages
+    sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+    import install as hspinstall
+    packages = hspinstall._find_py_packages()
+    for package in packages:
+        tasks, reqs = hspinstall._read_package_setup(package)
+        for r in reqs:
+            if not r in requirements:
+                requirements.append(r)
+    return requirements
 
 
-
-
+class HSPTestCommand(test):
+    def run(self):
+        self.distribution.install_requires = []
+        super().run()
+        
 
 with open('README.md') as f:
     readme = f.read()
@@ -57,10 +86,15 @@ setup(
     url='https://heasarc.gsfc.nasa.gov/docs/software/heasoft',
     license=license,
     packages=find_packages(exclude=('tests', 'notebooks')),
+    python_requires=">=3.7",
+    install_requires=build_requirements(),
     
     cmdclass={
         'build_py': HSPInstallCommand,
         'clean': HSPCleanCommand,
+        'test': HSPTestCommand,
     },
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
 )
 

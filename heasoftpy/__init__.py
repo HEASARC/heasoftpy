@@ -110,13 +110,25 @@ from . import utils
 from .fcn import *
 
 # help function
-def help(): return print(__doc__)
+def help(): print(__doc__)
 
 # version
 from .version import __version__
+
+
+# a helper function to check a package exists
+def _package_exists(package):
+    thisdir = os.path.dirname(__file__)
+    return os.path.exists(os.path.join(thisdir, 'packages', package))
+
 
 # load sub-packages, only if we are not installing the main package:
 # __INSTALLING_HSP is created in install.py during installation
 if not '__INSTALLING_HSP' in os.environ:
     
-    from .packages.template import *
+    if _package_exists('template'):
+        from .packages.template import *
+    
+    if _package_exists('ixpe'):
+        from .packages import ixpe
+        from .packages.ixpe import *
