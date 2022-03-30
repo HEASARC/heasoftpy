@@ -66,7 +66,7 @@ import shutil
 # from .logging_ import logger, abort
 
 from .utils import fixed_interval_time_binning, unix_to_string, met_to_unix
-from .files import open_fits_file, read_initial_charging_map, \
+from .files import open_fits_file, fits_openfile, read_initial_charging_map, \
     read_charging_parameters, write_charging_map_to_file, NOT_AVLB
 
 from .charging import EnergyFluxCube, FIDUCIAL_HALF_SIZE, \
@@ -292,8 +292,9 @@ def _ixpechrgcorr(input_file_paths, outFile,
             filename = tmp[0]
 
             # open CALDB file
-            calDbExtension = open_fits_file(filename)['CHRG_PAR']
-
+#            calDbExtension = open_fits_file(filename)['CHRG_PAR']
+            calDbExtension = fits_openfile(filename)['CHRG_PAR']
+            
             charging_parameters = calDbExtension.data[0]
 
     #	    params['KC_FAST'], params['TD_FAST'], params['DM_FAST'], \
