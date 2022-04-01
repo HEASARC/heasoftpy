@@ -297,13 +297,16 @@ class HSPTask:
         # do we have stderr?
         stderr = subprocess.PIPE if self.stderr else subprocess.STDOUT
         
-        # the :<1 ensures that empty str gets an extra space
+        # construct a parameter list
         for par in usr_params.keys():
             if isinstance(usr_params[par], bool):
                 usr_params[par] = 'yes' if usr_params[par] else 'no'
             if usr_params[par] is None:
                 usr_params[par] = 'NONE'
-        cmd_params = [f'{par}={val:<1}' for par,val in usr_params.items()]
+        # '$( )' ensures empty string are passed correctly with subprocess
+        cmd_params = ['{}={}'.format(par, val if val!='' else '$( )') 
+                      for par,val in usr_params.items()]
+
         
         # the task executable
         exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
