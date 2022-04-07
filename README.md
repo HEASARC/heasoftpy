@@ -97,7 +97,7 @@ fdump_task()
 Whenever a task in called, if any of the required parameters is missing, 
 the user is prompted to enter a value.
 
-Note that creating a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and parameters are queried if necessary.
+Note that creating a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initializes it. Only by doing `fdump_task(...)` is the task called and parameters are queried if necessary.
 
 
 ### 2.3 `HEASoftPy` Control Parameters
