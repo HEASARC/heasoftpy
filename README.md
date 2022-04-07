@@ -1,4 +1,4 @@
-Python interface to HeaSoft
+Python interface to HEASoft
 ===========================
 
 ## Content
@@ -6,7 +6,7 @@ Python interface to HeaSoft
 - [2. Usage](#2.-Usage)
     - [2.1 Calling the Tasks](#2.1-Calling-the-Tasks)
     - [2.2 Different Ways of Passing Parameters](#2.2-Different-Ways-of-Passing-Parameters)
-    - [2.3 `HEASoftpy` Control Parameters](#2.3-HEAsoftpy-Control-Parameters)
+    - [2.3 `HEASoftPy` Control Parameters](#2.3-HEASoftPy-Control-Parameters)
     - [2.4 Finding Help for the Tasks](#2.4-Finding-Help-for-the-Tasks)
 - [3. Installation](#3.-Installation)
 - [4. Writing Python Tasks](#4.-Writing-Python-Tasks)
@@ -14,28 +14,28 @@ Python interface to HeaSoft
 
 
 ## 1. About
-`HEASoftpy` is a Python 3 package that gives access to the `HEASoft` 
-tools using python. It provies python wrappers that call the 
+`HEASoftPy` is a Python 3 package that gives access to the `HEASoft`
+tools using python. It provides python wrappers that call the
 `HEASoft` tools, allowing for easy integration into other python
 code.
 
-`HEASoftpy` also provides a framework that allows for pure-python
+`HEASoftPy` also provides a framework that allows for pure-python
 tools to be developed and integrated within the `HEASoft` system (see [Writing Python Tasks](#4.-Writing-Python-Tasks)).
 
-Although `HEASoftpy` is written in pure python, it does not rewrite 
+Although `HEASoftPy` is written in pure python, it does not rewrite
 the functions and tools already existing in `HEASoft`. A working
 installation of `HEASoft` is therefore required.
 
 
 ## 2. Usage
-After intallation (see [Installation](#3.-Installation)), `HEASoftpy` can
+After intallation (see [Installation](#3.-Installation)), `HEASoftPy` can
 be used is several ways.
 
 ### 2.1 Calling the Tasks
 1- Importing the task methods:
 ```python
 
-import heasofpy as hsp
+import heasoftpy as hsp
 hsp.fdump(infile='input.fits', outfile='STDOUT', ...)
 
 ```
@@ -43,7 +43,7 @@ hsp.fdump(infile='input.fits', outfile='STDOUT', ...)
 2- Creating a `HSPTask` and invoking it:
 ```python
 
-import heasofpy as hsp
+import heasoftpy as hsp
 fdump = hsp.HSPTask('fdump')
 fdump(infile='input.fits', outfile='STDOUT', ...)
 
@@ -56,7 +56,7 @@ ixpecalcfov.py ra=... dec=...
 ```
 
 #### Task Names
-Native `heasoft` tasks have the same names in `heasfotpy`. So a task like `nicerclean` 
+Native `heasoft` tasks have the same names in `heasoftpy`. So a task like `nicerclean`
 is called by `heasoftpy.nicerclean`, except for tasks that have the dash symbol `-` in the name,
 which is replaced by an underscore `_`. So for example, the task `ut-swifttime` is available
 with `heasoftpy.ut_swifttime`, etc.
@@ -67,7 +67,7 @@ The task methods handle different types in inputs. For example:
 
 ```python
 
-import heasofpy as hsp
+import heasoftpy as hsp
 hsp.fdump(infile='input.fits', outfile='STDOUT', ...)
 
 # or
@@ -97,10 +97,10 @@ fdump_task()
 Whenever a task in called, if any of the required parameters is missing, 
 the user is prompted to enter a value.
 
-Note that creatting a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and paramters are queried if necessary.
+Note that creating a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initialize it. Only by doing `fdump_task(...)` that the task is called and parameters are queried if necessary.
 
 
-### 2.3 `HEASoftpy` Control Parameters
+### 2.3 `HEASoftPy` Control Parameters
 There are a few parameters that are common between all tasks:
 - `verbose`: This can take several values. In all cases, the text printed by the
     task is captured, and returned in `HSPResult.stdout/stderr`. Addionally:
@@ -138,7 +138,7 @@ hsp.fdump?
 
 which will print something like the following, indicating the required parameters:
 ```
-    Automatically generated function for Heasoft task fdump.
+    Automatically generated function for HEASoft task fdump.
     Additional help may be provided below.
 
     Args:
@@ -189,7 +189,7 @@ DESCRIPTION
 
 
 ## 3. Installation
-`heasoftpy` is generally installed automatically installed when installing `HEAsoft`, make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEAsoft`. The following steps can be used to install or update `heasoftpy` manually after `HEAsoft` is installed.
+`heasoftpy` is generally installed automatically installed when installing `HEASoft`, make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. The following steps can be used to install or update `heasoftpy` manually after `HEASoft` is installed.
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
@@ -202,18 +202,18 @@ pip install numpy scipy astropy pytest
 conda install numpy scipy astropy pytest
 ```
 
-2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar)
+2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.1.tar)
 ```sh
-wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar
+wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.1.tar
 ```
 or 
 ```sh
-curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy.tar
+curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.1.tar
 ```
 
 3- Untar the file:
 ```sh
-tar -xvf heasoftpy.tar
+tar -xvf heasoftpy1.1.tar
 cd heasoftpy
 ```
 
@@ -263,7 +263,7 @@ mv build/help/* $HEADAS/help
 
 ---
 ## 4. Writing Python Tasks
-The core of `HEASoftpy` is the class `HSPTask`, which handles the parameter reading and setting (from the `.par` file).
+The core of `HEASoftPy` is the class `HSPTask`, which handles the parameter reading and setting (from the `.par` file).
 
 It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `packages/template`. More details can be found in `heasoftpy/packages/template/__init__.py`. The following is short snippet:
 
@@ -293,8 +293,8 @@ class SampleTask(hsp.HSPTask):
 ## 5. Tutorials
 The following notebooks contain some tutorials and usage examples.
 
-- [Getting Started](getting-started.html): A quick walkthrough guide of the main features of the `HEASoftpy` package, and ways of calling and obtaining help for the tasks.
+- [Getting Started](getting-started.html): A quick walkthrough guide of the main features of the `HEASoftPy` package, and ways of calling and obtaining help for the tasks.
 
-- [NuSTAR Data Analysis Example](nustar_example.html): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftpy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
+- [NuSTAR Data Analysis Example](nustar_example.html): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftPy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
 
-- [NICER Data Analysis Example](nicer-processing.html): This is a walkthough example of analyzing NICER data using `HEASoftpy` and `pyXspec`.
+- [NICER Data Analysis Example](nicer-example.html): This is a walkthough example of analyzing NICER data using `HEASoftPy` and `PyXspec`.
