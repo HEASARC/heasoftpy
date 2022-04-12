@@ -100,6 +100,14 @@ class TestPyTasks(unittest.TestCase):
         hsp(infile='tests/test.fits', outfile='STDOUT', columns='-', rows='-', page='no')
         
         __builtins__['input'] = orig_input_f
+    
+    # ensure empty strings are passed correcty with subprocess
+    def test__tasks__pass_empty_string(self):
+        task = heasoftpy.HSPTask('fthedit')
+        os.system('cp tests/test.fits _tmp.fits')
+        out = task(infile='_tmp.fits+1', keyword='_EXTNAM', operation='add', value='TEST2')
+        os.system('rm _tmp.fits >/dev/null')
+        self.assertEqual(out.returncode, 0)
         
 if __name__ == '__main__':
     unittest.main()

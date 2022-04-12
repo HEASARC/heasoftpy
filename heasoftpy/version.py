@@ -8,5 +8,9 @@
 #--------------------------------------------------------
 # 1.0      | 03/01/2022  | AZ: added testing and installation tools, fixed bugs from
 #          |             | ixpe integration. Completed IXPE integration.
+#--------------------------------------------------------
+# 1.1      | TBD         | AZ: added remote caldb support to ixpechrgcorr
+#
+#
 
-__version__ = '1.0'
+__version__ = '1.1'
