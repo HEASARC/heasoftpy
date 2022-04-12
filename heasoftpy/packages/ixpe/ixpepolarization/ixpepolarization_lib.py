@@ -44,19 +44,18 @@ from typing import List, TextIO
 from heasoftpy.fcn.fselect import fselect
 
 from astropy import units
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.io import fits
 import logging
 
 from heasoftpy.core import HSPTask, HSPResult
-from ..versioning import VERSION
 
 TEMP_DIR = os.path.join(os.getcwd(), 'tmp')
 TEMP_FILE = "tmp.fits"
 TEMP_PATH = os.path.join(TEMP_DIR, TEMP_FILE)
 
-P_MAX_SCALED = 50  # length of reference vector in pixels
+P_MAX_SCALED = 70  # length of reference vector in pixels
 
 SUPPORTED_COORD_SYS = [
     'image',
@@ -212,18 +211,17 @@ class PolarizationTask(HSPTask):
             u /= w_mom
             p = np.sqrt(np.square(q) + np.square(u))
 
-            rot_angle = -0.5 * np.arctan2(u, q)  # Psi is calculated as the angle from the detector x-axis
+            rot_angle = 0.5 * np.arctan2(u, q)
+            print(f'Region: {region} \n Q={q}, U={u}, P_MAG={p}, P_ANG={np.rad2deg(rot_angle)}')
 
             ps = p * scale
 
             center_dec_reg = y_crvl + ((y_mid - y_crpx) * y_delt)
             center_ra_reg = x_crvl + (((x_mid - x_crpx) * x_delt) / np.cos(np.deg2rad(center_dec_reg)))
 
-            ra_hms1 = Angle(center_ra_reg + ((ps / 2) * np.cos(rot_angle)), unit=units.deg).hms
-            dec_dms1 = Angle(center_dec_reg + ((ps / 2) * np.sin(rot_angle)), unit=units.deg).dms
-
-            ra_hms2 = Angle(center_ra_reg - ((ps / 2) * np.cos(rot_angle)), unit=units.deg).hms
-            dec_dms2 = Angle(center_dec_reg - ((ps / 2) * np.sin(rot_angle)), unit=units.deg).dms
+            center = SkyCoord(ra=Angle(center_ra_reg, unit=units.deg), dec=Angle(center_dec_reg, unit=units.deg))
+            t1 = center.directional_offset_by(Angle(rot_angle, unit=units.rad), Angle(ps * 0.5, unit=units.deg))
+            t2 = center.directional_offset_by(Angle(rot_angle, unit=units.rad), Angle(-ps * 0.5, unit=units.deg))
 
             region_lines.append(
                 'icrs;line('
@@ -231,12 +229,12 @@ class PolarizationTask(HSPTask):
                 '{:+02}:{:02}:{:02},'
                 '{}:{:02}:{:02},'
                 '{:+02}:{:02}:{:02}'
-                ') # color={}\n'.format(
-                    int(ra_hms1.h), int(ra_hms1.m), ra_hms1.s,
-                    int(dec_dms1.d), int(dec_dms1.m), dec_dms1.s,
-                    int(ra_hms2.h), int(ra_hms2.m), ra_hms2.s,
-                    int(dec_dms2.d), int(dec_dms2.m), dec_dms2.s,
-                    color
+                ') # color={} \n# Q={}, U={}, P_MAG={}, P_ANG={}\n'.format(
+                    int(t1.ra.hms.h), int(t1.ra.hms.m), t1.ra.hms.s,
+                    int(t1.dec.dms.d), int(t1.dec.dms.m), t1.dec.dms.s,
+                    int(t2.ra.hms.h), int(t2.ra.hms.m), t2.ra.hms.s,
+                    int(t2.dec.dms.d), int(t2.dec.dms.m), t2.dec.dms.s,
+                    color, q, u, p, np.rad2deg(rot_angle)
                 ))
 
         if region_file != '-':
@@ -246,6 +244,7 @@ class PolarizationTask(HSPTask):
                         fo.write(line)
 
                     for line in region_lines:
+                        fo.write('# P Vector\n')
                         fo.write(line)
                     write_scaling_key(fo, abs(x_delt), scale, color)
                 fi.close()
@@ -260,7 +259,7 @@ class PolarizationTask(HSPTask):
         if os.path.exists(TEMP_DIR):
             shutil.rmtree(TEMP_DIR)
 
-        logger.info(f'Output file written to {outfile}')
+        logger.info(f'Output file with results written to {outfile}.')
 
         outMsg, errMsg = self.logger.output
         return HSPResult(0, outMsg, errMsg, self.params)
@@ -278,11 +277,11 @@ def write_scaling_key(file: TextIO, x_delt: float, scale: float, color: str = 'g
     Returns:
         None
     """
-    file.write(f'image; box(500, 500, 150, 50, 0) # color={color}\n')
+    file.write('# Scaling Key\n')
+    file.write(f'image; box(500, 500, 200, 50, 0) # color={color}\n')
     file.write(f'image; line(435, 500, {435 + P_MAX_SCALED}, 500) # color={color}\n')
-    file.write('image; text(535, 500) # color={} text={}'.format(color,
-                                                                 '{' + 'P=' + str(round(P_MAX_SCALED / scale * x_delt,
-                                                                                        6)) + '}\n'))
+    file.write('image; text(550, 500) # color={} text={}'.format(color, '{' + 'P=' + str(round(
+        P_MAX_SCALED * x_delt / scale, 6)) + '}\n'))
 
 
 def create_component_region_files(original_file: str) -> List[str]:
@@ -371,7 +370,7 @@ def ixpepolarization(args=None, **kwargs):
     pi_lo (str)
           Lower PI bound for event filtering. (default: -)
 
-    pi_lo (str)
+    pi_up (str)
           Upper PI bound for event filtering. (default: -)
 
     color (str)

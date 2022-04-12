@@ -37,19 +37,19 @@
 
 
 import os
-import sys
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Union
 
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy.coordinates import Angle, SkyCoord
+import astropy.units as u
 from heasoftpy.fcn.quzcif import quzcif
 from ..ixpeexpmap.ixpeexpmap_lib import GenericPixelMap
 from ..orbit.cartesian import Quaternion, Vector
 from ..time import Time
 from scipy.interpolate import interp1d
 import logging
-from ..versioning import VERSION
 
 from heasoftpy.core import HSPTask, HSPResult
 SKYVIEW_WIDTH = 600
@@ -71,36 +71,23 @@ class Det2J2000Task(HSPTask):
         logger = logging.getLogger(self.name)
 
         ph = fits.getheader(infile, extname='Primary')
+        obs_time = Time(ph['DATE-OBS'])
+        tf = obs_time.strftime('%Y-%m-%d_%H:%M:%S')
+        yymmdd = tf.split('_')[0]
+        hhmmss = tf.split('_')[1]
 
         if teldef == '-':
-            obs_time = Time(ph['DATE-OBS'])
-            tf = obs_time.strftime('%Y-%m-%d_%H:%M:%S')
-            yymmdd = tf.split('_')[0]
-            hhmmss = tf.split('_')[1]
-
             teldef = quzcif(mission='ixpe', instrument='xrt', codename='teldef', detector='-', filter='-',
                             date=yymmdd, time=hhmmss, expr='-').stdout.split(' ')[0]
 
             if teldef == '':
-                err_str = 'No telescope definition CALDB file could be found for the input observation time.'
+                err_str = 'No telescope definition file could be found in CALDB for the input observation time.'
                 logger.error(err_str)
                 raise LookupError(err_str)
 
         telescope_header = fits.getheader(teldef)
-
-        file_level = str(ph['FILE_LVL'])
-
-        try:
-            if file_level == '1':
-                j2000_data = Lvl1Det2J2000(infile, attitude, telescope_header, sc)
-            else:
-                sys.exit(2)
-
-        except KeyError:
-            sys.exit(2)
-
+        j2000_data = Lvl1Det2J2000(infile, attitude, telescope_header, sc)
         hdul = fits.open(infile)
-
         hdul['EVENTS'] = j2000_data.create_updated_hdu()
 
         date = Time.now().tt.fits
@@ -158,6 +145,10 @@ class BaseDet2J2000:
         self._input_file_path = input_file_path
         self._sc = sc
         self._input_table: Table = Table.read(self._input_file_path, hdu='EVENTS')
+        columns = self._input_table.colnames
+        if not ('ABSX' in columns and 'ABSY' in columns):
+            raise ValueError('ABSX, ABSY columns are required in input file EVENTS HDU')
+
         self._original_header = fits.getheader(self._input_file_path, extname='EVENTS')
 
         self._du = fits.getheader(self._input_file_path, extname='Primary')['DETNAM'][-1]
@@ -269,10 +260,11 @@ class BaseDet2J2000:
                 stop_index = attitude_table.loc_indices[
                     attitude_table['TIME'][np.where(attitude_table['TIME'] <= stop)]
                     [-1]]
-
-                f = interp1d(attitude_table['TIME'][start_index:stop_index + 1],
-                             np.arange(start_index, stop_index + 1), kind='nearest')
-
+                try:
+                    f = interp1d(attitude_table['TIME'][start_index:stop_index + 1],
+                                 np.arange(start_index, stop_index + 1), kind='nearest')
+                except ValueError:
+                    continue
                 interps.append({
                     'start': attitude_table['TIME'][start_index],
                     'stop': attitude_table['TIME'][stop_index],
@@ -282,6 +274,40 @@ class BaseDet2J2000:
                 })
 
         return interps
+
+    @staticmethod
+    def _find_interp(interps, attitude_table, time) -> Tuple[Union[bool, Quaternion], Union[bool, Quaternion]]:
+        q_dj = None
+        q_js = None
+        for interp in interps:
+            if interp['start'] - 0.1 <= time <= interp['stop'] + 0.1:
+                if time < interp['start']:
+                    q_dj_fix = attitude_table['QDJ'][interp['start_index']]
+                    q_js1_fix = attitude_table['QSJ_ST1'][interp['start_index']]
+                    q_js2_fix = attitude_table['QSJ_ST2'][interp['start_index']]
+                elif time > interp['stop']:
+                    q_dj_fix = attitude_table['QDJ'][interp['stop_index']]
+                    q_js1_fix = attitude_table['QSJ_ST1'][interp['stop_index']]
+                    q_js2_fix = attitude_table['QSJ_ST2'][interp['start_index']]
+                else:
+                    q_dj_fix = attitude_table['QDJ'][int(interp['interp'](time))]
+                    q_js1_fix = attitude_table['QSJ_ST1'][int(interp['interp'](time))]
+                    q_js2_fix = attitude_table['QSJ_ST2'][interp['start_index']]
+                try:
+                    q_dj = Quaternion(*q_dj_fix)
+                except ValueError:
+                    pass
+                try:
+                    q_js = Quaternion(*q_js1_fix).inverse()
+                except ValueError:
+                    try:
+                        q_js = Quaternion(*q_js2_fix).inverse()
+                    except ValueError:
+                        pass
+
+                break
+
+        return q_dj, q_js
 
     def _calculate_j2000_x_y_index(self, event_ra: float, event_dec: float, target_ra: float, target_dec: float)\
             -> tuple:
@@ -309,42 +335,36 @@ class BaseDet2J2000:
 class Lvl1Det2J2000(BaseDet2J2000):
     def __init__(self, input_file_path, attitude_data: str, telescope_header: fits.header.Header, sc: bool = False):
         super().__init__(input_file_path, sc)
+        if not ('DETQ' in self._input_table.colnames and 'DETU' in self._input_table.colnames):
+            raise ValueError('DETQ, DETU columns are required in input file EVENTS HDU')
+
         self._telescope_defs = telescope_header
         self._x_flip, self._y_flip, self._focal_length = self._retrieve_telescope_cal()
         self._sorted_attitude_tables = sorted([file_path for file_path in attitude_data.split(',')],
-                                              key=lambda x: fits.getheader(x, extname='Primary')['DATE'])
+                                              key=lambda x: fits.getheader(x, extname='Primary')['DATE'],
+                                              reverse=True)
         self._tangent_plane_coords = None
         self._gpm = self._initialize_gpm()
-        self._check_attitude_tables()
+        self._ra, self._dec = self._get_ra_dec()
         self._tangent_plane_coords = self._calculate_tangent_plane_sky_coords()
 
-    def _check_attitude_tables(self):
-        radecs = []
+    def _get_ra_dec(self) -> Tuple[float, float]:
+        ra = None
+        dec = None
         for attitude_path in self._sorted_attitude_tables:
             ph = fits.getheader(attitude_path, extname='Primary')
-            radecs.append((ph['RA_OBJ'], ph['DEC_OBJ']))
+            if 'RA_OBJ' not in ph or 'DEC_OBJ' not in ph:
+                raise ValueError('Input Attitude files must have value for RA_OBJ and DEC_OBJ in primary header')
+            if ra is None and dec is None:
+                ra = ph['RA_OBJ']
+                dec = ph['DEC_OBJ']
+            elif ph['RA_OBJ'] != ra or ph['DEC_OBJ'] != dec:
+                raise ValueError('Input Attitude files must have same value for RA_OBJ and DEC_OBJ in primary header')
 
-        if not len(set(radecs)) == 1:
-            raise ValueError('All input Attitude file must have same value for RA_OBJ and DEC_OBJ in primary header')
+        return np.deg2rad(ra), np.deg2rad(dec)
 
-    @staticmethod
-    def _create_radec_lookup(attitude_path, attitude_vtis):
-        lookup = []
-        ph = fits.getheader(attitude_path, extname='Primary')
-        if 'RA_OBJ' not in ph.keys() or 'DEC_OBJ' not in ph.keys():
-            raise LookupError('{}: RA_OBJ and DEC_OBJ need to be set in the Primary header'.format(attitude_path))
-        else:
-            for vti in attitude_vtis:
-                lookup.append({
-                    'start': vti[0],
-                    'stop': vti[1],
-                    'ra': np.deg2rad(ph['RA_OBJ']),
-                    'dec': np.deg2rad(ph['DEC_OBJ'])
-                })
-
-        return lookup
-
-    def _calculate_tangent_plane_sky_coords(self) -> Tuple[List[float], List[float], List[float], List[float]]:
+    def _calculate_tangent_plane_sky_coords(self) -> Tuple[List[float], List[float], List[float], List[float],
+                                                           List[float], List[float]]:
         """
         Calculates the projection of the event positions onto the tangent plane centered on the target.
         Returns:
@@ -355,80 +375,75 @@ class Lvl1Det2J2000(BaseDet2J2000):
         """
         x_t = [np.NaN for i in range(len(self._input_table))]
         y_t = [np.NaN for i in range(len(self._input_table))]
+        q_t = [np.NaN for i in range(len(self._input_table))]
+        u_t = [np.NaN for i in range(len(self._input_table))]
         x_sc_t = [np.NaN for i in range(len(self._input_table))]
         y_sc_t = [np.NaN for i in range(len(self._input_table))]
+
+        scy_decs = []
+        scy_ras = []
+        detqs = []
+        detus = []
+        indices = []
+
+        # STATUS2 bits that will be masked. "True" indicates these flags will cause
+        #   an event to not be aspect corrected.
+        s2mask = [True, False, False, True, True, True, True, True,
+                  True, True, False, False, False, False, False, False]
 
         for file_path in self._sorted_attitude_tables:
 
             attitude_table = Table.read(file_path, hdu='HK')
             attitude_vtis = self._calc_attitude_vtis(attitude_table)
             att_interp = self._calculate_interpolations(attitude_table, attitude_vtis)
-            radec_lookup = self._create_radec_lookup(file_path, attitude_vtis)
 
             for i, row in enumerate(self._input_table):
 
                 # Check if j2000 solution has already been filled in by a newer aspect solution
-                if not np.isnan(x_t[i]):
+                if not np.isnan(x_t[i]) or np.any(row['STATUS']) or np.any(np.logical_and(row['STATUS2'], s2mask)):
                     continue
 
-                if bool(row['STATUS2'][0]) is True:  # No aspect solution flag
-                    continue
-
-                x = self._x_flip * row['ABSX']
-                y = self._y_flip * row['ABSY']
+                x = row['ABSX']
+                y = row['ABSY']
                 df_event_position = Vector(x=-x, y=-y, z=self._focal_length).normalize()
 
                 t = row['TIME']
 
                 # Find the correct interpolation to use. Any events that don't have an aspect solution should have been
                 # filtered out by the STATUS2 value at the beginning of the loop
-                interp_found = False
-                for interp in att_interp:
-                    if interp['start'] - 0.1 <= t <= interp['stop'] + 0.1:
-                        if t < interp['start']:
-                            q_dj = Quaternion(*attitude_table['QDJ'][interp['start_index']])
-                            q_js = Quaternion(*attitude_table['QSJ_ST1'][interp['start_index']]).inverse()
-
-                        elif t > interp['stop']:
-                            q_dj = Quaternion(*attitude_table['QDJ'][interp['stop_index']])
-                            q_js = Quaternion(*attitude_table['QSJ_ST1'][interp['stop_index']]).inverse()
-
-                        else:
-                            q_dj = Quaternion(*attitude_table['QDJ'][int(interp['interp'](t))])
-                            q_js = Quaternion(*attitude_table['QSJ_ST1'][int(interp['interp'](t))]).inverse()
-
-                        interp_found = True
-                        break
-
-                if not interp_found:
+                q_dj, q_js = self._find_interp(att_interp, attitude_table, t)
+                if q_dj is None:
                     continue
 
                 j2000_event_position = q_dj.rotate(df_event_position)
                 event_ra, event_dec = j2000_event_position.to_radec()
 
-                if self._sc:
-                    sc = q_js.rotate(j2000_event_position)
+                if self._sc and q_js is not None:
+                    sc = q_js.rotate(df_event_position)
                     x_sc_t[i] = sc.x
                     y_sc_t[i] = sc.y
 
-                radec_found = False
-                for interval in radec_lookup:
-                    if interval['start'] - 0.1 <= t <= interval['stop'] + 0.1:
-                        target_ra = interval['ra']
-                        target_dec = interval['dec']
-
-                        radec_found = True
-                        break
-
-                if not radec_found:
-                    continue
-
-                x, y = self._calculate_j2000_x_y_index(event_ra, event_dec, target_ra, target_dec)
-
+                # Calculate X, Y
+                x, y = self._calculate_j2000_x_y_index(event_ra, event_dec, self._ra, self._dec)
                 x_t[i] = x
                 y_t[i] = y
 
-            return x_t, y_t, x_sc_t, y_sc_t
+                # Calculate Q, U
+                scy_ra, scy_dec = q_dj.rotate(Vector(0, 1, 0)).to_radec()
+                scy_ras.append(scy_ra)
+                scy_decs.append(scy_dec)
+                detqs.append(row['DETQ'])
+                detus.append(row['DETU'])
+                indices.append(i)
+
+        sc_pay = SkyCoord(ra=self._ra, dec=self._dec, frame='icrs', unit=u.rad).position_angle(
+            SkyCoord(ra=Angle(scy_ras, unit=u.rad), dec=Angle(scy_decs, unit=u.rad), frame='icrs')
+        )
+        for i, pa in enumerate(sc_pay):
+            q_t[indices[i]] = -(detqs[i] * np.cos(2 * pa.rad) + detus[i] * np.sin(2 * pa.rad))
+            u_t[indices[i]] = detus[i] * np.cos(2 * pa.rad) - detqs[i] * np.sin(2 * pa.rad)
+
+        return x_t, y_t, q_t, u_t, x_sc_t, y_sc_t
 
     def create_updated_hdu(self) -> fits.BinTableHDU:
         """
@@ -441,7 +456,7 @@ class Lvl1Det2J2000(BaseDet2J2000):
 
         columns = []
         for colname in hdu.columns.names:
-            if colname in ['X', 'Y'] or (self._sc and colname in ['SCX', 'SCY']):
+            if colname in ['X', 'Y', 'Q', 'U'] or (self._sc and colname in ['SCX', 'SCY']):
                 continue
 
             if colname in ['PIX_PHAS', 'PIX_PHAS_EQ']:
@@ -453,21 +468,36 @@ class Lvl1Det2J2000(BaseDet2J2000):
                                            bzero=hdu.columns[colname].bzero))
         hdul.close()
 
-        x_j2000 = fits.Column(array=self._tangent_plane_coords[0], name='X', format='D', unit='pixels')
-        y_j2000 = fits.Column(array=self._tangent_plane_coords[1], name='Y', format='D', unit='pixels')
-
+        x_j2000 = fits.Column(array=self._tangent_plane_coords[0], name='X', format='D', unit='pixels',
+                              coord_type='RA---TAN', coord_unit='deg', coord_ref_point=299,
+                              coord_ref_value=np.rad2deg(self._ra), coord_inc=-self._telescope_defs['SKY_XSCL'])
+        y_j2000 = fits.Column(array=self._tangent_plane_coords[1], name='Y', format='D', unit='pixels',
+                              coord_type='DEC--TAN', coord_unit='deg', coord_ref_point=299,
+                              coord_ref_value=np.rad2deg(self._dec), coord_inc=self._telescope_defs['SKY_YSCL'])
         columns.append(x_j2000)
         columns.append(y_j2000)
 
         if self._sc:
-            x_sc = fits.Column(array=self._tangent_plane_coords[2], name='SCX', format='D', unit='pixels')
-            y_sc = fits.Column(array=self._tangent_plane_coords[3], name='SCY', format='D', unit='pixels')
+            x_sc = fits.Column(array=self._tangent_plane_coords[4], name='SCX', format='D', unit='deg')
+            y_sc = fits.Column(array=self._tangent_plane_coords[5], name='SCY', format='D', unit='deg')
             columns.append(x_sc)
             columns.append(y_sc)
+
+        q_j2000 = fits.Column(array=self._tangent_plane_coords[2], name='Q', format='D')
+        u_j2000 = fits.Column(array=self._tangent_plane_coords[3], name='U', format='D')
+        columns.append(q_j2000)
+        columns.append(u_j2000)
 
         cols = fits.ColDefs(columns)
 
         bin_table = fits.BinTableHDU.from_columns(cols, header=self._original_header)
+        x_index = bin_table.columns.names.index('X') + 1
+        bin_table.header[f'TLMIN{x_index}'] = (1, 'Minimum allowed value in column')
+        bin_table.header[f'TLMAX{x_index}'] = (600, 'Maximum allowed value in column')
+
+        y_index = bin_table.columns.names.index('Y') + 1
+        bin_table.header[f'TLMIN{y_index}'] = (1, 'Minimum allowed value in column')
+        bin_table.header[f'TLMAX{y_index}'] = (600, 'Maximum allowed value in column')
 
         return bin_table
 

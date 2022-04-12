@@ -109,6 +109,24 @@ def open_fits_file(file_path, **kwargs):
 #    sys.stdout.write('Opening input file %s...' % file_path)
     return fits.open(file_path, **kwargs)
 
+
+def fits_openfile(file_path, **kwargs):
+    """ Thin wrapper around astropy.fits.open, with the aim of performing a few
+    basic checks on the file path.
+
+    Parameters
+    ----------
+    file_path : string
+        The input file path
+    """
+
+    logger = logging.getLogger('ixpechrgcorr')
+
+    logger.info('Opening input file %s...' % file_path)
+    sys.stdout.write('Opening input file %s...' % file_path)
+    return fits.open(file_path, **kwargs)
+
+
 def read_initial_charging_map(initial_map_file):
     """ Open the initial charging map file and read the values for the slow and
     fast component. We get the number of bins per side from the header.

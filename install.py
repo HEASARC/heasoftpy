@@ -107,6 +107,16 @@ def _find_py_packages():
     
     return packages
 
+    # exclude python packages that are not requested by the user.
+    # Find the list from the list of folders in the component-level directory
+    component_level = glob.glob('../..')
+    # first make sure we are in a standard location: heacore/heasoftpy/install.py
+    # if not, do nothing
+    if 'heacore' in component_level:
+        for package in packages:
+            if not package in component_level:
+                # remove package from the list of packages to be installed
+                packages.remove(package)
 
 def _read_package_setup(package):
     """Read setup.py in packages/{package}/"""
