@@ -794,7 +794,7 @@ class HSPParam():
             return value
         
         if value == 'INDEF' and inType in ['r', 'i']:
-            return None
+            return value
         
         if value == '' and inType in ['r', 'i']:
             value = 0

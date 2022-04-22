@@ -24,6 +24,10 @@ class TestParamType(unittest.TestCase):
     def test__param_type__r(self):
         test_result = heasoftpy.HSPParam.param_type('', 'r')
         self.assertIsInstance(test_result, float)
+    
+    def test__param_type__r_INDEF(self):
+        test_result = heasoftpy.HSPParam.param_type('INDEF', 'r')
+        self.assertEqual(test_result, 'INDEF')
         
     def test__param_type__s(self):
         test_result = heasoftpy.HSPParam.param_type('', 's')
