@@ -29,7 +29,7 @@ class HSPTask:
         """
         
         # if self.name is defined by a subclass, use it.
-        if hasattr(self, 'name'):
+        if hasattr(self, 'name') and isinstance(self.name, str):
             if name is None:
                 name = self.name
             # if name given is different from that defined in the class; fail
@@ -41,8 +41,8 @@ class HSPTask:
             raise HSPTaskException('Task name is required')
         
         # to handle "_" and "-" in names, we also create pyname
-        self.name   = name
-        self.pyname = name.replace('-', '_')
+        self.taskname   = name
+        self.pytaskname = name.replace('-', '_')
             
         
         # first read the parameter file
@@ -216,12 +216,12 @@ class HSPTask:
             # capture and logfile
             level = [1, 3]
             if logfile is None:
-                logfile = f'{self.name}.log'
+                logfile = f'{self.taskname}.log'
         else:
             # capture, screen and logfile
             level = [1, 2, 3]
             if logfile is None:
-                logfile = f'{self.name}.log'
+                logfile = f'{self.taskname}.log'
             
         self._logfile = logfile
         
@@ -229,7 +229,7 @@ class HSPTask:
         # those are handeled separately by handle_io_stream
         if self.__module__ != 'heasoftpy.core':
             logging.setLoggerClass(HSPLogger)
-            self.logger = logging.getLogger(self.name)
+            self.logger = logging.getLogger(self.taskname)
             self.logger.setup(level=level, stderr=self.stderr, file_name=logfile)
         # ------------------ #
         
@@ -252,7 +252,7 @@ class HSPTask:
             
             # write new params to the user .par file
             # do this before calling in case the task also updates the .par file
-            usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
+            usr_pfile = HSPTask.find_pfile(self.taskname, return_user=True)
             self.write_pfile(usr_pfile)
             
             # now call the task #
@@ -309,7 +309,7 @@ class HSPTask:
 
         
         # the task executable
-        exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
+        exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.taskname}')
         
         if os.path.exists(exec_cmd):
             exec_cmd = [exec_cmd]
@@ -352,7 +352,7 @@ class HSPTask:
             str of documentation
         
         """
-        name = self.name
+        name = self.taskname
         
         # call fhelp; assume HEADAS is defined #
         cmd  = os.path.join(os.environ['HEADAS'], 'bin/fhelp')
@@ -618,7 +618,7 @@ class HSPTask:
 
         # put it all together #
         docs = f"""
-    Automatically generated function for Heasoft task {self.name}.
+    Automatically generated function for Heasoft task {self.taskname}.
     Additional help may be provided below.
 
     Args:
@@ -632,8 +632,8 @@ class HSPTask:
         """Create python function for task_name
 
         """
-        task_name   = self.name
-        task_pyname = self.pyname
+        task_name   = self.taskname
+        task_pyname = self.pytaskname
 
         # generate docstring
         docs = self._generate_fcn_docs(fhelp=True)
