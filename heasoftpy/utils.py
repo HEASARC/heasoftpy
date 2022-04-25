@@ -90,7 +90,7 @@ def generate_py_code(tasks=None):
         
         hsp = HSPTask(task_name)
         fcn = hsp.generate_fcn_code()
-        with open(f'{outDir}/{hsp.pyname}.py', 'w') as fp: 
+        with open(f'{outDir}/{hsp.pytaskname}.py', 'w') as fp: 
             fp.write(fcn)
         logger.info('done!')
     
