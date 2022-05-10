@@ -719,8 +719,12 @@ class HSPParam():
 
         # handle comma (,) in the prompt text
         if len(info) > 6:
-            info = info[:6] + [','.join(info[6:])]
-
+            # if any value contains ",", replace it with "^|_", split, then put it back
+            # assumes "^|_" is not going to appear anywhere
+            info = [pp.replace('^|_', ',') for pp in ''.join([
+                    p.replace(',', '^|_') if ('"' in p or "'" in p) else p.strip() 
+                    for p in re.split("('.*?'|\\\".*?\\\")", line)]).split(',')]
+           
         # extract information about the parameter
         self.pname = info[0]
         pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
