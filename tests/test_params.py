@@ -122,6 +122,16 @@ class TestReadPFile(unittest.TestCase):
         self.assertEqual(pars[0].default, 'val1,val2')
         self.assertEqual(pars[0].prompt, 'Name of file, and stuff')
         os.remove(tmpfile)
+    
+    # prompt text has unclosed quotes
+    def test__read_pfile__prompt_with_unclosed_quotes(self):
+        wTxt = 'filtlist,s,a,val1,,,"Name of file, and stuff'
+        tmpfile = 'tmp.simpleFile.par'
+        with open(tmpfile, 'w') as fp: fp.write(wTxt)
+        pars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(pars[0].pname, 'filtlist')
+        self.assertEqual(pars[0].prompt, 'Name of file, and stuff')
+        os.remove(tmpfile)
         
 class TestWritePFile(unittest.TestCase):
     """Tests for write_pfile"""

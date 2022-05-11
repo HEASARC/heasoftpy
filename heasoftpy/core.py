@@ -719,12 +719,20 @@ class HSPParam():
 
         # handle comma (,) in the prompt text
         if len(info) > 6:
+            # if there is an unclosed " in the prompt. This should be fixed in the file
+            # but we add it here for generality
+            if line.count('"') % 2 != 0:
+                 line += '"'
             # if any value contains ",", replace it with "^|_", split, then put it back
             # assumes "^|_" is not going to appear anywhere
-            info = [pp.replace('^|_', ',') for pp in ''.join([
-                    p.replace(',', '^|_') if ('"' in p or "'" in p) else p.strip() 
-                    for p in re.split("('.*?'|\\\".*?\\\")", line)]).split(',')]
-           
+            # - split the line so closed strings (with ' or ") are in separate parts
+            parts = re.split("('.*?'|\\\".*?\\\")", line)
+            # - replace , with ^|_ if , falls in one of the substrings with open/close ',"
+            parts = [p.replace(',', '^|_') if ('"' in p or "'" in p) else p.strip()
+                      for p in parts]
+            # - put things back together, and then split at , and remove ^|_
+            info  = [p.replace('^|_', ',') for p in ''.join(parts).split(',')]
+            
         # extract information about the parameter
         self.pname = info[0]
         pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
