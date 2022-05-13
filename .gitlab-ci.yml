@@ -1,0 +1,15 @@
+# the steps are simple so we combine them into
+stages:
+  - build_test
+  
+
+build-test-job:
+  stage: build_test
+  tags:
+    - heasoftpy-develop
+  script:
+    - source /home/heasoft/miniconda3/etc/profile.d/conda.sh
+    - conda activate heasoft
+    - python setup.py build
+    - python setup.py test
+
