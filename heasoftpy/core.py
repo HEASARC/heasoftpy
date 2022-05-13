@@ -731,7 +731,7 @@ class HSPParam():
             parts = [p.replace(',', '^|_') if ('"' in p or "'" in p) else p.strip()
                       for p in parts]
             # - put things back together, and then split at , and remove ^|_
-            info  = ''.join([p.replace('^|_', ',') for p in parts]).split(',')
+            info  = [p.replace('^|_', ',') for p in ''.join(parts).split(',')]
             
         # extract information about the parameter
         self.pname = info[0]
