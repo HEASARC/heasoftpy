@@ -715,6 +715,7 @@ class HSPParam():
             line: a line from the parameter file
             
         """
+        line = line.replace('\n', '')
         info = line.strip().split(',')
 
         # handle comma (,) in the prompt text
