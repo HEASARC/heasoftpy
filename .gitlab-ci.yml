@@ -1,15 +1,33 @@
-# the steps are simple so we combine them into
+# the build and test are simple, so we combine them
+# test against the relased version of heasoft first, then agains the develop version
 stages:
-  - build_test
+  - heasoft_release_version
+  - heasoft_develop_version
   
-
-build-test-job:
-  stage: build_test
+# put common task here, and we call it later
+.build_and_test_heasoftpy:
   tags:
-    - heasoftpy-develop
+    - heasoftpy-local-pulsar
   script:
-    - source /home/heasoft/miniconda3/etc/profile.d/conda.sh
-    - conda activate heasoft
-    - python setup.py build
-    - python setup.py test
+    - export HEADAS=`ls -d /software/lheasoft/$VERSION/x86_64-pc-linux-gnu-libc$(ldd --version | grep ldd | sed 's:.*)[ ]*::')`
+    - echo "\n*** Using heasoft in $HEADAS ***\n"
+    - source $HEADAS/headas-init.sh
+    - export PYTHON=$(gawk '/PYTHON =/ {print $3;exit}' $HEADAS/BUILD_DIR/`basename $HEADAS`*.log)
+    - $PYTHON setup.py build
+    - $PYTHON setup.py test
+
+
+# do the release version
+build-test-local-release:
+  stage: heasoft_release_version
+  variables:
+    VERSION: release
+  extends: .build_and_test_heasoftpy
+
+# do the develop version
+build-test-local-develop:
+  stage: heasoft_develop_version
+  variables:
+    VERSION: develop
+  extends: .build_and_test_heasoftpy
 
