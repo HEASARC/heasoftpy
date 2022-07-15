@@ -460,7 +460,7 @@ class HSPTask:
                 val = defaults[par_name]
             
             # make any style changes to the values to be printed #
-            if par.type == 's' and (' ' in val or val == ''):
+            if par.type == 's' and (' ' in val or ',' in val or val == ''):
                 val = f'"{val}"'
             
             # write #
