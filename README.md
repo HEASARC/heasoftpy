@@ -1,3 +1,4 @@
+
 Python interface to HEASoft
 ===========================
 
@@ -103,7 +104,7 @@ Note that creating a task object with `fdump_task = hsp.HSPTask('fdump')` does n
 ### 2.3 `HEASoftPy` Control Parameters
 There are a few parameters that are common between all tasks:
 - `verbose`: This can take several values. In all cases, the text printed by the
-    task is captured, and returned in `HSPResult.stdout/stderr`. Addionally:
+    task is captured, and returned in `HSPResult.stdout/stderr`. Additionally:
     - `0` (also `False` or `no`): Just return the text, no progress prining.
     - `1` (also `True` or `yes`): In addition to capturing and returning the text,
         task text will printed into the screen as the task runs.
@@ -261,8 +262,26 @@ mv build/help/* $HEADAS/help
 
 `heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
 
+## 4. Re-creating function wrappers
+
+There may be times when a `heasoftpy` function needs 
+to be created for an installed `HEASoft` task 
+(for example, if a new `HEASoft` component is added to 
+`HEASoft` after `heasoftpy` was initially installed). 
+`heasoftpy` wrappers can be created (or re-created) using 
+the generate_pycode heasoftpy utils.  For example
+to generate a heasoftpy function wrapper for the NICERDAS
+tool ``nibackgen3c50``, do the following in python:
+
+<pre>
+py>> from heasoftpy.utils import generate_py_code
+py>> tasks = ['nibackgen3c50']
+py>> generate_py_code(tasks=task)
+</pre>
+
+
 ---
-## 4. Writing Python Tasks
+## 5. Writing Python Tasks
 The core of `HEASoftPy` is the class `HSPTask`, which handles the parameter reading and setting (from the `.par` file).
 
 It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `packages/template`. More details can be found in `heasoftpy/packages/template/__init__.py`. The following is short snippet:
@@ -290,7 +309,7 @@ class SampleTask(hsp.HSPTask):
 ```
 
 
-## 5. Tutorials
+## 6. Tutorials
 The following notebooks contain some tutorials and usage examples.
 
 - [Getting Started](getting-started.html): A quick walkthrough guide of the main features of the `HEASoftPy` package, and ways of calling and obtaining help for the tasks.
@@ -298,3 +317,4 @@ The following notebooks contain some tutorials and usage examples.
 - [NuSTAR Data Analysis Example](nustar_example.html): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftPy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
 
 - [NICER Data Analysis Example](nicer-example.html): This is a walkthough example of analyzing NICER data using `HEASoftPy` and `PyXspec`.
+
