@@ -303,9 +303,15 @@ class HSPTask:
                 usr_params[par] = 'yes' if usr_params[par] else 'no'
             if usr_params[par] is None:
                 usr_params[par] = 'NONE'
-        # '$( )' ensures empty string are passed correctly with subprocess
-        cmd_params = ['{}={}'.format(par, val if val!='' else '$( )') 
-                      for par,val in usr_params.items()]
+            
+            if isinstance(usr_params[par], str):
+                # some heasoft tasks don't handle quotes in comma-separated lists correctly
+                if ',' in usr_params[par]:
+                    usr_params[par] = usr_params[par].strip('"')
+                # '$( )' ensures empty string are passed correctly with subprocess
+                if usr_params[par] == '':
+                    usr_params[par] = '$( )'
+        cmd_params = ['{}={}'.format(par, val) for par,val in usr_params.items()]
 
         
         # the task executable
