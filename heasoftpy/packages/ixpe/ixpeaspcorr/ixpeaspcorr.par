@@ -1,9 +1,0 @@
-infile,s,a,,,,"Input FITS Event file"
-n,s,a,-,,,"Duration of time to group events in for fitting [- if default (300 seconds)]"
-statout,b,h,,,,"Output standard deviation and mean of event positions?"
-uncorr,b,h,,,,"Keep uncorrected positions in output file? If statout is also True, uncorrected stats will be output."
-att_path,s,h,,,,"Attitude file to be corrected"
-x_pix_mean,s,h,-,,,"Average x position of all detectors for observation. Default is the mean of the input detector only"
-y_pix_mean,s,h,-,,,"Average y position of detectors for observation. Default is the mean of the input detector only"
-mode,s,h,"ql",,,""
-

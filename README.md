@@ -284,7 +284,7 @@ py>> generate_py_code(tasks=task)
 ## 5. Writing Python Tasks
 The core of `HEASoftPy` is the class `HSPTask`, which handles the parameter reading and setting (from the `.par` file).
 
-It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `packages/template`. More details can be found in `heasoftpy/packages/template/__init__.py`. The following is short snippet:
+It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `template`. The following is short snippet:
 
 ```python
 
