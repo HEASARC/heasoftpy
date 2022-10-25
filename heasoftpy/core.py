@@ -264,11 +264,13 @@ class HSPTask:
             
             
             # re-read the pfile in case it has been modified by the task
+            # update only the the values in the HSPTask instance, not
+            #  result.params that will be returned to the user
             if os.path.exists(usr_pfile):
                 params_after = HSPTask.read_pfile(usr_pfile)
                 for ipar, par_name in enumerate(self.par_names):
                     setattr(self, par_name, params_after[ipar].value)
-                result.params.update(self.params)
+                #result.params.update(self.params)
                         
             return result
     
