@@ -9,9 +9,11 @@
 # 1.0      | 03/01/2022  | AZ: added testing and installation tools, fixed bugs from
 #          |             | ixpe integration. Completed IXPE integration.
 #--------------------------------------------------------
-# 1.1      | TBD         | AZ: added remote caldb support to ixpechrgcorr.
-#          |             | Several bug fixes handling special cases in reading parameter files.
-#
+# 1.1      | 04/13/2022  | AZ: - added remote caldb support to ixpechrgcorr.
+#--------------------------------------------------------
+# 1.2      | TBD         | - Several bug fixes handling special cases in reading parameter files.
+#          |             | - Moved ixpe to main heaosft build, the final installation remains
+#          |             | under heasoftpy.
 #
 
-__version__ = '1.1.dev0'
+__version__ = '1.2'
