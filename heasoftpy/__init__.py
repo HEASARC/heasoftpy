@@ -119,7 +119,7 @@ from .version import __version__
 # a helper function to check a package exists
 def _package_exists(package):
     thisdir = os.path.dirname(__file__)
-    return os.path.exists(os.path.join(thisdir, '..', package))
+    return os.path.exists(os.path.join(thisdir, package))
 
 
 # load sub-packages, only if we are not installing the main package:
@@ -131,5 +131,5 @@ if not '__INSTALLING_HSP' in os.environ:
     #     from template import *
     
     if _package_exists('ixpe'):
-        import ixpe
-        from ixpe import *
+        from . import ixpe
+        from .ixpe import *
