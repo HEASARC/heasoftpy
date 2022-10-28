@@ -136,5 +136,6 @@ def local_pfiles(par_dir=None):
             raise OSError(f'Cannot create parameter directory {pDir}')
     
     # if we make here, things are good, so add pDir to PFILES
-    os.environ['PFILES'] = f'{pDir};{os.environ["PFILES"]}'
+    sep = ':' if ';' in os.environ["PFILES"] else ';'
+    os.environ['PFILES'] = f'{pDir}{sep}{os.environ["PFILES"]}'
     return pDir
