@@ -541,19 +541,24 @@ class HSPTask:
         if not found:
             raise HSPTaskException(f'No .par file found for task {name}')
         
-        # user pfile; assumed to be the first one in pfiles
-        loc_pfile = os.path.join(pf, f'{name}.par')
+        # parameter file to read
+        pfile_to_read = os.path.join(pf, f'{name}.par')
+        
+        # parameter file where to save the task parameters
+        if pfiles[0] == sys_pfile:
+            # use ~/pfiles 
+            out_pdir = os.path.expanduser('~/pfiles')
+        else:
+            # use the first entry (other than sys_pfile) in PFILES
+            out_pdir = pfiles[0]
+
+        if not os.path.isdir(out_pdir):
+            os.mkdir(out_pdir)
+        pfile_to_write = f'{out_pdir}/{name}.par'
     
-        pfile = loc_pfile if os.path.exists(loc_pfile) else sys_pfile
         
         # if return_user, we should never return sys_pfile because, now we preparing to write
-        # create ~/pfiles if needed.
-        if return_user and pfile == sys_pfile:
-            pfile = os.path.expanduser('~/pfiles')
-            if not os.path.isdir(pfile):
-                os.mkdir(pfile)
-            pfile = f'{pfile}/{name}.par'
-        
+        pfile = pfile_to_write if return_user else pfile_to_read        
         return pfile
     
     @staticmethod
