@@ -17,7 +17,8 @@ class TestHSPTask(unittest.TestCase):
         with open(f'{cls.taskname}.par', 'w') as fp: fp.write(wTxt)
         
         cls.pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
     @classmethod
     def tearDownClass(cls):
@@ -112,7 +113,8 @@ class TestHSPTask(unittest.TestCase):
     def test__logfile_in_task_pars(self):
         taskname = 'taskwithlog'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\nlogfile,s,h,"NONE",,,"log file"')
@@ -149,7 +151,8 @@ class TestHSPTask(unittest.TestCase):
         with open(f'{taskname}.par', 'w') as fp: fp.write(wTxt)
         
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         task = heasoftpy.HSPTask(taskname)
         fcn = task.generate_fcn_code().split('\n')
