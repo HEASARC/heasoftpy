@@ -3,6 +3,7 @@ from .context import heasoftpy
 
 import unittest
 import os
+import re
 
 
 class TestParamType(unittest.TestCase):
@@ -85,7 +86,7 @@ class TestPFile(unittest.TestCase):
     # user_pfile
     def test__find_pfile__userTrue(self):
         pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=True)
-        pfile2 = os.path.join(os.environ['PFILES'].split(';')[0], 'fdump.par')
+        pfile2 = os.path.join(re.split(';|:', os.environ['PFILES'])[0], 'fdump.par')
         self.assertEqual(pfile, pfile2)
 
 
@@ -141,7 +142,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_q(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -181,7 +183,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_ql(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -221,7 +224,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_h(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -261,7 +265,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_hl(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -295,7 +300,19 @@ class TestWritePFile(unittest.TestCase):
         # --- #
         os.environ['PFILES'] = pfiles
         os.remove(f'{taskname}.par')
- 
+        
+        
+
+class TestParamExtra(unittest.TestCase):
+    """Some additional tests for handling parameters"""
+    
+    # a parameter that expects a comma-separated list, given inside quotes.
+    # heasoft tasks don't like that
+    def test__comma_list_inside_quotes(self):
+        task = heasoftpy.HSPTask('fdump')
+        res1 = task(infile='tests/test.fits', outfile='STDOUT', columns='"TIME,RATE"', rows='-', more='no', prhead='no')
+        self.assertEqual(res1.returncode, 0)
+
         
 if __name__ == '__main__':
     unittest.main()
