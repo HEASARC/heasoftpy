@@ -2,30 +2,30 @@ __description__ = """
 This is a template package for a python-only tasks.
 
 The structure of the package for a single task should be:
-packages/template/
-            |-- __init__.py
-            |-- setup.py
-            |-- template.py
-            |-- template_lib.py
-            |-- template.par
-            |-- template.html
+template/
+    |-- __init__.py
+    |-- setup.py
+    |-- template.py
+    |-- template_lib.py
+    |-- template.par
+    |-- template.html
 
 
 For multiple tasks that are related to a mission for example, the 
 recommended structure is:
-packages/mission/
-            |-- __init__.py
-            |-- setup.py
-            |-- template1
-                |-- template1.py
-                |-- template1_lib.py
-                |-- template1.par
-                |-- template1.html
-            |-- template2
-                |-- template2.py
-                |-- template2_lib.py
-                |-- template2.par
-                |-- template2.html
+mission/
+    |-- __init__.py
+    |-- setup.py
+    |-- task1
+        |-- task1.py
+        |-- task1_lib.py
+        |-- task1.par
+        |-- task1.html
+    |-- task2
+        |-- task2.py
+        |-- task2_lib.py
+        |-- task2.par
+        |-- task2.html
 
 Where:
 -----
@@ -38,7 +38,7 @@ Where:
     called `tasks` that contains a list of tasks provided by the package.
     If the above file structure is used, `tasks` should be a simple list of strings.
     So in the above 'complex' example. It is: 
-    tasks = ['template1', 'template2']
+    tasks = ['task1', 'task2']
     If the package structure is different, then the entry in the list is a dictionary of the form:
     [{taskname: [location_of_executable, location_of_parameter_file, location_of_help_file]}]. 
 
