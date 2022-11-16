@@ -534,6 +534,10 @@ class HSPTask:
         else:
             raise HSPTaskException('HEADAS not defined. Please initialize Heasoft!')
             
+        # during installation, allways use $HEADAS/syspfiles
+        if '__INSTALLING_HSP' in os.environ and os.environ['__INSTALLING_HSP'] == 'yes':
+            return sys_pfile
+            
         # split on both (:,;)
         pfiles = re.split(';|:', os.environ['PFILES'])
         

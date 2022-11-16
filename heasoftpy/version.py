@@ -11,9 +11,11 @@
 #--------------------------------------------------------
 # 1.1      | 04/13/2022  | AZ: - added remote caldb support to ixpechrgcorr.
 #--------------------------------------------------------
-# 1.2      | TBD         | - Several bug fixes handling special cases in reading parameter files.
+# 1.2      | 11/15/2022  | - Several bug fixes handling special cases in reading parameter files.
 #          |             | - Moved ixpe to main heaosft build, the final installation remains
 #          |             | under heasoftpy.
+#--------------------------------------------------------
+# 1.3      | TBD         | - Always use $HEADAS/syspfiles during installation
 #
 
-__version__ = '1.2'
+__version__ = '1.3dev'
