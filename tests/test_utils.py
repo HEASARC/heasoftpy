@@ -20,6 +20,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(pDir, os.path.join('/tmp', str(os.getpid()) + '.pfiles.tmp'))
         self.assertTrue(pDir in os.environ['PFILES'])
         os.rmdir(pDir)
+        os.environ['PFILES'] = self.pfiles
     
     # input is a file not a dir
     def test__utils__local_pfiles_file(self):
@@ -40,6 +41,18 @@ class TestUtils(unittest.TestCase):
         oDir = heasoftpy.utils.local_pfiles(pDir)
         self.assertEqual(pDir, oDir)
         self.assertTrue(pDir in os.environ['PFILES'])
+        os.rmdir(pDir)
+        os.environ['PFILES'] = self.pfiles
+        
+    # ensure a task writes to the local pfile created by the user
+    def test__utils__local_pfiles_someDir_ensure_write(self):
+        pDir = os.path.join('/tmp', str(os.getpid()) + '.tmp')
+        oDir = heasoftpy.utils.local_pfiles(pDir)
+        heasoftpy.fhelp(task='ftlist')
+        self.assertTrue(os.path.exists(f'{pDir}/fhelp.par'))
+        os.remove(f'{pDir}/fhelp.par')
+        os.rmdir(pDir)
+        os.environ['PFILES'] = self.pfiles
 
         
 if __name__ == '__main__':

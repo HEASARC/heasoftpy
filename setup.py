@@ -46,16 +46,6 @@ def build_requirements():
         requirements = fp.readlines()
     requirements = [r.strip() for r in requirements 
                     if not r.startswith('#') or len(r) == 0]
-    
-    # requirements from sub-packages
-    sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-    import install as hspinstall
-    packages = hspinstall._find_py_packages()
-    for package in packages:
-        tasks, reqs = hspinstall._read_package_setup(package)
-        for r in reqs:
-            if not r in requirements:
-                requirements.append(r)
     return requirements
 
 
@@ -85,7 +75,7 @@ setup(
     author_email='a.zoghbi@nasa.gov',
     url='https://heasarc.gsfc.nasa.gov/docs/software/heasoft',
     license=license,
-    packages=find_packages(exclude=('tests', 'notebooks')),
+    packages=find_packages(exclude=('tests', 'notebooks', 'template')),
     python_requires=">=3.7",
     install_requires=build_requirements(),
     

@@ -3,6 +3,7 @@ from .context import heasoftpy
 
 import unittest
 import os
+import re
 
 
 class TestParamType(unittest.TestCase):
@@ -24,6 +25,10 @@ class TestParamType(unittest.TestCase):
     def test__param_type__r(self):
         test_result = heasoftpy.HSPParam.param_type('', 'r')
         self.assertIsInstance(test_result, float)
+    
+    def test__param_type__r_INDEF(self):
+        test_result = heasoftpy.HSPParam.param_type('INDEF', 'r')
+        self.assertEqual(test_result, 'INDEF')
         
     def test__param_type__s(self):
         test_result = heasoftpy.HSPParam.param_type('', 's')
@@ -81,7 +86,7 @@ class TestPFile(unittest.TestCase):
     # user_pfile
     def test__find_pfile__userTrue(self):
         pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=True)
-        pfile2 = os.path.join(os.environ['PFILES'].split(';')[0], 'fdump.par')
+        pfile2 = os.path.join(re.split(';|:', os.environ['PFILES'])[0], 'fdump.par')
         self.assertEqual(pfile, pfile2)
 
 
@@ -99,8 +104,6 @@ class TestReadPFile(unittest.TestCase):
         tmpfile = 'tmp.simpleFile.par'
         with open(tmpfile, 'w') as fp: fp.write(wTxt)
         pars = heasoftpy.HSPTask.read_pfile(tmpfile)
-        expected = {'infile': {'type':'s', 'mode':'a', 'default':'',
-                               'min': '', 'max': '', 'prompt': 'Name of file'}}
         self.assertEqual(pars[0].pname, 'infile')
         self.assertEqual(pars[0].type, 's')
         self.assertEqual(pars[0].mode, 'a')
@@ -110,6 +113,26 @@ class TestReadPFile(unittest.TestCase):
         self.assertEqual(pars[0].prompt, 'Name of file')
         os.remove(tmpfile)
 
+    # input has commas
+    def test__read_pfile__par_with_comma(self):
+        wTxt = 'filtlist,s,a,"val1,val2",,,"Name of file, and stuff"'
+        tmpfile = 'tmp.simpleFile.par'
+        with open(tmpfile, 'w') as fp: fp.write(wTxt)
+        pars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(pars[0].pname, 'filtlist')
+        self.assertEqual(pars[0].default, 'val1,val2')
+        self.assertEqual(pars[0].prompt, 'Name of file, and stuff')
+        os.remove(tmpfile)
+    
+    # prompt text has unclosed quotes
+    def test__read_pfile__prompt_with_unclosed_quotes(self):
+        wTxt = 'filtlist,s,a,val1,,,"Name of file, and stuff'
+        tmpfile = 'tmp.simpleFile.par'
+        with open(tmpfile, 'w') as fp: fp.write(wTxt)
+        pars = heasoftpy.HSPTask.read_pfile(tmpfile)
+        self.assertEqual(pars[0].pname, 'filtlist')
+        self.assertEqual(pars[0].prompt, 'Name of file, and stuff')
+        os.remove(tmpfile)
         
 class TestWritePFile(unittest.TestCase):
     """Tests for write_pfile"""
@@ -119,7 +142,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_q(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -159,7 +183,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_ql(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -199,7 +224,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_h(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -239,7 +265,8 @@ class TestWritePFile(unittest.TestCase):
     def test__write_pfile__mode_hl(self):
         taskname = 'testtask'
         pfiles = os.environ['PFILES']
-        os.environ['PFILES'] = os.getcwd() + ';' + os.environ['PFILES']
+        sep = ':' if ';' in os.environ["PFILES"] else ';'
+        os.environ['PFILES'] = os.getcwd() + sep + os.environ['PFILES']
         
         # a, q, h, ql, hl
         wTxt = ('par1,s,a,,,,"Par1"\npar2,r,q,2.0,,,"Par2"\npar3,r,h,3.0,,,"Par3"\n'
@@ -273,7 +300,19 @@ class TestWritePFile(unittest.TestCase):
         # --- #
         os.environ['PFILES'] = pfiles
         os.remove(f'{taskname}.par')
- 
+        
+        
+
+class TestParamExtra(unittest.TestCase):
+    """Some additional tests for handling parameters"""
+    
+    # a parameter that expects a comma-separated list, given inside quotes.
+    # heasoft tasks don't like that
+    def test__comma_list_inside_quotes(self):
+        task = heasoftpy.HSPTask('fdump')
+        res1 = task(infile='tests/test.fits', outfile='STDOUT', columns='"TIME,RATE"', rows='-', more='no', prhead='no')
+        self.assertEqual(res1.returncode, 0)
+
         
 if __name__ == '__main__':
     unittest.main()

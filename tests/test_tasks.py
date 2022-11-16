@@ -66,12 +66,12 @@ class TestPyTasks(unittest.TestCase):
         self.assertEqual(task.isfits.value, 'yes')
 
         
-    # re-read pfile, ensure HSPTask.params match HSPResult.params
+    # re-read pfile, HSPResult.params should return the user input
     def test__write_pfile__fstruct_rereadPfile_updateHSPResult(self):
         task = heasoftpy.HSPTask('fstruct')
         # we force isfits=no, which should be updated after running the task
         res  = task(infile='tests/test.fits', isfits='no')
-        self.assertEqual(task.isfits.value, res.params['isfits'])
+        self.assertEqual(res.params['isfits'], 'no')
         
         
     # make sure returncode is not None when verbose=True
