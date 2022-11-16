@@ -29,7 +29,7 @@ class HSPTask:
         """
         
         # if self.name is defined by a subclass, use it.
-        if hasattr(self, 'name'):
+        if hasattr(self, 'name') and isinstance(self.name, str):
             if name is None:
                 name = self.name
             # if name given is different from that defined in the class; fail
@@ -41,8 +41,8 @@ class HSPTask:
             raise HSPTaskException('Task name is required')
         
         # to handle "_" and "-" in names, we also create pyname
-        self.name   = name
-        self.pyname = name.replace('-', '_')
+        self.taskname   = name
+        self.pytaskname = name.replace('-', '_')
             
         
         # first read the parameter file
@@ -216,12 +216,12 @@ class HSPTask:
             # capture and logfile
             level = [1, 3]
             if logfile is None:
-                logfile = f'{self.name}.log'
+                logfile = f'{self.taskname}.log'
         else:
             # capture, screen and logfile
             level = [1, 2, 3]
             if logfile is None:
-                logfile = f'{self.name}.log'
+                logfile = f'{self.taskname}.log'
             
         self._logfile = logfile
         
@@ -229,7 +229,7 @@ class HSPTask:
         # those are handeled separately by handle_io_stream
         if self.__module__ != 'heasoftpy.core':
             logging.setLoggerClass(HSPLogger)
-            self.logger = logging.getLogger(self.name)
+            self.logger = logging.getLogger(self.taskname)
             self.logger.setup(level=level, stderr=self.stderr, file_name=logfile)
         # ------------------ #
         
@@ -252,7 +252,7 @@ class HSPTask:
             
             # write new params to the user .par file
             # do this before calling in case the task also updates the .par file
-            usr_pfile = HSPTask.find_pfile(self.name, return_user=True)
+            usr_pfile = HSPTask.find_pfile(self.taskname, return_user=True)
             self.write_pfile(usr_pfile)
             
             # now call the task #
@@ -264,11 +264,13 @@ class HSPTask:
             
             
             # re-read the pfile in case it has been modified by the task
+            # update only the the values in the HSPTask instance, not
+            #  result.params that will be returned to the user
             if os.path.exists(usr_pfile):
                 params_after = HSPTask.read_pfile(usr_pfile)
                 for ipar, par_name in enumerate(self.par_names):
                     setattr(self, par_name, params_after[ipar].value)
-                result.params.update(self.params)
+                #result.params.update(self.params)
                         
             return result
     
@@ -303,13 +305,16 @@ class HSPTask:
                 usr_params[par] = 'yes' if usr_params[par] else 'no'
             if usr_params[par] is None:
                 usr_params[par] = 'NONE'
-        # '$( )' ensures empty string are passed correctly with subprocess
-        cmd_params = ['{}={}'.format(par, val if val!='' else '$( )') 
-                      for par,val in usr_params.items()]
+            
+            if isinstance(usr_params[par], str):
+                # '$( )' ensures empty string are passed correctly with subprocess
+                if usr_params[par] == '':
+                    usr_params[par] = '$( )'
+        cmd_params = ['{}={}'.format(par, val) for par,val in usr_params.items()]
 
         
         # the task executable
-        exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.name}')
+        exec_cmd = os.path.join(os.environ['HEADAS'], f'bin/{self.taskname}')
         
         if os.path.exists(exec_cmd):
             exec_cmd = [exec_cmd]
@@ -352,7 +357,7 @@ class HSPTask:
             str of documentation
         
         """
-        name = self.name
+        name = self.taskname
         
         # call fhelp; assume HEADAS is defined #
         cmd  = os.path.join(os.environ['HEADAS'], 'bin/fhelp')
@@ -415,7 +420,15 @@ class HSPTask:
         
         noprompt = self._noprompt
         # ----------------------------------------------------------- #
-                
+
+        
+        ## do some basic checks on user_pars ##
+        # some heasoft tasks don't handle quotes in comma-separated lists correctly
+        for par in user_pars.keys():
+            if isinstance(user_pars[par], str) and ',' in user_pars[par]:
+                user_pars[par] = user_pars[par].strip('"')
+        ## --------------------------------- ##
+
         
         # loop through task parameters and either:
         params  = {}
@@ -460,7 +473,7 @@ class HSPTask:
                 val = defaults[par_name]
             
             # make any style changes to the values to be printed #
-            if par.type == 's' and (' ' in val or val == ''):
+            if par.type == 's' and (' ' in val or ',' in val or val == ''):
                 val = f'"{val}"'
             
             # write #
@@ -533,19 +546,24 @@ class HSPTask:
         if not found:
             raise HSPTaskException(f'No .par file found for task {name}')
         
-        # user pfile; assumed to be the first one in pfiles
-        loc_pfile = os.path.join(pf, f'{name}.par')
+        # parameter file to read
+        pfile_to_read = os.path.join(pf, f'{name}.par')
+        
+        # parameter file where to save the task parameters
+        if pfiles[0] == sys_pfile:
+            # use ~/pfiles 
+            out_pdir = os.path.expanduser('~/pfiles')
+        else:
+            # use the first entry (other than sys_pfile) in PFILES
+            out_pdir = pfiles[0]
+
+        if not os.path.isdir(out_pdir):
+            os.mkdir(out_pdir)
+        pfile_to_write = f'{out_pdir}/{name}.par'
     
-        pfile = loc_pfile if os.path.exists(loc_pfile) else sys_pfile
         
         # if return_user, we should never return sys_pfile because, now we preparing to write
-        # create ~/pfiles if needed.
-        if return_user and pfile == sys_pfile:
-            pfile = os.path.expanduser('~/pfiles')
-            if not os.path.isdir(pfile):
-                os.mkdir(pfile)
-            pfile = f'{pfile}/{name}.par'
-        
+        pfile = pfile_to_write if return_user else pfile_to_read        
         return pfile
     
     @staticmethod
@@ -618,7 +636,7 @@ class HSPTask:
 
         # put it all together #
         docs = f"""
-    Automatically generated function for Heasoft task {self.name}.
+    Automatically generated function for Heasoft task {self.taskname}.
     Additional help may be provided below.
 
     Args:
@@ -632,8 +650,8 @@ class HSPTask:
         """Create python function for task_name
 
         """
-        task_name   = self.name
-        task_pyname = self.pyname
+        task_name   = self.taskname
+        task_pyname = self.pytaskname
 
         # generate docstring
         docs = self._generate_fcn_docs(fhelp=True)
@@ -715,12 +733,25 @@ class HSPParam():
             line: a line from the parameter file
             
         """
+        line = line.replace('\n', '')
         info = line.strip().split(',')
 
         # handle comma (,) in the prompt text
         if len(info) > 6:
-            info = info[:6] + [','.join(info[6:])]
-
+            # if there is an unclosed " in the prompt. This should be fixed in the file
+            # but we add it here for generality
+            if line.count('"') % 2 != 0:
+                 line += '"'
+            # if any value contains ",", replace it with "^|_", split, then put it back
+            # assumes "^|_" is not going to appear anywhere
+            # - split the line so closed strings (with ' or ") are in separate parts
+            parts = re.split("('.*?'|\\\".*?\\\")", line)
+            # - replace , with ^|_ if , falls in one of the substrings with open/close ',"
+            parts = [p.replace(',', '^|_') if ('"' in p or "'" in p) else p.strip()
+                      for p in parts]
+            # - put things back together, and then split at , and remove ^|_
+            info  = [p.replace('^|_', ',') for p in ''.join(parts).split(',')]
+            
         # extract information about the parameter
         self.pname = info[0]
         pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
@@ -794,7 +825,7 @@ class HSPParam():
             return value
         
         if value == 'INDEF' and inType in ['r', 'i']:
-            return None
+            return value
         
         if value == '' and inType in ['r', 'i']:
             value = 0

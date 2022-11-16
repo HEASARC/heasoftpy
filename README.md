@@ -1,3 +1,4 @@
+
 Python interface to HEASoft
 ===========================
 
@@ -103,7 +104,7 @@ Note that creating a task object with `fdump_task = hsp.HSPTask('fdump')` does n
 ### 2.3 `HEASoftPy` Control Parameters
 There are a few parameters that are common between all tasks:
 - `verbose`: This can take several values. In all cases, the text printed by the
-    task is captured, and returned in `HSPResult.stdout/stderr`. Addionally:
+    task is captured, and returned in `HSPResult.stdout/stderr`. Additionally:
     - `0` (also `False` or `no`): Just return the text, no progress prining.
     - `1` (also `True` or `yes`): In addition to capturing and returning the text,
         task text will printed into the screen as the task runs.
@@ -189,7 +190,7 @@ DESCRIPTION
 
 
 ## 3. Installation
-`heasoftpy` is generally installed automatically installed when installing `HEASoft`, make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. The following steps can be used to install or update `heasoftpy` manually after `HEASoft` is installed.
+`heasoftpy` is generally installed automatically when installing `HEASoft`, make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. The following steps can be used to install or update `heasoftpy` manually after `HEASoft` is installed.
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
@@ -202,18 +203,18 @@ pip install numpy scipy astropy pytest
 conda install numpy scipy astropy pytest
 ```
 
-2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.1.tar)
+2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.2.tar)
 ```sh
-wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.1.tar
+wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.2.tar
 ```
 or 
 ```sh
-curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.1.tar
+curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.2.tar
 ```
 
 3- Untar the file:
 ```sh
-tar -xvf heasoftpy1.1.tar
+tar -xvf heasoftpy1.2.tar
 cd heasoftpy
 ```
 
@@ -225,6 +226,14 @@ This will generate the python wrappers under `build/lib/heasoftpy`. Check the `h
 
 5- Move the created `heasoftpy` folder to `$HEADAS/lib/python` (if `$HEADAS/lib/python` doesn't exist, please create it).
 ```sh
+rm -r $HEADAS/lib/python/heasoftpy
+mv build/lib/heasoftpy $HEADAS/lib/python
+```
+
+*NOTE*: Starting with `heasoftpy` version 1.2, the IXPE tools are distributed with the main `heasoft` tools, not with `heasoftpy`, so if you are updating `heasoftpy` only and plan to use the IXPE tools, make sure you copy the installed `heasoftpy/ixpe` to the new `heasoftpy` first, so step 5 becomes:
+```sh
+cp -r $HEADAS/lib/python/heasoftpy/ixpe build/lib/heasoftpy/
+rm -r $HEADAS/lib/python/heasoftpy
 mv build/lib/heasoftpy $HEADAS/lib/python
 ```
 
@@ -235,37 +244,35 @@ mv build/syspfiles/* $HEADAS/syspfiles
 mv build/help/* $HEADAS/help
 ```
 
-#### - Install outside the `HEASoft` tree
-
-`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
-
-4- Collect the pacakges:
-```
-python setup.py build
-```
-This will generate the python wrappers under `build/lib/heasoftpy`. Check the `heasoftpy-install.log` for errors.
-
-5- Move the created `heasoftpy` folder to `$HEADAS/lib/python` (if `$HEADAS/lib/python` doesn't exist, please create it).
-```sh
-mv build/lib/heasoftpy $HEADAS/lib/python
-```
-
-6- Move the parameter files, executables and help files (if any) to their location in the `$HEADAS` tree:
-```sh
-mv build/bin/* $HEADAS/bin
-mv build/syspfiles/* $HEADAS/syspfiles
-mv build/help/* $HEADAS/help
-```
 
 #### - Install outside the `HEASoft` tree
 
 `heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
+
+
+## 4. Re-creating function wrappers
+
+There may be times when a `heasoftpy` function needs 
+to be created for an installed `HEASoft` task 
+(for example, if a new `HEASoft` component is added to 
+`HEASoft` after `heasoftpy` was initially installed). 
+`heasoftpy` wrappers can be created (or re-created) using 
+the `heasoftpy.utils.generate_py_code`function.  For example
+to generate a heasoftpy function wrapper for the NICERDAS
+tool `nibackgen3c50`, do the following in python:
+
+```python
+from heasoftpy.utils import generate_py_code
+tasks = ['nibackgen3c50']
+generate_py_code(tasks=task)
+```
+
 
 ---
-## 4. Writing Python Tasks
+## 5. Writing Python Tasks
 The core of `HEASoftPy` is the class `HSPTask`, which handles the parameter reading and setting (from the `.par` file).
 
-It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `packages/template`. More details can be found in `heasoftpy/packages/template/__init__.py`. The following is short snippet:
+It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `template`. The following is short snippet:
 
 ```python
 
@@ -274,7 +281,9 @@ import heasoftpy as hsp
 class SampleTask(hsp.HSPTask):
     """New Task"""
     
-    def def exec_task(self):
+    name = 'sampletask'
+    
+    def exec_task(self):
         
         # model parameters
         usr_params = self.params
@@ -290,7 +299,7 @@ class SampleTask(hsp.HSPTask):
 ```
 
 
-## 5. Tutorials
+## 6. Tutorials
 The following notebooks contain some tutorials and usage examples.
 
 - [Getting Started](getting-started.html): A quick walkthrough guide of the main features of the `HEASoftPy` package, and ways of calling and obtaining help for the tasks.
@@ -298,3 +307,4 @@ The following notebooks contain some tutorials and usage examples.
 - [NuSTAR Data Analysis Example](nustar_example.html): This is a walkthough example of analyzing NuSTAR observation `60001110002` of the AGN in center of `SWIFT J2127.4+5654` using `HEASoftPy`. It includes examples of calling the calibration pipeline, and then extracting the source light curve.
 
 - [NICER Data Analysis Example](nicer-example.html): This is a walkthough example of analyzing NICER data using `HEASoftPy` and `PyXspec`.
+
