@@ -15,7 +15,9 @@
 #          |             | - Moved ixpe to main heaosft build, the final installation remains
 #          |             | under heasoftpy.
 #--------------------------------------------------------
-# 1.3      | TBD         | - Always use $HEADAS/syspfiles during installation
+# 1.3dev   | TBD         | - Always use $HEADAS/syspfiles during installation
+#          |             | - updated utils.local_pfiles to exclude ~/pfiles
+#          |             | - fix for the case of parameter expecting a str and float is given
 #
 
 __version__ = '1.3dev'
