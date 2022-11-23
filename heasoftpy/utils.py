@@ -136,6 +136,8 @@ def local_pfiles(par_dir=None):
             raise OSError(f'Cannot create parameter directory {pDir}')
     
     # if we make here, things are good, so add pDir to PFILES
-    sep = ':' if ';' in os.environ["PFILES"] else ';'
-    os.environ['PFILES'] = f'{pDir}{sep}{os.environ["PFILES"]}'
+    # Note that we are not including ~/pfiles because it may cause issues 
+    # for tasks that write parameters such as ftstat
+    syspfile = os.path.join(os.environ['HEADAS'], 'syspfiles')
+    os.environ['PFILES'] = f'{pDir};{syspfile}'
     return pDir

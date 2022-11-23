@@ -473,7 +473,7 @@ class HSPTask:
                 val = defaults[par_name]
             
             # make any style changes to the values to be printed #
-            if par.type == 's' and (' ' in val or ',' in val or val == ''):
+            if par.type == 's' and isinstance(val, str) and (' ' in val or ',' in val or val == ''):
                 val = f'"{val}"'
             
             # write #
@@ -533,6 +533,10 @@ class HSPTask:
             sys_pfile = os.path.join(os.environ['HEADAS'], 'syspfiles', f'{name}.par')
         else:
             raise HSPTaskException('HEADAS not defined. Please initialize Heasoft!')
+            
+        # during installation, allways use $HEADAS/syspfiles
+        if '__INSTALLING_HSP' in os.environ and os.environ['__INSTALLING_HSP'] == 'yes':
+            return sys_pfile
             
         # split on both (:,;)
         pfiles = re.split(';|:', os.environ['PFILES'])
