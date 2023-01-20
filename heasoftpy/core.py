@@ -34,7 +34,7 @@ class HSPTask:
                 name = self.name
             # if name given is different from that defined in the class; fail
             if name != self.name:
-                raise HSPTaskException(f'given task name "{name}" does not '
+                raise HSPTaskException(f'given task name "{name}" does not ' +
                                        f'match the name in the class "{self.name}"')
         # task name is required #    
         if name is None:
@@ -477,7 +477,7 @@ class HSPTask:
                 val = f'"{val}"'
             
             # write #
-            ptxt += (f'{par.pname},{par.type},{par.mode},'
+            ptxt += (f'{par.pname},{par.type},{par.mode},'+
                      f'{val},{par.min},{par.max},\"{par.prompt}\"\n')
             
         with open(pfile, 'w') as pf:
