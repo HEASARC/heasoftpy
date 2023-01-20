@@ -190,13 +190,13 @@ DESCRIPTION
 
 
 ## 3. Installation
-`heasoftpy` is generally installed automatically when installing `HEASoft`, make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. The following steps can be used to install or update `heasoftpy` manually after `HEASoft` is installed.
+`heasoftpy` is installed automatically with `HEASoft` version 6.30 or newer.  Make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. If you have an older version of `HEASoft`, the following steps can be used to install or update `heasoftpy` manually in an existing `HEASoft` installation.
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
 #### - Install within the `HEASoft` tree
 
-1- Ensure you have `python>=3.7` installed. Install the latest versions of the python dependencies:
+1- Ensure you have `python>=3.7` installed, as well as the latest versions of the python dependencies (`AstroPy >=4.0`, `NumPy >=1.7`, `SciPy >=1.6`):
 ```sh
 pip install numpy scipy astropy pytest
 # or, if using conda:
