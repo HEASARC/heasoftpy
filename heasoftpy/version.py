@@ -18,6 +18,10 @@
 # 1.2.1    | 12/05/2022  | - Always use $HEADAS/syspfiles during installation
 #          |             | - updated utils.local_pfiles to exclude ~/pfiles
 #          |             | - fix for the case of parameter expecting a str and float is given
-#
+#--------------------------------------------------------
+# 1.3dev   | TBD         | - fixed an issue of reading par files with extra white space
+#          |             |
+#          |             |
 
-__version__ = '1.2.1'
+
+__version__ = '1.3dev'
