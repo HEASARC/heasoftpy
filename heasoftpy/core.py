@@ -553,6 +553,15 @@ class HSPTask:
         # parameter file to read
         pfile_to_read = os.path.join(pf, f'{name}.par')
         
+        # check time-stamps; if we have a fresh heasoft or fresh heasoftpy
+        # always read from sys_pfile
+        this_ts  = os.path.getmtime(__file__)
+        sys_ts   = os.path.getmtime(sys_pfile) if os.path.exists(sys_pfile) else -1.0    
+        pfile_ts = os.path.getmtime(pfile_to_read) if os.path.exists(pfile_to_read) else -1.0
+        if (sys_ts >= pfile_ts or this_ts >= pfile_ts) and not return_user:
+            return sys_pfile
+        
+        
         # parameter file where to save the task parameters
         if pfiles[0] == sys_pfile:
             # use ~/pfiles 

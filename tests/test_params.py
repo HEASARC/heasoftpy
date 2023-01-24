@@ -2,8 +2,10 @@
 from .context import heasoftpy
 
 import unittest
+from unittest import mock
 import os
 import re
+from pathlib import Path
 
 
 class TestParamType(unittest.TestCase):
@@ -88,6 +90,23 @@ class TestPFile(unittest.TestCase):
         pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=True)
         pfile2 = os.path.join(re.split(';|:', os.environ['PFILES'])[0], 'fdump.par')
         self.assertEqual(pfile, pfile2)
+    
+    # use timestamps to prefer sys pfile if we have a fresh heasoft(py)
+    @mock.patch.dict(os.environ, {'PFILES': f'{os.getcwd()}:{os.environ["PFILES"]}'})
+    def test__find_pfile__usetimestamps(self):
+        path = f'{os.getcwd()}/fdump.par'
+        Path(path).touch()
+        pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=False)
+        self.assertEqual(pfile, path)
+        
+        # simulate new install
+        path = f'{os.environ["HEADAS"]}/syspfiles/fdump.par'
+        Path(path).touch()
+        pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=False)
+        self.assertEqual(pfile, path)
+        
+        # clean
+        os.remove('fdump.par')
 
 
 class TestReadPFile(unittest.TestCase):

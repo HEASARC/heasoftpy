@@ -20,7 +20,7 @@
 #          |             | - fix for the case of parameter expecting a str and float is given
 #--------------------------------------------------------
 # 1.3dev   | TBD         | - fixed an issue of reading par files with extra white space
-#          |             |
+#          |             | - added timestamp check to read par files from sys_pfiles after a fresh installation
 #          |             |
 
 
