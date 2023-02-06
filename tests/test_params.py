@@ -99,9 +99,12 @@ class TestPFile(unittest.TestCase):
         pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=False)
         self.assertEqual(pfile, path)
         
-        # simulate new install
+        # simulate new install by changing timestamp of local file to before 
+        # that of syspfiles. Do it this way because we don't always have read
+        # access to syspfiles
         path = f'{os.environ["HEADAS"]}/syspfiles/fdump.par'
-        Path(path).touch()
+        sys_ts = os.path.getmtime(path)
+        os.utime('fdump.par', (sys_ts-100, sys_ts-100))
         pfile  = heasoftpy.HSPTask.find_pfile('fdump', return_user=False)
         self.assertEqual(pfile, path)
         
