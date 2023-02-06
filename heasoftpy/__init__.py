@@ -129,6 +129,17 @@ if not '__INSTALLING_HSP' in os.environ:
     # if _package_exists('template'):
     #     import template
     #     from template import *
+
+    # the following fixes any version discrepency between
+    # cfitsio used in pyxspec and cfitsio used in astropy
+    # which is needed by ixpe.
+    # If xspec is imported *after* heasoftpy, and there is a 
+    # cfitsio version discrepency, xspec may fail, but it appears
+    # to work fine when importe before heasoftpy (ixpe in this case)
+    try:
+        import xspec as pyxspec
+    except ImportError:
+        pass
     
     if _package_exists('ixpe'):
         from . import ixpe

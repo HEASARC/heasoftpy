@@ -19,8 +19,9 @@
 #          |             | - updated utils.local_pfiles to exclude ~/pfiles
 #          |             | - fix for the case of parameter expecting a str and float is given
 #--------------------------------------------------------
-# 1.3dev   | TBD         | - fixed an issue of reading par files with extra white space
+# 1.3dev3  | TBD         | - fixed an issue of reading par files with extra white space
 #          |             | - added timestamp check to read par files from sys_pfiles after a fresh installation
+#          |             | - added a fix for cfitsio version conflict between astropy (through ixpe) and pyxspec
 #          |             |
 
 
