@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import glob
+import tempfile
 import logging
 from .core import HSPTask, HSPTaskException
     
@@ -120,7 +121,7 @@ def local_pfiles(par_dir=None):
     create = True
     pDir   = par_dir
     if par_dir is None:
-        pDir = os.path.join('/tmp', str(os.getpid()) + '.pfiles.tmp')
+        pDir = tempfile.NamedTemporaryFile().name + '.pfiles'
     elif os.path.exists(par_dir):
         if os.path.isdir(par_dir):
             create = False
@@ -130,10 +131,7 @@ def local_pfiles(par_dir=None):
         pass
     
     if create:
-        try:
-            os.mkdir(pDir)
-        except:
-            raise OSError(f'Cannot create parameter directory {pDir}')
+        os.mkdir(pDir)
     
     # if we make here, things are good, so add pDir to PFILES
     # Note that we are not including ~/pfiles because it may cause issues 
