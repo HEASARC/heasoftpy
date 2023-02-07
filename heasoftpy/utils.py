@@ -4,6 +4,7 @@ import subprocess
 import glob
 import tempfile
 import logging
+import contextlib
 from .core import HSPTask, HSPTaskException
     
 
@@ -139,3 +140,29 @@ def local_pfiles(par_dir=None):
     syspfile = os.path.join(os.environ['HEADAS'], 'syspfiles')
     os.environ['PFILES'] = f'{pDir};{syspfile}'
     return pDir
+
+
+@contextlib.contextmanager
+def local_pfiles_context(par_dir=None):
+    """Create a conext environment with a temporary parameter file directory
+    that can be run like:
+    
+    with local_pfiles_context(par_dir):
+        # run tasks in parallel for exampel
+        
+    
+    This is useful for scripting and running many tasks at the same time
+    so that the tasks do not overwrite each other's pfiles.
+    See https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html.
+    
+    Parameters:
+    -----------
+        par_dir: str or None
+            a user-specified directory. None means create a temporary one.
+    """
+    old_pfiles = os.environ['PFILES']
+    pdir = local_pfiles(par_dir)
+    try:
+        yield
+    finally:
+        os.environ['PFILES'] = old_pfiles

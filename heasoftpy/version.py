@@ -23,7 +23,8 @@
 #          |             | AZ: - added timestamp check to read par files from sys_pfiles after a fresh installation
 #          |             | AZ: - added a fix for cfitsio version conflict between astropy (through ixpe) and pyxspec
 #          |             | AZ: - updated utils.local_pfiles to use tempfile instead of process id.
+#          |             | AZ: - add utils.local_pfiles_context to be used as context manager for local pfiles
 #          |             |
 
 
-__version__ = '1.3dev4'
+__version__ = '1.3dev5'

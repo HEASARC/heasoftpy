@@ -53,6 +53,16 @@ class TestUtils(unittest.TestCase):
         os.remove(f'{pDir}/fhelp.par')
         os.rmdir(pDir)
         os.environ['PFILES'] = self.pfiles
+        
+    # test using local_pfiles_context
+    def test__utils__local_pfiles_context(self):
+        pDir = os.path.join('/tmp', str(os.getpid()) + '.tmp')
+        
+        with heasoftpy.utils.local_pfiles_context(pDir):
+            self.assertTrue(pDir in os.environ['PFILES'])
+            
+        self.assertFalse(pDir in os.environ['PFILES'])
+        
 
         
 if __name__ == '__main__':
