@@ -276,7 +276,7 @@ You can also start a fresh `heasoftpy` installation as detailed in the [Installa
 
 ---
 ## 5. Running Tasks in Parallel
-As discussed in the [PARALLEL BATCH PROCESSING](https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html), most `heasoft` (and hence `heasoftpy`) tasks use parameter files whose location is managed by the `PFILES` environment variable. Parallel calls to the same task will likely end up using the same parameter file and may cause unintended parameter changes. Users may use the suggestions in the link above, however when using python scripting, it may be convenient to use the context manager method `heasoftpy.utils.local_pfiles_context`. Including all parallel inside a `with` statement, will ensure that temporary parameter files is used. The following gives a usage example:
+As discussed in the [PARALLEL BATCH PROCESSING](https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html), most `heasoft` (and hence `heasoftpy`) tasks use parameter files whose location is managed by the `PFILES` environment variable. Parallel calls to the same task will likely end up using the same parameter file and may cause unintended parameter changes. Users may use the suggestions in the link above, however when using python scripting, it may be convenient to use the context manager method `heasoftpy.utils.local_pfiles_context`. Including all parallel tasks inside a `with` statement, will ensure that temporary parameter files are used. The following gives a usage example:
 
 ```python
 from multiprocessing import Pool
