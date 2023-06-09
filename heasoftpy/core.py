@@ -1,5 +1,4 @@
 
-from collections import OrderedDict
 import subprocess
 import os
 import re
@@ -12,7 +11,7 @@ import logging
 
 class HSPTaskException(Exception):
     """A simple exception class"""
-    
+
     def __init__(self, errMsg=None):
         super(HSPTaskException, self).__init__(errMsg)
 
@@ -22,8 +21,9 @@ class HSPTask:
 
     def __init__(self, name=None):
         """Initialize an HSPTask with a given name.
-        
-        Args:
+
+        Parameters
+        ----------
             name (str): The name of the task to be called. Required
                 
         """
@@ -107,13 +107,12 @@ class HSPTask:
         There are several ways to call HSPTask:
         1: HSPTask(): query parameters as usually done with heasoft tasks
         2: HSPTask(previousHSPTask): initialize from a previously defined HSPTask
-        3: HSPTask(argsDict): args is a dict or OrderedDict of input parameters
+        3: HSPTask(argsDict): args is a dict of input parameters
         4: HSPTask(foo=bar, x=0): parameters are passed in the kwargs dict.
         
         
         Args:
-            args (HSPTask, dict, OrderedDict): task parameters as another HSPTask,
-                dict or OrderedDict
+            args (HSPTask, dict): task parameters as another HSPTask or dict
             **kwargs: individual task parameters given as: paramter=value.
             
         Common Keywords:
@@ -141,7 +140,7 @@ class HSPTask:
         # assemble the user input, if any, into a dict
         if args is None:
             user_pars = {}
-        elif isinstance(args, (dict, OrderedDict)):
+        elif isinstance(args, dict):
             user_pars = dict(args)
         elif isinstance(args, HSPTask):
             user_pars = dict(args.params)
@@ -495,7 +494,7 @@ class HSPTask:
             pfile: full path to .par file
             
         Returns:
-            OrderedDict
+            list of HSPParam
         
         """
         
@@ -704,7 +703,7 @@ class HSPResult:
             ret_code: return code from running the task
             std_out: The returned string in standard output
             std_err: The returnd standard error, or None
-            params: a dict and OrderedDict containing the task parameters
+            params: a dict containing the task parameters
             custom: a dict of any extra parameters.
         
         """
