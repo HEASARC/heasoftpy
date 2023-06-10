@@ -108,6 +108,4 @@ class TestPyTasks(unittest.TestCase):
         out = task(infile='_tmp.fits+1', keyword='_EXTNAM', operation='add', value='TEST2')
         os.system('rm _tmp.fits >/dev/null')
         self.assertEqual(out.returncode, 0)
-        
-if __name__ == '__main__':
-    unittest.main()
+

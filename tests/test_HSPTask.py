@@ -162,7 +162,4 @@ class TestHSPTask(unittest.TestCase):
         
         os.remove(f'{taskname}.par')
         os.environ['PFILES'] = pfiles
-        
-        
-if __name__ == '__main__':
-    unittest.main()
+

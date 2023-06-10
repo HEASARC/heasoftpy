@@ -346,6 +346,3 @@ class TestParamExtra(unittest.TestCase):
         res1 = task(infile='tests/test.fits', outfile='STDOUT', columns='"TIME,RATE"', rows='-', more='no', prhead='no')
         self.assertEqual(res1.returncode, 0)
 
-        
-if __name__ == '__main__':
-    unittest.main()
