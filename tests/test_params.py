@@ -346,3 +346,131 @@ class TestParamExtra(unittest.TestCase):
         res1 = task(infile='tests/test.fits', outfile='STDOUT', columns='"TIME,RATE"', rows='-', more='no', prhead='no')
         self.assertEqual(res1.returncode, 0)
 
+
+class TestHSPParam(unittest.TestCase):
+    """Testing HSPParam"""
+
+    def test_HSPParam__basic(self):
+        line = 'infile,s,a,somefile,,,"Name of file"'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.pname, 'infile')
+        self.assertEqual(hpar.type, 's')
+        self.assertEqual(hpar.mode, 'a')
+        self.assertEqual(hpar.default, 'somefile')
+        self.assertEqual(hpar.min, '')
+        self.assertEqual(hpar.max, '')
+        self.assertEqual(hpar.prompt, 'Name of file')
+
+    def test_HSPParam__unclosed_dbl_quote(self):
+        line = 'infile,s,a,somefile,,,"Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.pname, 'infile')
+        self.assertEqual(hpar.prompt, 'Name of file')
+
+    def test_HSPParam__unclosed_sgl_quote(self):
+        line = "infile,s,a,somefile,,,file's Name"
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.pname, 'infile')
+        self.assertEqual(hpar.prompt, "file's Name")
+
+    def test_HSPParam__comma_in_prompt(self):
+        line = 'infile,s,a,somefile,,,"Name, of file"'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.pname, 'infile')
+        self.assertEqual(hpar.prompt, "Name, of file")
+
+    def test_HSPParam__comma_in_value(self):
+        line = 'infile,s,a,"some,file",,,"Name of file"'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'some,file')
+        self.assertEqual(hpar.prompt, "Name of file")
+
+    def test_HSPParam__many_commas(self):
+        line = 'infile,s,a,somefile,,,Name of file,extra'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'somefile')
+        self.assertEqual(hpar.prompt, "Name of file, extra")
+
+    def test_HSPParam__val_int(self):
+        line = 'infile,i,a,"123",,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 123)
+
+    def test_HSPParam__val_int_no_quote(self):
+        line = 'infile,i,a,123,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 123)
+
+    def test_HSPParam__val_float(self):
+        line = 'infile,r,a,"123.4",,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 123.4)
+
+    def test_HSPParam__val_float_sgl_quote(self):
+        line = "infile,r,a,'123.4',,,Name of file"
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 123.4)
+
+    def test_HSPParam__val_float_no_quote(self):
+        line = 'infile,r,a,123.4,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 123.4)
+
+    def test_HSPParam__val_str(self):
+        line = 'infile,s,a,"123.4",,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, '123.4')
+
+    def test_HSPParam__val_str_no_quote(self):
+        line = 'infile,s,a,123.4,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, '123.4')
+
+    def test_HSPParam__val_bool_Y(self):
+        line = 'infile,b,a,Y,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'yes')
+
+    def test_HSPParam__val_bool_YeS(self):
+        line = 'infile,b,a,YeS,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'yes')
+
+    def test_HSPParam__val_bool_True(self):
+        line = 'infile,b,a,True,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'yes')
+
+    def test_HSPParam__val_bool_False(self):
+        line = 'infile,b,a,False,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'no')
+
+    def test_HSPParam__val_bool_N(self):
+        line = 'infile,b,a,N,,,Name of file'
+        hpar = heasoftpy.HSPParam(line)
+        self.assertEqual(hpar.default, 'no')
+
+    def test_HSPParam__set_value(self):
+        line = 'infile,r,a,0.0,,,Name of file'
+        class HSPtmp:
+            par = heasoftpy.HSPParam(line)
+        hspinst = HSPtmp()
+        hspinst.par = '123.5'
+        self.assertEqual(hspinst.par, 123.5)
+
+    def test_HSPParam__set_HSPParam(self):
+        line = 'infile,r,a,0.0,,,Name of file'
+        class HSPtmp:
+            par = heasoftpy.HSPParam(line)
+        hspinst = HSPtmp()
+        line = 'infile,r,a,12.35,,,Name of file'
+        hspinst.par = heasoftpy.HSPParam(line)
+        self.assertEqual(hspinst.par, 12.35)
+
+    def test_HSPParam__eq_HSPParam(self):
+        line = 'infile,r,a,0.0,,,Name of file'
+        class HSPtmp:
+            par = heasoftpy.HSPParam(line)
+        hspinst = HSPtmp()
+        self.assertEqual(hspinst.par, heasoftpy.HSPParam(line))

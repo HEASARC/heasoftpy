@@ -709,7 +709,6 @@ class HSPTask:
         )
         return fcn
     
-    
 
 class HSPResult:
     """Container for the result of a task execution"""
@@ -771,14 +770,18 @@ class HSPParam():
         # but we add it here for generality
         if line.count('"') % 2 != 0:
              line += '"'
+        # unclosed (') is fine, e.g. "file's name"; so we close
+        # it, then remove it later
+        sgl_quote = False
         if line.count("'") % 2 != 0:
-             line += "'"
+            line += "'"
+            sgl_quote = True
 
         # split at ,
         info = line.strip().split(',')
 
         # handle characters (,"') in the prompt text
-        if len(info) > 6:
+        if len(info) > 7:
             # - split the line so closed strings (with ' or ") are in separate parts
             parts = re.split("('.*?'|\\\".*?\\\")", line)
             
@@ -789,6 +792,11 @@ class HSPParam():
                       for p in parts]
             # - put things back together, and then split at , and remove ^|_
             info  = [p.replace('^|_', ',').strip() for p in ''.join(parts).split(',')]
+
+        # assume all text at the end is part of the prompt
+        if len(info) > 7:
+            info[6] = ', '.join(info[6:])
+            info = info[:7]
             
         # extract information about the parameter
         self.pname = info[0]
@@ -796,13 +804,17 @@ class HSPParam():
         for ikey,key in enumerate(pkeys):
             setattr(self, key, info[ikey+1].strip().strip('"'))
         
+        # handle case of single quote like: prompt="file's name"
+        if sgl_quote and self.prompt.split("'")[-2][0] == 's':
+            setattr(self, 'prompt', self.prompt[:-1])
+
         self.default = HSPParam.param_type(self.default, self.type)
         self.value   = self.default 
 
     
     def __set__(self, obj, new_value):
         if obj is None:
-            return self
+            obj = self
         self.value = HSPParam.param_type(new_value, self.type)
         
     def __repr__(self):
