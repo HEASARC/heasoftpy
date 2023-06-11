@@ -55,13 +55,6 @@ class HSPTask:
         for par in params:
             setattr(self, par.pname, par)
             par_names.append(par.pname)
-        
-        # if no mode, assume ql
-        if not 'mode' in par_names:
-            params.append(HSPParam('mode,s,h,"ql",,,'))
-            setattr(self, 'mode', params[-1])
-            par_names.append('mode')
-        
      
         # add extra useful keys to parameters
         default_mode = self.mode.value if hasattr(self, 'mode') else 'h'
@@ -529,6 +522,10 @@ class HSPTask:
                     continue
 
                 params.append(HSPParam(line))
+        
+        # if no mode, assume ql
+        if 'mode' not in [par.pname for par in params]:
+            params.append(HSPParam('mode,s,h,ql,,,'))
         
         return params
     
