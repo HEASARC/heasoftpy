@@ -984,5 +984,6 @@ class HSPLogger(logging.getLoggerClass()):
         if self.stderr:
             err = self.eStream.getvalue()
             self.eStream.close()
+        self.isSetup = False
         
         return out,err
