@@ -28,4 +28,4 @@
 #          |             |
 
 
-__version__ = '1.3dev6'
+__version__ = '1.3dev6a'
