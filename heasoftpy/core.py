@@ -979,11 +979,11 @@ class HSPLogger(logging.getLoggerClass()):
     def output(self):
         """Return the content captured in the log stream, and flush it"""
         out = self.oStream.getvalue()
-        self.oStream.close()
+        self.oStream = io.StringIO()
         err = None
         if self.stderr:
             err = self.eStream.getvalue()
-            self.eStream.close()
+            self.eStream = io.StringIO()
         self.isSetup = False
         
         return out,err
