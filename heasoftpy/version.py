@@ -19,13 +19,15 @@
 #          |             | - updated utils.local_pfiles to exclude ~/pfiles
 #          |             | - fix for the case of parameter expecting a str and float is given
 #--------------------------------------------------------
-# 1.3dev   | TBD         | AZ: - fixed an issue of reading par files with extra white space
-#          |             | AZ: - added timestamp check to read par files from sys_pfiles after a fresh installation
-#          |             | AZ: - added a fix for cfitsio version conflict between astropy (through ixpe) and pyxspec
-#          |             | AZ: - updated utils.local_pfiles to use tempfile instead of process id.
-#          |             | AZ: - add utils.local_pfiles_context to be used as context manager for local pfiles
-#          |             | AZ: - Fix logging errors in ixpe tests.
+# 1.3dev   | TBD         | AZ: 1- fixed an issue of reading par files with extra white space
+#          |             | AZ: 2- added timestamp check to read par files from sys_pfiles after a fresh installation
+#          |             | AZ: 3- added a fix for cfitsio version conflict between astropy (through ixpe) and pyxspec
+#          |             | AZ: 4- updated utils.local_pfiles to use tempfile instead of process id.
+#          |             | AZ: 5- add utils.local_pfiles_context to be used as context manager for local pfiles
+#          |             | AZ: 6- Fix logging errors in ixpe tests.
+#          |             | AZ: 7- Moved mode check from HSPTask to HSPTask.read_pfile + code style updates. 
+#          |             |      - Added HSPParams tests
 #          |             |
 
 
-__version__ = '1.3dev6a'
+__version__ = '1.3dev7'
