@@ -700,8 +700,8 @@ class HSPTask:
             'import subprocess\n\n'
             'from ..core import HSPTask, HSPTaskException\n\n\n'
             f'def {task_pyname}(args=None, **kwargs):\n'
-            f'    """\n{docs}\n    """\n\n'
-            f'    {task_name}_task = HSPTask(name="{task_name}")\n'
+            f'    r"""\n{docs}\n    """\n\n'
+            f'    {task_pyname}_task = HSPTask(name="{task_name}")\n'
             f'    return {task_pyname}_task(args, **kwargs)\n'
         )
         return fcn
