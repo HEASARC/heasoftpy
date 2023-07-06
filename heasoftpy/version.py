@@ -27,6 +27,7 @@
 #          |             | AZ: 6- Fix logging errors in ixpe tests.
 #          |             | AZ: 7- Moved mode check from HSPTask to HSPTask.read_pfile + code style updates. 
 #          |             |      - Added HSPParams tests
+#          |             |      - Added explict ISO-8859-15 in the return of subprocess.Popen
 #          |             |
 
 

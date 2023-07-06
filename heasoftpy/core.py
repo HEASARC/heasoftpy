@@ -348,8 +348,8 @@ class HSPTask:
             proc.wait() # needed to ensure the returncode is set correctly
         else:
             proc_out, proc_err = proc.communicate()
-            if isinstance(proc_out, bytes): proc_out = proc_out.decode()
-            if isinstance(proc_err, bytes): proc_err = proc_err.decode()
+            if isinstance(proc_out, bytes): proc_out = proc_out.decode('ISO-8859-15')
+            if isinstance(proc_err, bytes): proc_err = proc_err.decode('ISO-8859-15')
         # ---------------------------------------------------- #
         
         return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
@@ -387,7 +387,7 @@ class HSPTask:
             proc = subprocess.Popen([fhelp, f'task={name}{ext}'], stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc_out, proc_err = proc.communicate()
-            fhelp = proc_out.decode()
+            fhelp = proc_out.decode('ISO-8859-15')
             fhelp = f"{'-'*50}\n   fhelp-generated text\n{'-'*50}\n{fhelp}"
             fhelp.replace('"""', '')
             # add tab to the fhelp text
