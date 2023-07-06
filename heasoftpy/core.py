@@ -390,6 +390,8 @@ class HSPTask:
             fhelp = proc_out.decode()
             fhelp = f"{'-'*50}\n   fhelp-generated text\n{'-'*50}\n{fhelp}"
             fhelp.replace('"""', '')
+            # add tab to the fhelp text
+            fhelp = ''.join([line if line == '\n' else f'    {line}' for line in fhelp.splitlines(True)])
         # ------------------------------------- #
 
         return fhelp
