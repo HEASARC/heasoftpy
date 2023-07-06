@@ -62,8 +62,4 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(pDir in os.environ['PFILES'])
             
         self.assertFalse(pDir in os.environ['PFILES'])
-        
 
-        
-if __name__ == '__main__':
-    unittest.main()
