@@ -55,7 +55,7 @@ def generate_py_code(tasks=None):
     logger = logging.getLogger('heasoftpy-install')
     
     # here we are assuming HEADAS is defined. 
-    # TODO: check this is the case when we are installying heasoftpy for the firs time
+    # TODO: check this is the case when we are installing heasoftpy for the firs time
     if 'HEADAS' in os.environ:
         pfile_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
     else:
@@ -76,7 +76,7 @@ def generate_py_code(tasks=None):
     
     
     ntasks = len(tasks)
-    logger.info(f'Installying python wrappers. There are {ntasks} tasks!')
+    logger.info(f'Installing python wrappers. There are {ntasks} tasks!')
     
     # loop through the tasks and generate and save the code #
     outDir = os.path.join(os.path.dirname(__file__), 'fcn')
