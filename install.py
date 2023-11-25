@@ -6,21 +6,13 @@ import glob
 import importlib
 import shutil
 import subprocess
+from setuptools.command.build_py import build_py
 
-# add heasoftpy location to sys.path as it is not installed yet
-current_dir = os.path.abspath(os.path.dirname(__file__))
-sys.path.insert(0, current_dir)
 
 # Where to install the pure-python executable and parameter file #
 if not 'HEADAS' in os.environ:
     raise RuntimeError('heasoft needs to be initialized before running this script')
-#exe_install_dir = os.path.join(os.environ['HEADAS'], 'bin')
-#par_install_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
-#help_install_dir = os.path.join(os.environ['HEADAS'], 'help')
-exe_install_dir = os.path.join('build', 'bin')
-par_install_dir = os.path.join('build', 'syspfiles')
-help_install_dir = os.path.join('build', 'help')
-package_dir = current_dir
+
 
 
 
@@ -50,17 +42,35 @@ logger.addHandler(ch)
 ## -------------------- ##
 
 
+class HSPInstallCommand(build_py):
+    """Run install.py to generate the wrappers before doing the standard install
+    This is triggered by tool.setuptools.cmdclass in pyproject.toml
+    """
+    def run(self):
+        _do_install()
+        super().run()
+
+def _do_install():
+    logger.info('-'*60)
+    logger.info('Starting heasoftpy installation ...')
+
+    # python wrappers for heasoft-native tools
+    #_create_py_wrappers()
 
 ## ---------------------------------- ##
 ## python wrappers for built-in tools ##
 def _create_py_wrappers():
-    
+
     # the following prevents sub-package in heasoftpy.packages from being imported
     # as they may depend on the functions in heasoftpy.fcn, that we will install here
     os.environ['__INSTALLING_HSP'] = 'yes'
+
+    # add heasoftpy location to sys.path as it is not installed yet
+    current_dir = os.path.abspath(os.path.dirname(__file__))
+    sys.path.insert(0, current_dir)
     from heasoftpy.utils import generate_py_code
-    
-    
+
+
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
@@ -70,28 +80,16 @@ def _create_py_wrappers():
         raise
     logger.info('Python wrappers created sucessfully!')
     logger.info('-'*30)
-    
+
     # remove the __INSTALLING_HSP variable we added at the start
     del os.environ['__INSTALLING_HSP']
 ## ---------------------------------- ##
 
 
-
-def _do_install():
-    
-    logger.info('-'*60)
-    logger.info('Starting heasoftpy installation ...')
-    
-    
-    # python wrappers for heasoft-native tools
-    _create_py_wrappers()
-
-
-
     
 if __name__ == '__main__':
     help_txt = """This script is not meant to run directly.
-Please use: python setup.py build
+Please use: pip install .
 
 Then, copy build/lib/heasoftpy to a location where python can find it,
 or add build/lib to your PYTHONPATH.
