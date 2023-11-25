@@ -1,5 +1,4 @@
 
-from collections import OrderedDict
 import subprocess
 import os
 import re
@@ -12,7 +11,7 @@ import logging
 
 class HSPTaskException(Exception):
     """A simple exception class"""
-    
+
     def __init__(self, errMsg=None):
         super(HSPTaskException, self).__init__(errMsg)
 
@@ -22,8 +21,9 @@ class HSPTask:
 
     def __init__(self, name=None):
         """Initialize an HSPTask with a given name.
-        
-        Args:
+
+        Parameters
+        ----------
             name (str): The name of the task to be called. Required
                 
         """
@@ -34,7 +34,7 @@ class HSPTask:
                 name = self.name
             # if name given is different from that defined in the class; fail
             if name != self.name:
-                raise HSPTaskException(f'given task name "{name}" does not '
+                raise HSPTaskException(f'given task name "{name}" does not ' +
                                        f'match the name in the class "{self.name}"')
         # task name is required #    
         if name is None:
@@ -55,13 +55,6 @@ class HSPTask:
         for par in params:
             setattr(self, par.pname, par)
             par_names.append(par.pname)
-        
-        # if no mode, assume ql
-        if not 'mode' in par_names:
-            params.append(HSPParam('mode,s,h,"ql",,,'))
-            setattr(self, 'mode', params[-1])
-            par_names.append('mode')
-        
      
         # add extra useful keys to parameters
         default_mode = self.mode.value if hasattr(self, 'mode') else 'h'
@@ -78,70 +71,87 @@ class HSPTask:
         self.params = {}
         self.default_params = {pname:getattr(self, pname).value for pname in par_names}
         self.pfile = pfile
-        self.__doc__ = self._generate_fcn_docs()
+        self.__doc__ = self._generate_fcn_docs(fhelp=True)
 
         
-    def __setattr__(self, attr, val):
+    def __setattr__(self, pname, val):
         """Enable setting a parameter by setting HSPParam equal to some value.
+
         Doing it this way because for non-class attributes (task parameters that
         are defined in __init__ and not the in class), setting and getting them
         is not accessible for an class instance, unless we do it this way.
         
+        Parameters
+        ----------
+        pname: str
+            parameter name to be set
+        val: str
+            parameter value to set.
+
         """
         try:
-            attrObj = super(HSPTask, self).__getattribute__(attr)
+            attrObj = super(HSPTask, self).__getattribute__(pname)
         except AttributeError:
             # setting for the first time
-            super(HSPTask, self).__setattr__(attr, val)
+            super(HSPTask, self).__setattr__(pname, val)
         else:
             if hasattr(attrObj, '__set__'):
                 attrObj.__set__(self, val)
-                self.params[attr] = val
+                self.params[pname] = val
             else:
-                super(HSPTask, self).__setattr__(attr, val)
+                super(HSPTask, self).__setattr__(pname, val)
         
     
     def __call__(self, args=None, **kwargs):
         """Call the task.
         
         There are several ways to call HSPTask:
-        1: HSPTask(): query parameters as usually done with heasoft tasks
-        2: HSPTask(previousHSPTask): initialize from a previously defined HSPTask
-        3: HSPTask(argsDict): args is a dict or OrderedDict of input parameters
+        1: HSPTask(): required parameters will be queried as usually done with heasoft tasks.
+        2: HSPTask(previousHSPTask): initialize from a previously defined HSPTask.
+        3: HSPTask(argsDict): argsDict is a dict of input parameters.
         4: HSPTask(foo=bar, x=0): parameters are passed in the kwargs dict.
-        
-        
-        Args:
-            args (HSPTask, dict, OrderedDict): task parameters as another HSPTask,
-                dict or OrderedDict
-            **kwargs: individual task parameters given as: paramter=value.
-            
-        Common Keywords:
-            - verbose: This can take several values. In all cases, the text printed by the
-                task is captured, and returned in HSPResult.stdout/stderr. Addionally:
-                - 0 (also False or 'no'): Just return the text, no progress prining.
-                - 1 (also True or 'yes'): In addition to capturing and returning the text,
-                    task text will printed into the screen as the task runs.
-                - 2: Similar to 1, but also prints the text to a log file.
-                - 20: In addition to capturing and returning the text, log it to a file, 
-                    but not to the screen. 
-                    In both cases of 2 and 20, the default log file name is {taskname}.log. 
-                    A logfile parameter can be passed to the task to override the file name.
-            - noprompt: Typically, HSPTask would check the input parameters and 
-                queries any missing ones. Some tasks (e.g. pipelines) can run by using
-                default values. Setting `noprompt=True`, disables checking and quering 
-                the parameters. Default is False.
-            - stderr: If True, make stderr separate from stdout. The default
-                is False, so stderr is written to stdout.
-            
+
+
+        Parameters
+        ----------
+        args: HSPTask or dict
+            Task parameters as another HSPTask or dict
+
+        Keywords
+        --------
+        individual task parameters given as: paramter=value.
+
+        Additionally, the user may pass other arguments that are common between
+        all tasks. These include:
+
+        verbose: This can take several values. In all cases, the text printed by the
+            task is captured, and returned in HSPResult.stdout/stderr. Addionally:
+            - 0 (also False or 'no'): Just return the text, no progress prining.
+            - 1 (also True or 'yes'): In addition to capturing and returning the text,
+                task text will printed into the screen as the task runs.
+            - 2: Similar to 1, but also prints the text to a log file.
+            - 20: In addition to capturing and returning the text, log it to a file,
+                but not to the screen.
+                In both cases of 2 and 20, the default log file name is {taskname}.log.
+                A logfile parameter can be passed to the task to override the file name.
+
+        noprompt: Typically, HSPTask would check the input parameters and
+            queries any missing ones. Some tasks (e.g. pipelines) can run by using
+            default values. Setting `noprompt=True`, disables checking and quering
+            the parameters. Default is False.
+
+        stderr: If True, make stderr separate from stdout. The default
+            is False, so stderr is written to stdout.
+
         Returns:
-            HSPResult
+            HSPResult instance.
+            e.g. HSPResult(ret_code, std_out, std_err, params, custom_dict)
         """
         
         # assemble the user input, if any, into a dict
         if args is None:
             user_pars = {}
-        elif isinstance(args, (dict, OrderedDict)):
+        elif isinstance(args, dict):
             user_pars = dict(args)
         elif isinstance(args, HSPTask):
             user_pars = dict(args.params)
@@ -276,17 +286,18 @@ class HSPTask:
     
     
     def exec_task(self):
-        """Run the Heasoft task
+        """Run the Heasoft task. This is not meant to be called directly.
         
         This method can be overriden by python-only tasks that subclass HSPTask
-        The task parameters are available in:
-            self.params: a dict of {par:value} parameters provided by the user
+        The task parameters are available as dictionary of {par_name:value}
+        that contain both the parameters passed by the user and default ones.
                 
         Here, we just call the heasoft task as a subprocess
         
                 
-        Returns:
-            This method should return HSPResult object.
+        Returns
+        -------
+        HSPResult instance.
             e.g. HSPResult(ret_code, std_out, std_err, params, custom_dict)
         
         """
@@ -337,8 +348,8 @@ class HSPTask:
             proc.wait() # needed to ensure the returncode is set correctly
         else:
             proc_out, proc_err = proc.communicate()
-            if isinstance(proc_out, bytes): proc_out = proc_out.decode()
-            if isinstance(proc_err, bytes): proc_err = proc_err.decode()
+            if isinstance(proc_out, bytes): proc_out = proc_out.decode('ISO-8859-15')
+            if isinstance(proc_err, bytes): proc_err = proc_err.decode('ISO-8859-15')
         # ---------------------------------------------------- #
         
         return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
@@ -360,50 +371,48 @@ class HSPTask:
         name = self.taskname
         
         # call fhelp; assume HEADAS is defined #
-        cmd  = os.path.join(os.environ['HEADAS'], 'bin/fhelp')
-        try:
-            proc = subprocess.Popen([cmd, f'task={name}'], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            proc_out, proc_err = proc.communicate()
-        except:
-            # in case it is a .py task
-            try:
-                proc = subprocess.Popen([cmd, f'task={name}.py'], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                proc_out, proc_err = proc.communicate()
-            except:
-                print(f'Failed in running fhelp to obtain docs for {name}')
-        # ---------- #
+        hbin = f"{os.environ['HEADAS']}/bin"
+        fhelp = f"{hbin}/fhelp"
 
-        # convert fhelp output from byte to str #
-        try:
-            if proc_err is None or len(proc_err) != 0:
-                raise RuntimeError
-            else:
-                fhelp = proc_out.decode()
-                fhelp = f"{'-'*50}\n   The following has been generated from fhelp\n{'-'*50}\n{fhelp}"
-        except:
-            # we can be more specific in trapping
-            fhelp = f'No fhelp text was generated for {name}'
-        fhelp.replace('"""', '')
+        if os.path.exists(f'{hbin}/{name}'):
+            ext = ''
+        elif os.path.exists(f'{hbin}/{name}.py'):
+            ext = '.py'
+        else:
+            ext = None
+
+        if ext is None:
+            fhelp = f'Cannot run fhelp for {name}. No fhelp text was generated'
+        else:
+            proc = subprocess.Popen([fhelp, f'task={name}{ext}'], stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc_out, proc_err = proc.communicate()
+            fhelp = proc_out.decode('ISO-8859-15')
+            fhelp = f"{'-'*50}\n   fhelp-generated text\n{'-'*50}\n{fhelp}"
+            fhelp.replace('"""', '')
+            # add tab to the fhelp text
+            fhelp = ''.join([line if line == '\n' else f'    {line}' for line in fhelp.splitlines(True)])
         # ------------------------------------- #
-        
+
         return fhelp
     
     
     def build_params(self, user_pars):
-        """Check the user given parameters agains the expectation from the .par file.
+        """Check the parameters given by the user against expectation from the .par file.
 
         - Loop through the expected task parameters (self.all_params).
         - Update their value if any of them is given by the user (in user_pars)
-        - if a parameter is required by the task and not given, query the user
+        - if a parameter is required by the task and not given, query the user.
         The final updated list of parameters is returned
         
-        Args:
-            user_pars: a dict containing the par_name:value given by the user
+        Parameters
+        ----------
+        user_pars: dict
+            a dictionay containing the par_name:value given by the user
             
-        Returns:
-            dict of {pname:pvalue} for the values either passed by user or queried if required
+        Return
+        ------
+        dict of {pname:pvalue} for the values either passed by user or queried if required
         """
         
         
@@ -454,8 +463,10 @@ class HSPTask:
     def write_pfile(self, pfile):
         """Write .par file of some task, typically after executing
         
-        Args:
-            pfile: path and name of the .par file. If it doesn't exist, create it
+        Parameters
+        ----------
+        pfile: str
+            path and name of the .par file. If it doesn't exist, create it
             
         Return:
             None
@@ -477,7 +488,7 @@ class HSPTask:
                 val = f'"{val}"'
             
             # write #
-            ptxt += (f'{par.pname},{par.type},{par.mode},'
+            ptxt += (f'{par.pname},{par.type},{par.mode},'+
                      f'{val},{par.min},{par.max},\"{par.prompt}\"\n')
             
         with open(pfile, 'w') as pf:
@@ -491,11 +502,13 @@ class HSPTask:
         
         Can be called without initializing HSPTask by doing: HSPTask.read_pfile(...)
         
-        Args:
-            pfile: full path to .par file
+        Parameters
+        ----------
+        pfile: str
+            full path to .par file
             
         Returns:
-            OrderedDict
+            list of HSPParam instances
         
         """
         
@@ -512,17 +525,24 @@ class HSPTask:
 
                 params.append(HSPParam(line))
         
+        # if no mode, assume ql
+        if 'mode' not in [par.pname for par in params]:
+            params.append(HSPParam('mode,s,h,ql,,,'))
+        
         return params
     
     
     @staticmethod
     def find_pfile(name, return_user=False):
-        """search for an return the .par file for the task
+        """Search for an return the .par file for the task
         
-        Args:
-            name: Name of the task, so the pfile is {name}.par
-            return_user: return the user pfile, even if it doesn't exist
-                User pfile is the taken from the first entry to PFILES
+        Parameters
+        ----------
+        name: str
+            Name of the task, so the pfile is {name}.par
+        return_user: bool
+            return the user pfile, even if it doesn't exist
+            User's pfile is the taken from the first entry to PFILES
         
         Returns:
             the path to the {name}.par pfile
@@ -553,6 +573,15 @@ class HSPTask:
         # parameter file to read
         pfile_to_read = os.path.join(pf, f'{name}.par')
         
+        # check time-stamps; if we have a fresh heasoft or fresh heasoftpy
+        # always read from sys_pfile
+        this_ts  = os.path.getmtime(__file__)
+        sys_ts   = os.path.getmtime(sys_pfile) if os.path.exists(sys_pfile) else -1.0    
+        pfile_ts = os.path.getmtime(pfile_to_read) if os.path.exists(pfile_to_read) else -1.0
+        if (sys_ts >= pfile_ts or this_ts >= pfile_ts) and not return_user:
+            return sys_pfile
+        
+        
         # parameter file where to save the task parameters
         if pfiles[0] == sys_pfile:
             # use ~/pfiles 
@@ -572,11 +601,13 @@ class HSPTask:
     
     @staticmethod
     def handle_io_stream(proc, stderr, verbose, logfile):
-        """
+        """Internal method to handle multiple streams (file & screen)
 
-        Args:
-            proc: proc from subprocess or sys; i.e. it has proc.stdout and proc.stderr
-            stderr: bool user input of whether to use stderr or not
+        Parameters:
+            proc:
+                proc from subprocess or sys; i.e. it has proc.stdout and proc.stderr
+            stderr: bool
+                user input of whether to use stderr or not
 
         """
         # selectors handle multiple io streams
@@ -620,8 +651,15 @@ class HSPTask:
     def _generate_fcn_docs(self, fhelp=False):
         """Generation standard function docstring from .par file
 
-        Additional help is generated by task_docs, which, in the case of heasoft
-        tools, is generated with fhelp
+
+        Parameters
+        ----------
+        fhelp: bool
+            If True, call task_docs to generate standard help with fhelp
+
+        Return
+        ------
+        str containing the help docs.
 
         """
 
@@ -639,15 +677,12 @@ class HSPTask:
         task_docs = self.task_docs() if fhelp else ''
 
         # put it all together #
-        docs = f"""
-    Automatically generated function for Heasoft task {self.taskname}.
-    Additional help may be provided below.
+        docs = (
+            f'    Automatically generated function for Heasoft task {self.taskname}.\n\n\n'
+             '    Parameters\n    ----------'
+            f'{parsDesc}\n\n{task_docs}'
+        )
 
-    Args:
-{parsDesc}
-\n\n
-{task_docs}
-        """
         return docs
 
     def generate_fcn_code(self):
@@ -661,27 +696,17 @@ class HSPTask:
         docs = self._generate_fcn_docs(fhelp=True)
 
         # generate function text
-        fcn = f"""
-
-import sys
-import os
-import subprocess
-
-from ..core import HSPTask, HSPTaskException
-
-
-def {task_pyname}(args=None, **kwargs):
-    r\"""
-{docs}
-    \"""
-
-    {task_pyname}_task = HSPTask(name="{task_name}")
-    return {task_pyname}_task(args, **kwargs)
-
-        """
-
+        fcn = (
+            'import sys\n'
+            'import os\n'
+            'import subprocess\n\n'
+            'from ..core import HSPTask, HSPTaskException\n\n\n'
+            f'def {task_pyname}(args=None, **kwargs):\n'
+            f'    r"""\n{docs}\n    """\n\n'
+            f'    {task_pyname}_task = HSPTask(name="{task_name}")\n'
+            f'    return {task_pyname}_task(args, **kwargs)\n'
+        )
         return fcn
-    
     
 
 class HSPResult:
@@ -695,7 +720,7 @@ class HSPResult:
             ret_code: return code from running the task
             std_out: The returned string in standard output
             std_err: The returnd standard error, or None
-            params: a dict and OrderedDict containing the task parameters
+            params: a dict containing the task parameters
             custom: a dict of any extra parameters.
         
         """
@@ -733,28 +758,44 @@ class HSPParam():
     def __init__(self, line):
         """Initialize a parameter object with a line from the .par file
         
-        Args:
-            line: a line from the parameter file
+        Parameters
+        ----------
+        line: str
+            a line from the parameter file
             
         """
         line = line.replace('\n', '')
+        # if there is an unclosed "|' in the prompt. This should be fixed in the file
+        # but we add it here for generality
+        if line.count('"') % 2 != 0:
+             line += '"'
+        # unclosed (') is fine, e.g. "file's name"; so we close
+        # it, then remove it later
+        sgl_quote = False
+        if line.count("'") % 2 != 0:
+            line += "'"
+            sgl_quote = True
+
+        # split at ,
         info = line.strip().split(',')
 
-        # handle comma (,) in the prompt text
-        if len(info) > 6:
-            # if there is an unclosed " in the prompt. This should be fixed in the file
-            # but we add it here for generality
-            if line.count('"') % 2 != 0:
-                 line += '"'
-            # if any value contains ",", replace it with "^|_", split, then put it back
-            # assumes "^|_" is not going to appear anywhere
+        # handle characters (,"') in the prompt text
+        if len(info) > 7:
             # - split the line so closed strings (with ' or ") are in separate parts
             parts = re.split("('.*?'|\\\".*?\\\")", line)
-            # - replace , with ^|_ if , falls in one of the substrings with open/close ',"
+            
+            # if any value or prompt contains ",", replace it with "^|_", split, 
+            # then put it back. Assumes "^|_" is not going to appear anywhere
+            # - replace (,) with (^|_) if , falls in one of the substrings with (',")
             parts = [p.replace(',', '^|_') if ('"' in p or "'" in p) else p.strip()
                       for p in parts]
             # - put things back together, and then split at , and remove ^|_
-            info  = [p.replace('^|_', ',') for p in ''.join(parts).split(',')]
+            info  = [p.replace('^|_', ',').strip() for p in ''.join(parts).split(',')]
+
+        # assume all text at the end is part of the prompt
+        if len(info) > 7:
+            info[6] = ', '.join(info[6:])
+            info = info[:7]
             
         # extract information about the parameter
         self.pname = info[0]
@@ -762,13 +803,17 @@ class HSPParam():
         for ikey,key in enumerate(pkeys):
             setattr(self, key, info[ikey+1].strip().strip('"'))
         
+        # handle case of single quote like: prompt="file's name"
+        if sgl_quote and self.prompt.split("'")[-2][0] == 's':
+            setattr(self, 'prompt', self.prompt[:-1])
+
         self.default = HSPParam.param_type(self.default, self.type)
         self.value   = self.default 
 
     
     def __set__(self, obj, new_value):
         if obj is None:
-            return self
+            obj = self
         self.value = HSPParam.param_type(new_value, self.type)
         
     def __repr__(self):
@@ -783,10 +828,8 @@ class HSPParam():
     
     
     def query(self):
-        """Query the user for parameter
-        
-        Sets the value in self.value
-            
+        """Query the user for a parameter and set its value to self.value
+                    
         TODO: handle nan, None, INDEF etc
             
         """
@@ -812,15 +855,18 @@ class HSPParam():
     @staticmethod
     def param_type(value, inType):
         """Find the correct type from pfiles
-        
-        Args:
-            value: The value to be converted; typically a str
-            inType: a str representing the type in the .par files.
-                One of: {i, s, f, b, r, fr, b}
-        
+
+        Parameters
+        ----------
+        value: str (or possiblly int or float) 
+            The value to be converted; typically a str
+        inType: str
+            a str representing the type in the .par files.
+            One of: {i, s, f, b, r, fr, b}
+
         Returns:
             the value in the correct type
-        
+
         """
         
         # handle special cases first
@@ -970,10 +1016,11 @@ class HSPLogger(logging.getLoggerClass()):
     def output(self):
         """Return the content captured in the log stream, and flush it"""
         out = self.oStream.getvalue()
-        self.oStream.close()
+        self.oStream = io.StringIO()
         err = None
         if self.stderr:
             err = self.eStream.getvalue()
-            self.eStream.close()
+            self.eStream = io.StringIO()
+        self.isSetup = False
         
         return out,err

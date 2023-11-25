@@ -2,7 +2,9 @@ import sys
 import os
 import subprocess
 import glob
+import tempfile
 import logging
+import contextlib
 from .core import HSPTask, HSPTaskException
     
 
@@ -53,7 +55,7 @@ def generate_py_code(tasks=None):
     logger = logging.getLogger('heasoftpy-install')
     
     # here we are assuming HEADAS is defined. 
-    # TODO: check this is the case when we are installying heasoftpy for the firs time
+    # TODO: check this is the case when we are installing heasoftpy for the firs time
     if 'HEADAS' in os.environ:
         pfile_dir = os.path.join(os.environ['HEADAS'], 'syspfiles')
     else:
@@ -74,7 +76,7 @@ def generate_py_code(tasks=None):
     
     
     ntasks = len(tasks)
-    logger.info(f'Installying python wrappers. There are {ntasks} tasks!')
+    logger.info(f'Installing python wrappers. There are {ntasks} tasks!')
     
     # loop through the tasks and generate and save the code #
     outDir = os.path.join(os.path.dirname(__file__), 'fcn')
@@ -120,7 +122,7 @@ def local_pfiles(par_dir=None):
     create = True
     pDir   = par_dir
     if par_dir is None:
-        pDir = os.path.join('/tmp', str(os.getpid()) + '.pfiles.tmp')
+        pDir = tempfile.NamedTemporaryFile().name + '.pfiles'
     elif os.path.exists(par_dir):
         if os.path.isdir(par_dir):
             create = False
@@ -130,10 +132,7 @@ def local_pfiles(par_dir=None):
         pass
     
     if create:
-        try:
-            os.mkdir(pDir)
-        except:
-            raise OSError(f'Cannot create parameter directory {pDir}')
+        os.mkdir(pDir)
     
     # if we make here, things are good, so add pDir to PFILES
     # Note that we are not including ~/pfiles because it may cause issues 
@@ -141,3 +140,29 @@ def local_pfiles(par_dir=None):
     syspfile = os.path.join(os.environ['HEADAS'], 'syspfiles')
     os.environ['PFILES'] = f'{pDir};{syspfile}'
     return pDir
+
+
+@contextlib.contextmanager
+def local_pfiles_context(par_dir=None):
+    """Create a conext environment with a temporary parameter file directory
+    that can be run like:
+    
+    with local_pfiles_context(par_dir):
+        # run tasks in parallel for exampel
+        
+    
+    This is useful for scripting and running many tasks at the same time
+    so that the tasks do not overwrite each other's pfiles.
+    See https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html.
+    
+    Parameters:
+    -----------
+        par_dir: str or None
+            a user-specified directory. None means create a temporary one.
+    """
+    old_pfiles = os.environ['PFILES']
+    pdir = local_pfiles(par_dir)
+    try:
+        yield
+    finally:
+        os.environ['PFILES'] = old_pfiles

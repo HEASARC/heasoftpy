@@ -21,7 +21,9 @@ tools using python. It provides python wrappers that call the
 code.
 
 `HEASoftPy` also provides a framework that allows for pure-python
-tools to be developed and integrated within the `HEASoft` system (see [Writing Python Tasks](#4.-Writing-Python-Tasks)).
+tools to be developed and integrated within the `HEASoft` system 
+(see [Writing Python Tasks](#4.-Writing-Python-Tasks)).
+The IXPE tools are an example of mission tools developed in python.
 
 Although `HEASoftPy` is written in pure python, it does not rewrite
 the functions and tools already existing in `HEASoft`. A working
@@ -37,7 +39,7 @@ be used is several ways.
 ```python
 
 import heasoftpy as hsp
-hsp.fdump(infile='input.fits', outfile='STDOUT', ...)
+hsp.ftlist(infile='input.fits', option='HC', outfile='STDOUT', ...)
 
 ```
 
@@ -45,60 +47,65 @@ hsp.fdump(infile='input.fits', outfile='STDOUT', ...)
 ```python
 
 import heasoftpy as hsp
-fdump = hsp.HSPTask('fdump')
-fdump(infile='input.fits', outfile='STDOUT', ...)
+ftlist = hsp.HSPTask('ftlist')
+ftlist(infile='input.fits', option='HC', outfile='STDOUT', ...)
 
 ```
 
 3- For tasks written in python (e.g. `ixpecalcfov.py`), the tools can be used as usual from the command line, similar to the standard `HEASoft` tools:
 ```bash
-ixpecalcfov.py ra=... dec=...
-
+ixpecalcfov[.py] ra=... dec=...
 ```
+The `.py` extension is generally optional.
+
 
 #### Task Names
-Native `heasoft` tasks have the same names in `heasoftpy`. So a task like `nicerclean`
+Native `HEASoft` tasks have the same names in `HEASoftPy`. So a task like `nicerclean`
 is called by `heasoftpy.nicerclean`, except for tasks that have the dash symbol `-` in the name,
-which is replaced by an underscore `_`. So for example, the task `ut-swifttime` is available
-with `heasoftpy.ut_swifttime`, etc.
+which is replaced by an underscore `_`. For example, the task `bat-burst-advocate` is available
+with `heasoftpy.bat_burst_advocate`, etc.
 
 
 ### 2.2 Different Ways of Passing Parameters
-The task methods handle different types in inputs. For example:
+Passing parameters to a task can be done in several ways. For example:
 
 ```python
 
 import heasoftpy as hsp
-hsp.fdump(infile='input.fits', outfile='STDOUT', ...)
+hsp.ftlist(infile='input.fits', option='HC', outfile='STDOUT', ...)
 
 # or
 params = {
     'infile': 'input.fits',
+    'option': 'HC',
     'outfile': 'STDOUT',
     ...
 }
-hsp.fdump(params)
+hsp.ftlist(params)
 
 # or
-fdump_task = hsp.HSPTask('fdump')
-fdump_task(infile='input2.fits', outfile='STDOUT', ...)
-hsp.fdump(fdump_task)
+ftlist_task = hsp.HSPTask('ftlist')
+ftlist_task(infile='input2.fits', option='HC', outfile='STDOUT', ...)
+hsp.ftlist(ftlist_task)
 
 # or
-fdump_task = hsp.HSPTask('fdump')
-fdump_task.infile = 'input2.fits'
-fdump_task.outfile = 'STDOUT'
+ftlist_task = hsp.HSPTask('ftlist')
+ftlist_task.infile = 'input2.fits'
+ftlist_task.option= 'HC'
+ftlist_task.outfile = 'STDOUT'
 ... # other parameters
-fdump_task()
+ftlist_task()
 
 # or a combination of the above
 
 ```
 
 Whenever a task in called, if any of the required parameters is missing, 
-the user is prompted to enter a value.
+the user is prompted to enter a value. If the user knows that the passed
+parameters are enough to run the task, they can pass `noprompt=True`, to 
+distable parameter prompt.
 
-Note that creating a task object with `fdump_task = hsp.HSPTask('fdump')` does not actually call the task, it just initializes it. Only by doing `fdump_task(...)` is the task called and parameters are queried if necessary.
+Note that creating a task object with `ftlist_task = hsp.HSPTask('ftlist')` does not actually call the task, it just initializes it. Only by doing `ftlist_task(...)` is the task called and parameters are queried if necessary.
 
 
 ### 2.3 `HEASoftPy` Control Parameters
@@ -132,93 +139,98 @@ with `'task.log'` logging the task activity, and `'pytask.log'` logging the pyth
 
 
 ### 2.4 Finding Help for the Tasks
-The help for the tasks can be accessed in the standard python way.
+The help for the tasks can be accessed in the standard python way, e.g. in ipython:
 ```python
-hsp.fdump?
+hsp.ftlist?
 ```
 
 which will print something like the following, indicating the required parameters:
 ```
-    Automatically generated function for HEASoft task fdump.
-    Additional help may be provided below.
+    Automatically generated function for Heasoft task ftlist.
 
-    Args:
-     infile       (Req) : Name of FITS file and [ext#] (default: test.fits)
-     outfile      (Req) : Name of optional output file (default: STDOUT)
-     columns      (Req) : Names of columns (default: -)
-     rows         (Req) : Lists of rows (default: -)
-     fldsep             : Define a new field separator (default is space) (default: )
-     pagewidth          : Page width (default: 80)
-     prhead             : Print header keywords? (default: True)
-     prdata             : Print data? (default: True)
-     showcol            : Print column names? (default: True)
-     showunit           : Print column units? (default: True)
-     showrow            : Print row numbers? (default: True)
-     showscale          : Show scaled values? (default: True)
-     align              : Align columns with names? (default: True)
-     skip               : Print every nth row (default: 1)
-     tdisp              : Use TDISPn keywords? (default: False)
-     wrap               : Display entire row at once? (default: False)
-     page               : Page through output to terminal (default: True)
-     clobber            : Overwrite output file if exists? (default: False)
-     sensecase          : Be case sensitive about column names? (default: False)
-     xdisp              : How to display nX Column(default/(b or B)/(D or d)? (default: )
-     more         (Req) : More? (default: yes)
-     mode               :  (default: ql)
+
+    Parameters
+    ----------
+    infile       (Req) :  Input file name  (default: )
+    option       (Req) :  Print options: H C K I T  (default: HC)
+    outfile            :  Optional output file  (default: -)
+    clobber            :  Overwrite existing output file?  (default: no)
+    include            :  Include keywords list  (default: *)
+    exclude            :  Exclude keywords list  (default: )
+    section            :  Image section to print, eg, '2:8,1:10' (default: *)
+    columns            :  Table columns to print  (default: *)
+    rows               :  Table rows or ranges to print, eg, '2,6-8' (default: -)
+    vector             :  Vector range to print, eg, '1-5'  (default: -)
+    separator          :  Column separator string  (default:  )
+    rownum             :  Print row number?  (default: yes)
+    colheader          :  Print column header?  (default: yes)
+    mode               :  Mode  (default: ql)
+
 
 ...
 ```
 Scrolling down further, the help message will print the standard HEASoft help text from `fhelp`.
 ```
---------------------------------------------------
-   The following has been generated from fhelp
---------------------------------------------------
-NAME
+    --------------------------------------------------
+       fhelp-generated text
+    --------------------------------------------------
+    NAME
 
-   fdump -- Convert the contents of a FITS table to ASCII format.
+       ftlist - List the contents of the input file.
 
-USAGE
+    USAGE
 
-        fdump infile[ext#] outfile columns rows
+       ftlist infile[ext][filters] option
 
-DESCRIPTION
+    DESCRIPTION
 
-   This task converts the information in the header and data of a FITS
-   table extension (either ASCII or binary table) ...
-   
+       'ftlist' displays the contents of the input file. Depending on the
+       value of the 'option' parameter, this task can be used to list any
+       combination of the following:
+
+         * a one line summary of the contents of each HDU (option = H)
+         * the names, units, and ranges of each table column (option = C)
+         * all or a selected subset of the header keywords (option = K)
+         * the pixel values in a subset of an image (option = I)
+         * the values in selected rows and columns of a table (option = T)
+
+       If a specific HDU name or number is given as part of the input file
+       name then only that HDU will be listed. If only the root name of the
+       file is specified, then every HDU in the file will be listed.
+
 ```
 
 
 ## 3. Installation
-`heasoftpy` is generally installed automatically when installing `HEASoft`, make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. The following steps can be used to install or update `heasoftpy` manually after `HEASoft` is installed.
+`heasoftpy` is installed automatically with `HEASoft` version 6.30 or newer.  Make sure you have python version >3.6, and the python dependencies installed (see step 1- below) before installing `HEASoft`. If you have an older version of `HEASoft`, the following steps can be used to install or update `heasoftpy` manually in an existing `HEASoft` installation.
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
 #### - Install within the `HEASoft` tree
 
-1- Ensure you have `python>=3.7` installed. Install the latest versions of the python dependencies:
+1- Ensure you have `python>=3.6` installed, as well as the latest versions of the python dependencies (`AstroPy >=4.0`, `NumPy >=1.7`, `SciPy >=1.5`):
 ```sh
-pip install numpy scipy astropy pytest
+pip install numpy scipy astropy 
 # or, if using conda:
-conda install numpy scipy astropy pytest
+conda install numpy scipy astropy
 ```
 
-2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.2.tar)
+2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.3.tar)
 ```sh
-wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.2.tar
+wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.3.tar
 ```
 or 
 ```sh
-curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.2.tar
+curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.3.tar
 ```
 
 3- Untar the file:
 ```sh
-tar -xvf heasoftpy1.2.tar
+tar -xvf heasoftpy1.3.tar
 cd heasoftpy
 ```
 
-4- Collect the pacakges:
+4- Generate the python wrappers:
 ```
 python setup.py build
 ```
@@ -250,6 +262,14 @@ mv build/help/* $HEADAS/help
 `heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
 
 
+#### - Updating `heasoftpy` after installation
+
+New in `HEASoft 6.32` is a patch installer for `heasoftpy`, named `hpyupdate`.  To run it, first make sure that `HEASoft` is initialized and that the utilites `wget` and `tar` are available in your system `PATH`, then simply run
+```sh
+hpyupdate
+```
+
+
 ## 4. Re-creating function wrappers
 
 There may be times when a `heasoftpy` function needs 
@@ -266,10 +286,36 @@ from heasoftpy.utils import generate_py_code
 tasks = ['nibackgen3c50']
 generate_py_code(tasks=task)
 ```
+You can also start a fresh `heasoftpy` installation as detailed in the [Installation](3.-Installation) section.
 
 
 ---
-## 5. Writing Python Tasks
+## 5. Running Tasks in Parallel
+As discussed in the [PARALLEL BATCH PROCESSING](https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html), most `heasoft` (and hence `heasoftpy`) tasks use parameter files whose location is managed by the `PFILES` environment variable. Parallel calls to the same task will likely end up using the same parameter file and may cause unintended parameter changes. Users may use the suggestions in the link above, however when using python scripting, it may be convenient to use the context manager method `heasoftpy.utils.local_pfiles_context`. Including all parallel tasks inside a `with` statement, will ensure that temporary parameter files are used. The following gives a usage example:
+
+```python
+from multiprocessing import Pool
+import heasoftpy as hsp
+
+
+def worker(args):
+    """Run individual tasks"""
+    with hsp.utils.local_pfiles_context():
+        # call the tasks of interest
+        out = hsp.nicerl2(...)
+        # other tasks
+        # ...
+    
+    return output
+
+nproc = 5
+with Pool(nproc) as p:
+    print(p.map(worker, [1, 2, 3, 4, 5]))
+        
+```
+
+---
+## 6. Writing Python Tasks
 The core of `HEASoftPy` is the class `HSPTask`, which handles the parameter reading and setting (from the `.par` file).
 
 It was written in a way that makes it easy for writing new codes that can be easily integrated within `HEASoft`. All that is needed, in addition to creating a `.par` file, is to create a subclass of `HSPTask` and implement a method `exec_task` that does the task function. An example is given in `template`. The following is short snippet:
