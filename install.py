@@ -50,12 +50,13 @@ class HSPInstallCommand(build_py):
         _do_install()
         super().run()
 
+
 def _do_install():
     logger.info('-'*60)
     logger.info('Starting heasoftpy installation ...')
 
     # python wrappers for heasoft-native tools
-    #_create_py_wrappers()
+    _create_py_wrappers()
 
 ## ---------------------------------- ##
 ## python wrappers for built-in tools ##
@@ -74,7 +75,7 @@ def _create_py_wrappers():
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
-        generate_py_code()
+        generate_py_code(['fdump', 'ftlist', 'ftselect'])
     except:
         logger.error('Failed in generating python wrappers')
         raise

@@ -20,8 +20,9 @@ dynamic = ["version", "dependencies"]
 [project.urls]
 "Homepage" = "https://heasarc.gsfc.nasa.gov/lheasoft/heasoftpy/"
 
-[tool.setuptools]
-packages = ["heasoftpy"]
+[tool.setuptools.packages.find]
+include = ["heasoftpy*"]
+exclude = ["notebook*", "licences*", "template*", "tests*"]
 
 [tools.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
