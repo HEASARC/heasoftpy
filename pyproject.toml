@@ -24,8 +24,8 @@ dynamic = ["version", "dependencies"]
 include = ["heasoftpy*"]
 exclude = ["notebook*", "licences*", "template*", "tests*"]
 
-[tools.setuptools.dynamic]
-dependencies = {file = "requirements.txt"}
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
 test = [

@@ -75,7 +75,7 @@ def _create_py_wrappers():
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
-        generate_py_code(['fdump', 'ftlist', 'ftselect'])
+        generate_py_code()
     except:
         logger.error('Failed in generating python wrappers')
         raise
