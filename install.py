@@ -13,7 +13,10 @@ from setuptools.command.build_py import build_py
 if not 'HEADAS' in os.environ:
     raise RuntimeError('heasoft needs to be initialized before running this script')
 
-
+# packages that use heasoftpy
+# Typically, this means they have their code under
+# $HEADAS/../{mission}/x86../lib/python/heasoftpy/{subpackage}
+SUBPACKAGES = ['nicer', 'ixpe']
 
 
 ## --- setup logger --- ##
@@ -58,6 +61,9 @@ def _do_install():
     # python wrappers for heasoft-native tools
     _create_py_wrappers()
 
+    # add subpackages
+    _add_sub_packages()
+
 ## ---------------------------------- ##
 ## python wrappers for built-in tools ##
 def _create_py_wrappers():
@@ -85,6 +91,30 @@ def _create_py_wrappers():
     # remove the __INSTALLING_HSP variable we added at the start
     del os.environ['__INSTALLING_HSP']
 ## ---------------------------------- ##
+
+## ---------------------------------- ##
+## python wrappers for built-in tools ##
+def _add_sub_packages():
+    """Find and install subpackages from other places in heasoft"""
+    if not 'HEADAS' in os.environ:
+        msg = 'HEADAS not defined. Please initialize Heasoft!'
+        logger.error(msg)
+        raise ValueError(msg)
+
+    # find installation folder name
+    headas = os.environ['HEADAS']
+    inst_dir = os.path.basename(headas)
+
+    # loop through subpackages
+    logger.info('-'*30)
+    logger.info('Looking for subpackages ...')
+    for subpackage in SUBPACKAGES:
+        pth = f"{headas}/../{subpackage}/{inst_dir}/lib/python/heasoftpy/{subpackage}"
+        if os.path.exists(pth):
+            logger.info(f'Found {subpackage} ...')
+            os.system(f'cp -r {pth} heasoftpy/')
+        else:
+            logger.info(f'No {subpackage} subpackage, skipping ...')
 
 
     
