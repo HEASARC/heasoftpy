@@ -107,8 +107,6 @@ import os
 from .core import HSPTask, HSPTaskException, HSPResult, HSPParam, HSPLogger
 from . import utils
 
-from .fcn import *
-
 # help function
 def help(): print(__doc__)
 
@@ -125,6 +123,8 @@ def _package_exists(package):
 # load sub-packages, only if we are not installing the main package:
 # __INSTALLING_HSP is created in install.py during installation
 if not '__INSTALLING_HSP' in os.environ:
+    # import all the heasoft tools
+    from .fcn import *
     
     # if _package_exists('template'):
     #     import template
