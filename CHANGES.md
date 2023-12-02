@@ -29,3 +29,10 @@
 - Moved mode check from `HSPTask` to `HSPTask.read_pfile` + code style updates. 
 - Added HSPParams tests
 - Added explict ISO-8859-15 in the return of `subprocess.Popen`
+
+## 1.4 (TBD)
+- Several maintaince updates:
+    - Switch installation to use pyproject.toml instead of setup.py.
+    - Swtich fcn/__init__.py to use __all__ instead of dynamic imports.
+    - Added local-build.py to handle local building of the package
+    - TODO: update installation instructions in README
