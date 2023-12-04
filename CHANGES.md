@@ -32,7 +32,7 @@
 
 ## 1.4 (TBD)
 - Several maintaince updates:
+    - Switch to automatic dev versioning using git SHA with setuptools-scm. 
     - Switch installation to use pyproject.toml instead of setup.py.
-    - Swtich fcn/__init__.py to use __all__ instead of dynamic imports.
-    - Added local-build.py to handle local building of the package
-    - Update installation instructions in README
+    - Added local-build.py to handle local building of the package.
+    - Update installation instructions in README.
