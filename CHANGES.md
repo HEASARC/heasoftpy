@@ -35,4 +35,4 @@
     - Switch installation to use pyproject.toml instead of setup.py.
     - Swtich fcn/__init__.py to use __all__ instead of dynamic imports.
     - Added local-build.py to handle local building of the package
-    - TODO: update installation instructions in README
+    - Update installation instructions in README

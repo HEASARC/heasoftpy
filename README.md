@@ -202,51 +202,39 @@ Scrolling down further, the help message will print the standard HEASoft help te
 
 
 ## 3. Installation
-`heasoftpy` is installed automatically with `HEASoft` version 6.30 or newer.  Make sure you have python version >3.6, and the python dependencies installed (see step 1- below) before installing `HEASoft`. If you have an older version of `HEASoft`, the following steps can be used to install or update `heasoftpy` manually in an existing `HEASoft` installation.
+`heasoftpy` is installed automatically with `HEASoft` version 6.30 or newer.  Make sure you have python version >3.7, and the python dependencies installed (see step 1- below) before installing `HEASoft`. If you have an older version of `HEASoft`, the following steps can be used to install or update `heasoftpy` manually in an existing `HEASoft` installation.
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
 #### - Install within the `HEASoft` tree
 
-1- Ensure you have `python>=3.6` installed, as well as the latest versions of the python dependencies (`AstroPy >=4.0`, `NumPy >=1.7`, `SciPy >=1.5`):
-```sh
-pip install numpy scipy astropy 
-# or, if using conda:
-conda install numpy scipy astropy
-```
+1- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy-latest.tar)
 
-2- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.3.tar)
+2- Untar the file:
 ```sh
-wget https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.3.tar
-```
-or 
-```sh
-curl -O https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy1.3.tar
-```
-
-3- Untar the file:
-```sh
-tar -xvf heasoftpy1.3.tar
+tar -xvf heasoftpy-latest.tar
 cd heasoftpy
 ```
 
-4- Generate the python wrappers:
-```
-python setup.py build
-```
-This will generate the python wrappers under `build/lib/heasoftpy`. Check the `heasoftpy-install.log` for errors.
-
-5- Move the created `heasoftpy` folder to `$HEADAS/lib/python` (if `$HEADAS/lib/python` doesn't exist, please create it).
+3- Install python dependencies:
 ```sh
-rm -r $HEADAS/lib/python/heasoftpy
-mv build/lib/heasoftpy $HEADAS/lib/python
+pip install -r requirements.txt 
 ```
 
-*NOTE*: Starting with `heasoftpy` version 1.2, the IXPE tools are distributed with the main `heasoft` tools, not with `heasoftpy`, so if you are updating `heasoftpy` only and plan to use the IXPE tools, make sure you copy the installed `heasoftpy/ixpe` to the new `heasoftpy` first, so step 5 becomes:
+4- Generate the wrappers and install the package:
+To install `heasoftpy` into the `$HEADAS` tree:
+```
+bash local-build.py
+```
+This will generate the python wrappers under `build/heasoftpy`. Check the `heasoftpy-install.log` for errors.
+
+5- Move the `heasoftpy` folder from `build/heasoftpy` to `$HEADAS/lib/python`.
 ```sh
-cp -r $HEADAS/lib/python/heasoftpy/ixpe build/lib/heasoftpy/
 rm -r $HEADAS/lib/python/heasoftpy
-mv build/lib/heasoftpy $HEADAS/lib/python
+mv build/heasoftpy $HEADAS/lib/python
+```
+
+*NOTE*: Starting with `heasoftpy` version 1.4, if any of the IXPE and NICER python tools are found in your `heasoft` installation, they will automatically be installed in the updated `heasoftpy` folder.
 ```
 
 6- Move the parameter files, executables and help files (if any) to their location in the `$HEADAS` tree:
@@ -259,7 +247,7 @@ mv build/help/* $HEADAS/help
 
 #### - Install outside the `HEASoft` tree
 
-`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined), and `PYTHONPATH` is setup correctly. Assuming you want to install `heasoftpy` in some location `HEASOFTPY_LOC`, just repeat the above steps 1-5, replacing `$HEADAS/lib/python` with `HEASOFTPY_LOC`. Then, make sure `PYTHONPATH` includes your location `HEASOFTPY_LOC`. 
+`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined). Inside the newly download `heasoftpy` folder, do: `pip install .`
 
 
 #### - Updating `heasoftpy` after installation
