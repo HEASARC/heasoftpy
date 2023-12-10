@@ -1,0 +1,38 @@
+# Version tracking
+
+
+## 0.2 (12/17/2021):
+- Converted the functionality from the old code. Went throguh all the issues (up to #35) and issues and made sure all work in the new code, plus additional features.
+
+## 0.2 (03/01/2022):
+- Added testing and installation tools, fixed bugs from ixpe integration. Completed IXPE integration.
+
+## 1.1 (04/13/2022)
+- added remote caldb support to ixpechrgcorr.
+  
+## 1.2 (11/15/2022)
+- Several bug fixes handling special cases in reading parameter files.
+- Moved ixpe to main heaosft build, the final installation remains under heasoftpy.
+
+## 1.2.1 (12/05/2022)
+- Always use `$HEADAS/syspfiles` during installation
+- Updated `utils.local_pfiles` to exclude `~/pfiles`
+- fix for the case of parameter expecting a str and float is given
+
+## 1.3 (07/12/2023)
+- Fixed an issue of reading par files with extra white space
+- Added timestamp check to read par files from sys_pfiles after a fresh installation
+- Added a fix for cfitsio version conflict between astropy (through ixpe) and pyxspec
+- Updated `utils.local_pfiles` to use tempfile instead of process id.
+- Add `utils.local_pfiles_context` to be used as context manager for local pfiles
+- Fix logging errors in ixpe tests.
+- Moved mode check from `HSPTask` to `HSPTask.read_pfile` + code style updates. 
+- Added HSPParams tests
+- Added explict ISO-8859-15 in the return of `subprocess.Popen`
+
+## 1.4 (TBD)
+- Several maintaince updates:
+    - Switch to automatic dev versioning using git SHA with setuptools-scm. 
+    - Switch installation to use pyproject.toml instead of setup.py.
+    - Added local-build.py to handle local building of the package.
+    - Update installation instructions in README.

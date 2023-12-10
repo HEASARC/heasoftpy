@@ -13,8 +13,11 @@ stages:
     - echo "\n*** Using heasoft in $HEADAS ***\n"
     - source $HEADAS/headas-init.sh
     - export PYTHON=$(gawk '/PYTHON =/ {print $3;exit}' $HEADAS/BUILD_DIR/`basename $HEADAS`*.log)
-    - $PYTHON setup.py build
-    - $PYTHON setup.py test
+    - $PYTHON -m venv .hpy
+    - source .hpy/bin/activate
+    - pip install pytest
+    - python local-build.py
+    - python -m pytest
 
 
 # do the release version

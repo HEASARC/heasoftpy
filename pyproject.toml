@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "heasoftpy"
+authors = [
+  { name="HEASARC", email="heasarc-hd@athena.gsfc.nasa.gov" },
+]
+maintainers = [
+    { name="Abdu Zoghbi", email="a.zoghbi@nasa.gov" },
+]
+description = "Python interface for Heasoft"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["astronomy", "heasoft", "heasarc"]
+license = {text = "LICENSE"}
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+"Homepage" = "https://heasarc.gsfc.nasa.gov/lheasoft/heasoftpy/"
+
+[tool.setuptools.packages.find]
+include = ["heasoftpy*"]
+exclude = ["notebook*", "licences*", "template*", "tests*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools_scm]
+write_to = "heasoftpy/version.py"
+
+[tool.setuptools.cmdclass]
+build_py = "install.HSPInstallCommand"
