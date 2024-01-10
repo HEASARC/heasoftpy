@@ -36,3 +36,4 @@
     - Switch installation to use pyproject.toml instead of setup.py.
     - Added local-build.py to handle local building of the package.
     - Update installation instructions in README.
+    - (1.4dev2) Restore the old numbered versioning.
