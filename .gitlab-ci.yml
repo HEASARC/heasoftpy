@@ -16,6 +16,7 @@ stages:
     - $PYTHON -m venv .hpy
     - source .hpy/bin/activate
     - pip install pytest
+    - pip install -r requirements.txt
     - python local-build.py
     - python -m pytest
 
