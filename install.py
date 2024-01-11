@@ -68,8 +68,8 @@ def _do_install():
 ## python wrappers for built-in tools ##
 def _create_py_wrappers():
 
-    # the following prevents sub-package in heasoftpy.packages from being imported
-    # as they may depend on the functions in heasoftpy.fcn, that we will install here
+    # the following prevents sub-package from being imported
+    # as they may depend on the functions in heasoftpy,that we will install here.
     os.environ['__INSTALLING_HSP'] = 'yes'
 
     # add heasoftpy location to sys.path as it is not installed yet
@@ -81,7 +81,11 @@ def _create_py_wrappers():
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
-        generate_py_code()
+        list_of_files = generate_py_code()
+        # add the generated files to heasoftpy.egg-info so they are 
+        # installed correctly
+        with open(f'heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
+            fp.write(list_of_files)
     except:
         logger.error('Failed in generating python wrappers')
         raise

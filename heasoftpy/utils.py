@@ -67,22 +67,38 @@ def generate_py_code(tasks=None):
     # list of tasks
     if tasks is None:
         par_files = glob.glob(f'{pfile_dir}/*.par')
+        # follow simlinks
+        modules = []
+        for pfile in par_files:
+            if os.path.islink(pfile):
+                module = os.readlink(pfile).split('/')[2]
+            else:
+                module = 'misc'
+            modules.append(module)
         tasks     = [os.path.basename(file[:-4]) for file in par_files]
     else:
         if not isinstance(tasks, (list, )) and not isinstance(tasks[0], str):
             msg = 'tasks has to be a list of task names'
             logger.error(msg)
             raise HSPTaskException(msg)
-    
+        modules = ['' for _ in tasks]
+
+    #_tasks = [t for t,m in zip(tasks, modules) if m in ['heacore', 'Xspec']]
+    #_modules = [m for t,m in zip(tasks, modules) if m in ['heacore', 'Xspec']]
+    #tasks, modules = _tasks, _modules
+
+    if len(modules) != len(tasks):
+        msg = 'There was an error in trying to figure out the module names'
+        logger.error(msg)
+        raise HSPTaskException(msg)
     
     ntasks = len(tasks)
     logger.info(f'Installing python wrappers. There are {ntasks} tasks!')
-    
-    # loop through the tasks and generate and save the code #
-    outDir = os.path.join(os.path.dirname(__file__), 'fcn')
-    
+
+    init_list = {}
     for it,task_name in enumerate(tasks):
-        logger.info(f'.. {it+1}/{ntasks} install {task_name} ... ')
+        module = modules[it]
+        logger.info(f'.. {it+1}/{ntasks} install {module}/{task_name} ... ')
         
         # if it is already a python tool, skip
         pytask = os.path.join(os.environ['HEADAS'], 'bin', f'{task_name}.py')
@@ -92,10 +108,30 @@ def generate_py_code(tasks=None):
         
         hsp = HSPTask(task_name)
         fcn = hsp.generate_fcn_code()
+
+        outDir = os.path.join(os.path.dirname(__file__), module)
+        if not os.path.exists(outDir):
+            os.mkdir(outDir)
+        if not modules[it] in init_list:
+            init_list[module] = []
+        init_list[module].append(hsp.pytaskname)
         with open(f'{outDir}/{hsp.pytaskname}.py', 'w') as fp: 
             fp.write(fcn)
         logger.info('done!')
-    
+
+    # write __init__ files and prepare a list of files to return
+    list_of_files = ''
+    for module,methods in init_list.items():
+        txt = ''
+        for method in methods:
+            txt += f'from .{method} import {method}\n'
+            list_of_files += f'\nheasoftpy/{module}/{method}.py'
+        outDir = os.path.join(os.path.dirname(__file__), module)
+        with open(f'{outDir}/__init__.py', 'w') as fp:
+            fp.write(txt)
+        list_of_files += f'\nheasoftpy/{module}/__init__.py'
+    return list_of_files
+
 
 def local_pfiles(par_dir=None):
     """Create a local parameter folder and add it to $PFILES
