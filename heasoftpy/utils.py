@@ -83,8 +83,8 @@ def generate_py_code(tasks=None):
             raise HSPTaskException(msg)
         modules = ['' for _ in tasks]
 
-    #_tasks = [t for t,m in zip(tasks, modules) if m in ['heacore', 'Xspec']]
-    #_modules = [m for t,m in zip(tasks, modules) if m in ['heacore', 'Xspec']]
+    #_tasks = [t for t,m in zip(tasks, modules) if m in ['heacore', 'Xspec', 'nustar']]
+    #_modules = [m for t,m in zip(tasks, modules) if m in ['heacore', 'Xspec', 'nustar']]
     #tasks, modules = _tasks, _modules
 
     if len(modules) != len(tasks):
@@ -96,6 +96,7 @@ def generate_py_code(tasks=None):
     logger.info(f'Installing python wrappers. There are {ntasks} tasks!')
 
     init_list = {}
+    fcn_init, fcn_files = '', ''
     for it,task_name in enumerate(tasks):
         module = modules[it]
         logger.info(f'.. {it+1}/{ntasks} install {module}/{task_name} ... ')
@@ -117,6 +118,31 @@ def generate_py_code(tasks=None):
         init_list[module].append(hsp.pytaskname)
         with open(f'{outDir}/{hsp.pytaskname}.py', 'w') as fp: 
             fp.write(fcn)
+
+        ## --- TEMPORARY UNTIL FCN DEPRECATION -- ##
+        # add deprecation message for mission tools
+        depr_text = None
+        outDir = os.path.join(os.path.dirname(__file__), 'fcn')
+        if not os.path.exists(outDir):
+            os.mkdir(outDir)
+        if module not in ['ftools', 'heacore', 'heagen', 'heasim', 'heasptools',
+                          'heatools', 'attitude', 'Xspec']:
+            alternative = f'Use ``heasoftpy.{module}.{task_name}`` instead'
+            depr_text = (
+                '@deprecated(\n'
+                'since="1.4",\n'
+                f'message="heasoftpy.{task_name} is being '
+                f'deprecated and will be removed. {alternative}",\n'
+                f'alternative="{alternative}",\n'
+                f'warning_type=HSPDeprecationWarning'
+            ')')
+            fcn = hsp.generate_fcn_code(deprecate_text=depr_text)
+            fcn_init += f'from .{hsp.pytaskname} import {hsp.pytaskname}\n'
+            fcn_files += f'\nheasoftpy/fcn/{hsp.pytaskname}.py'
+            with open(f'{outDir}/{hsp.pytaskname}.py', 'w') as fp:
+                fp.write(fcn)
+        ## ------------------------------------- ##
+
         logger.info('done!')
 
     # write __init__ files and prepare a list of files to return
@@ -130,6 +156,14 @@ def generate_py_code(tasks=None):
         with open(f'{outDir}/__init__.py', 'w') as fp:
             fp.write(txt)
         list_of_files += f'\nheasoftpy/{module}/__init__.py'
+
+    ## --- TEMPORARY UNTIL FCN DEPRECATION -- ##
+    list_of_files += fcn_files
+    with open('heasoftpy/fcn/__init__.py', 'w') as fp:
+        fp.write(fcn_init)
+    list_of_files += '\nheasoftpy/fcn/__init__.py'
+    ## ------------------------------------- ##
+
     return list_of_files
 
 
@@ -202,3 +236,5 @@ def local_pfiles_context(par_dir=None):
         yield
     finally:
         os.environ['PFILES'] = old_pfiles
+        if os.path.exists(pdir):
+            os.system(f'rm -rf {pdir}')

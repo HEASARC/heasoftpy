@@ -8,12 +8,13 @@ import selectors
 import logging
 
 
+if not '__INSTALLING_HSP' in os.environ:
+    from astropy.utils.exceptions import AstropyDeprecationWarning
+    class HSPDeprecationWarning(AstropyDeprecationWarning):
+        """heasoftpy Deprecation warning"""
 
 class HSPTaskException(Exception):
-    """A simple exception class"""
-
-    def __init__(self, errMsg=None):
-        super(HSPTaskException, self).__init__(errMsg)
+    """heasoftpy exception class"""
 
 
 class HSPTask:
@@ -685,7 +686,7 @@ class HSPTask:
 
         return docs
 
-    def generate_fcn_code(self):
+    def generate_fcn_code(self, deprecate_text=None):
         """Create python function for task_name
 
         """
@@ -695,12 +696,18 @@ class HSPTask:
         # generate docstring
         docs = self._generate_fcn_docs(fhelp=True)
 
+        # do we have a depratation text
+        depr_import, depr_text = '', ''
+        if deprecate_text is not None:
+            depr_import = 'from astropy.utils.decorators import deprecated\n'
+            depr_import += 'from ..core import HSPDeprecationWarning\n'
+            depr_text = deprecate_text
+
         # generate function text
         fcn = (
-            'import sys\n'
-            'import os\n'
-            'import subprocess\n\n'
+            f'{depr_import}\n'
             'from ..core import HSPTask, HSPTaskException\n\n\n'
+            f'{depr_text}\n'
             f'def {task_pyname}(args=None, **kwargs):\n'
             f'    r"""\n{docs}\n    """\n\n'
             f'    {task_pyname}_task = HSPTask(name="{task_name}")\n'
