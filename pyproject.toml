@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -26,6 +26,7 @@ exclude = ["notebook*", "licences*", "template*", "tests*"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
+version = {attr = "heasoftpy.version.__version__"}
 
 [project.optional-dependencies]
 test = [
@@ -34,9 +35,6 @@ test = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.setuptools_scm]
-write_to = "heasoftpy/version.py"
 
 [tool.setuptools.cmdclass]
 build_py = "install.HSPInstallCommand"
