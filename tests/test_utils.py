@@ -63,3 +63,27 @@ class TestUtils(unittest.TestCase):
             
         self.assertFalse(pDir in os.environ['PFILES'])
 
+def test_pfiles_list():
+    """Ensure pfiles_list.txt is up to date"""
+    our_f = 'pfiles_list.txt'
+    hea_f = f"{os.environ['HEADAS']}/syspfiles/pfiles_list.txt"
+    # do check only if hea_f is present
+    if not os.path.exists(hea_f):
+        return
+    our_m = {}
+    for line in open(our_f).readlines():
+        mod,task = line.split(':')
+        if not mod in our_m:
+            our_m[mod] = []
+        our_m[mod].append(task)
+    hea_m = {}
+    for line in open(hea_f).readlines():
+        mod,task = line.split(':')
+        if not mod in hea_m:
+            hea_m[mod] = []
+        hea_m[mod].append(task)
+    for k in our_m:
+        our_m[k].sort()
+    for k in hea_m:
+        hea_m[k].sort()
+    assert(hea_m == our_m)
