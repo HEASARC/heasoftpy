@@ -679,7 +679,7 @@ class HSPTask:
 
         # put it all together #
         docs = (
-            f'    Automatically generated function for Heasoft task {self.taskname}.\n\n\n'
+            f'    \n\n'
              '    Parameters\n    ----------'
             f'{parsDesc}\n\n{task_docs}'
         )

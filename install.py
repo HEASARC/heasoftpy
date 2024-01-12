@@ -23,24 +23,16 @@ SUBPACKAGES = ['nicer', 'ixpe']
 logger = logging.getLogger('heasoftpy-install')
 logger.setLevel(logging.DEBUG)
 
-# log to a file 
-fh = logging.FileHandler('heasoftpy-install.log', mode='w')
-fh.setLevel(logging.DEBUG)
-
 # log to screen
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 
 # create formatter and add it to the handlers
 tformat = '%Y-%m-%d %H:%M:%S'
-formatter = logging.Formatter(
-    '%(asctime)s - %(levelname)5s - %(filename)s - %(message)s', tformat)
-fh.setFormatter(formatter)
 formatter = logging.Formatter('%(asctime)s - %(levelname)5s - %(message)s', tformat)
 ch.setFormatter(formatter)
 
 # add the handlers to the logger
-logger.addHandler(fh)
 logger.addHandler(ch)
 ## -------------------- ##
 
@@ -85,7 +77,7 @@ def _create_py_wrappers():
         # add the generated files to heasoftpy.egg-info so they are 
         # installed correctly
         with open(f'heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
-            fp.write(list_of_files)
+            fp.write('\n' + ('\n'.join(list_of_files)))
     except:
         logger.error('Failed in generating python wrappers')
         raise

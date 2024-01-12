@@ -37,3 +37,4 @@
     - Added local-build.py to handle local building of the package.
     - Update installation instructions in README.
     - (1.4dev2) Restore the old numbered versioning.
+    - (1.4dev3) Switch from fcn.* to individual components. Using fcn.* will give a warning.
