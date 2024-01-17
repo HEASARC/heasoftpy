@@ -104,6 +104,7 @@ def _add_sub_packages():
     # loop through subpackages
     logger.info('-'*30)
     logger.info('Looking for subpackages ...')
+    list_of_files = []
     for subpackage in SUBPACKAGES:
         pth = f"{headas}/../{subpackage}/{inst_dir}/lib/python/heasoftpy/{subpackage}"
         if os.path.exists(pth):
@@ -112,8 +113,15 @@ def _add_sub_packages():
                 os.system(f'cp -r {pth}/* heasoftpy/{subpackage}/')
             else:
                 os.system(f'cp -r {pth} heasoftpy/')
+            list_of_files += [lf for lf in
+                              glob.glob(f'heasoftpy/{subpackage}/**', recursive=True)
+                             if lf[-3:] == '.py']
         else:
             logger.info(f'No {subpackage} subpackage, skipping ...')
+        # add the generated files to heasoftpy.egg-info so they are
+        # installed correctly
+        with open(f'heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
+            fp.write('\n' + ('\n'.join(list_of_files)))
 
 
     
