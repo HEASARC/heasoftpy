@@ -124,7 +124,12 @@ def _package_exists(package):
 # __INSTALLING_HSP is created in install.py during installation
 if not '__INSTALLING_HSP' in os.environ:
     # import the core heasoft tools
+    ## Temporary for Old compatibility ##
+    ## delete once fcn is removed      ##
     from .fcn import *
+    if _package_exists('ixpe'):
+        from ._ixpe import *
+    ## ------------------------------- ##
     from .ftools import *
     from .heacore import *
     from .heagen import *
@@ -133,5 +138,3 @@ if not '__INSTALLING_HSP' in os.environ:
     from .heatools import *
     from .attitude import *
     from .Xspec import *
-    
-

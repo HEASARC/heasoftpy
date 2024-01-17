@@ -38,3 +38,4 @@
     - Update installation instructions in README.
     - (1.4dev2) Restore the old numbered versioning.
     - (1.4dev3) Switch from fcn.* to individual components. Using fcn.* will give a warning.
+    - (1.4dev4) Add _ixpe.py temporarily to handle deprecate messages.

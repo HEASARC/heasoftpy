@@ -108,7 +108,10 @@ def _add_sub_packages():
         pth = f"{headas}/../{subpackage}/{inst_dir}/lib/python/heasoftpy/{subpackage}"
         if os.path.exists(pth):
             logger.info(f'Found {subpackage} ...')
-            os.system(f'cp -r {pth} heasoftpy/')
+            if os.path.exists(f'heasoftpy/{subpackage}'):
+                os.system(f'cp -r {pth}/* heasoftpy/{subpackage}/')
+            else:
+                os.system(f'cp -r {pth} heasoftpy/')
         else:
             logger.info(f'No {subpackage} subpackage, skipping ...')
 
