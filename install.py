@@ -23,24 +23,16 @@ SUBPACKAGES = ['nicer', 'ixpe']
 logger = logging.getLogger('heasoftpy-install')
 logger.setLevel(logging.DEBUG)
 
-# log to a file 
-fh = logging.FileHandler('heasoftpy-install.log', mode='w')
-fh.setLevel(logging.DEBUG)
-
 # log to screen
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 
 # create formatter and add it to the handlers
 tformat = '%Y-%m-%d %H:%M:%S'
-formatter = logging.Formatter(
-    '%(asctime)s - %(levelname)5s - %(filename)s - %(message)s', tformat)
-fh.setFormatter(formatter)
 formatter = logging.Formatter('%(asctime)s - %(levelname)5s - %(message)s', tformat)
 ch.setFormatter(formatter)
 
 # add the handlers to the logger
-logger.addHandler(fh)
 logger.addHandler(ch)
 ## -------------------- ##
 
@@ -68,8 +60,8 @@ def _do_install():
 ## python wrappers for built-in tools ##
 def _create_py_wrappers():
 
-    # the following prevents sub-package in heasoftpy.packages from being imported
-    # as they may depend on the functions in heasoftpy.fcn, that we will install here
+    # the following prevents sub-package from being imported
+    # as they may depend on the functions in heasoftpy,that we will install here.
     os.environ['__INSTALLING_HSP'] = 'yes'
 
     # add heasoftpy location to sys.path as it is not installed yet
@@ -81,7 +73,11 @@ def _create_py_wrappers():
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
-        generate_py_code()
+        list_of_files = generate_py_code()
+        # add the generated files to heasoftpy.egg-info so they are 
+        # installed correctly
+        with open(f'heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
+            fp.write('\n' + ('\n'.join(list_of_files)))
     except:
         logger.error('Failed in generating python wrappers')
         raise
@@ -108,13 +104,24 @@ def _add_sub_packages():
     # loop through subpackages
     logger.info('-'*30)
     logger.info('Looking for subpackages ...')
+    list_of_files = []
     for subpackage in SUBPACKAGES:
         pth = f"{headas}/../{subpackage}/{inst_dir}/lib/python/heasoftpy/{subpackage}"
         if os.path.exists(pth):
             logger.info(f'Found {subpackage} ...')
-            os.system(f'cp -r {pth} heasoftpy/')
+            if os.path.exists(f'heasoftpy/{subpackage}'):
+                os.system(f'cp -r {pth}/* heasoftpy/{subpackage}/')
+            else:
+                os.system(f'cp -r {pth} heasoftpy/')
+            list_of_files += [lf for lf in
+                              glob.glob(f'heasoftpy/{subpackage}/**', recursive=True)
+                             if lf[-3:] == '.py']
         else:
             logger.info(f'No {subpackage} subpackage, skipping ...')
+        # add the generated files to heasoftpy.egg-info so they are
+        # installed correctly
+        with open(f'heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
+            fp.write('\n' + ('\n'.join(list_of_files)))
 
 
     

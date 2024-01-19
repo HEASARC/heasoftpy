@@ -58,6 +58,23 @@ ixpecalcfov[.py] ra=... dec=...
 ```
 The `.py` extension is generally optional.
 
+Starting with version 1.4, the mission tools are no longer
+imported by default when importing heasoftpy. They need to be
+imported explicitly:
+
+```python
+# heasoftpy version >= 1.4
+from heasoftpy import nicer, ixpe
+nicer.nicerl2(...)
+ixpe.ixpeaspcorr(...)
+
+# heasoftpy version < 1.4
+import heasoftpy
+heasoftpy.nicerl2(...)
+heasoftpy.ixpeaspcorr(...)
+
+```
+Only core tools are available under the `heasoftpy` namespace.
 
 #### Task Names
 Native `HEASoft` tasks have the same names in `HEASoftPy`. So a task like `nicerclean`
@@ -102,10 +119,12 @@ ftlist_task()
 
 Whenever a task in called, if any of the required parameters is missing, 
 the user is prompted to enter a value. If the user knows that the passed
-parameters are enough to run the task, they can pass `noprompt=True`, to 
-distable parameter prompt.
+parameters are enough to run the task (e.g. pipeline tools), 
+they can pass `noprompt=True`, to distable parameter prompt.
 
-Note that creating a task object with `ftlist_task = hsp.HSPTask('ftlist')` does not actually call the task, it just initializes it. Only by doing `ftlist_task(...)` is the task called and parameters are queried if necessary.
+Note that creating a task object with `ftlist_task = hsp.HSPTask('ftlist')`
+does not actually call the task, it just initializes it. 
+Only by doing `ftlist_task(...)` is the task called and parameters are queried if necessary.
 
 
 ### 2.3 `HEASoftPy` Control Parameters
@@ -206,7 +225,16 @@ Scrolling down further, the help message will print the standard HEASoft help te
 
 Assuming you have `HEASoft` initialized and the environment variable `$HEADAS` is defined:
 
-#### - Install within the `HEASoft` tree
+#### - With Heasoft
+`heasoftpy` is automatically installed with any new installation of `HEASoft` after version 6.30
+
+#### - Update to latest heasoftpy
+Starting with `HEASoft 6.32`, you can update `heasoftpy` by running `hpyupdate`.  First, make sure that `HEASoft` is initialized and that the utilites `wget` and `tar` are available in your system `PATH`, then simply run
+```sh
+hpyupdate
+```
+
+#### - Manual Install
 
 1- Download the [latest version of heasoftpy](https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/release/heasoftpy-latest.tar)
 
@@ -226,15 +254,12 @@ To install `heasoftpy` into the `$HEADAS` tree:
 ```
 bash local-build.py
 ```
-This will generate the python wrappers under `build/heasoftpy`. Check the `heasoftpy-install.log` for errors.
+This will generate the python wrappers under `build/heasoftpy`. Errors will be printed in the `pip.log` file.
 
 5- Move the `heasoftpy` folder from `build/heasoftpy` to `$HEADAS/lib/python`.
 ```sh
 rm -r $HEADAS/lib/python/heasoftpy
 mv build/heasoftpy $HEADAS/lib/python
-```
-
-*NOTE*: Starting with `heasoftpy` version 1.4, if any of the IXPE and NICER python tools are found in your `heasoft` installation, they will automatically be installed in the updated `heasoftpy` folder.
 ```
 
 6- Move the parameter files, executables and help files (if any) to their location in the `$HEADAS` tree:
@@ -245,17 +270,10 @@ mv build/help/* $HEADAS/help
 ```
 
 
-#### - Install outside the `HEASoft` tree
+#### - Install Outside the `HEASoft` tree
 
-`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized (`$HEADAS` is defined). Inside the newly download `heasoftpy` folder, do: `pip install .`
+`heasoftpy` does not have to be inside the `HEASoft` tree as long as `HEASoft` is initialized. Inside the newly download `heasoftpy` folder, do: `pip install .`
 
-
-#### - Updating `heasoftpy` after installation
-
-New in `HEASoft 6.32` is a patch installer for `heasoftpy`, named `hpyupdate`.  To run it, first make sure that `HEASoft` is initialized and that the utilites `wget` and `tar` are available in your system `PATH`, then simply run
-```sh
-hpyupdate
-```
 
 
 ## 4. Re-creating function wrappers
@@ -279,18 +297,19 @@ You can also start a fresh `heasoftpy` installation as detailed in the [Installa
 
 ---
 ## 5. Running Tasks in Parallel
-As discussed in the [PARALLEL BATCH PROCESSING](https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html), most `heasoft` (and hence `heasoftpy`) tasks use parameter files whose location is managed by the `PFILES` environment variable. Parallel calls to the same task will likely end up using the same parameter file and may cause unintended parameter changes. Users may use the suggestions in the link above, however when using python scripting, it may be convenient to use the context manager method `heasoftpy.utils.local_pfiles_context`. Including all parallel tasks inside a `with` statement, will ensure that temporary parameter files are used. The following gives a usage example:
+As discussed in the [PARALLEL BATCH PROCESSING](https://heasarc.gsfc.nasa.gov/lheasoft/scripting.html), most `heasoft` (and hence `heasoftpy`) tasks use parameter files whose location is managed by the `PFILES` environment variable. Parallel calls to the same task will likely end up using the same parameter file and may cause unintended parameter changes. Users may use the suggestions in the link above, however when using python scripting, it may be convenient to use the context manager method `heasoftpy.utils.local_pfiles_context`. Including all parallel tasks inside a `with` statement, will ensure that temporary parameter files are used. The following gives an example:
 
 ```python
 from multiprocessing import Pool
 import heasoftpy as hsp
+from heasoftpy import nicer
 
 
 def worker(args):
     """Run individual tasks"""
     with hsp.utils.local_pfiles_context():
         # call the tasks of interest
-        out = hsp.nicerl2(...)
+        out = nicer.nicerl2(...)
         # other tasks
         # ...
     
@@ -319,7 +338,7 @@ class SampleTask(hsp.HSPTask):
     
     def exec_task(self):
         
-        # model parameters
+        # model parameters as a dict
         usr_params = self.params
         
         # write your task code here #
