@@ -130,11 +130,34 @@ if not '__INSTALLING_HSP' in os.environ:
     if _package_exists('ixpe'):
         from ._ixpe import *
     ## ------------------------------- ##
-    from .ftools import *
     from .heacore import *
-    from .heagen import *
-    from .heasim import *
-    from .heasptools import *
-    from .heatools import *
-    from .attitude import *
-    from .Xspec import *
+
+    # the following are not always installed
+    try:
+        from .ftools import *
+    except ImportError:
+        pass
+    try:
+        from .heagen import *
+    except ImportError:
+        pass
+    try:
+        from .heasim import *
+    except ImportError:
+        pass
+    try:
+        from .heasptools import *
+    except ImportError:
+        pass
+    try:
+        from .attitude import *
+    except ImportError:
+        pass
+    try:
+        from .Xspec import *
+    except ImportError:
+        pass
+    try:
+        from .heatools import *
+    except ImportError:
+        pass
