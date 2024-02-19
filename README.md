@@ -58,9 +58,16 @@ ixpecalcfov[.py] ra=... dec=...
 ```
 The `.py` extension is generally optional.
 
+<hr style="border: 2px solid #fadbac" />
+<p style='font-size:20px'>
 Starting with version 1.4, the mission tools are no longer
 imported by default when importing heasoftpy. They need to be
-imported explicitly:
+imported explicitly.
+</p>
+<p style='font-size:20px'>
+Using the old namespace call, will give a deprecation warning, with the suggested new use. The old way will removed in the future.
+</p>
+<hr style="border: 2px solid #fadbac" />
 
 ```python
 # heasoftpy version >= 1.4
