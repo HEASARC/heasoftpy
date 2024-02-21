@@ -30,8 +30,8 @@
 - Added HSPParams tests
 - Added explict ISO-8859-15 in the return of `subprocess.Popen`
 
-## 1.4 (TBD)
-- Several maintaince updates:
+## 1.4 (02/21/2024)
+- Several maintenance updates:
     - Switch to automatic dev versioning using git SHA with setuptools-scm. 
     - Switch installation to use pyproject.toml instead of setup.py.
     - Added local-build.py to handle local building of the package.
