@@ -107,8 +107,6 @@ import os
 from .core import HSPTask, HSPTaskException, HSPResult, HSPParam, HSPLogger
 from . import utils
 
-from .fcn import *
-
 # help function
 def help(): print(__doc__)
 
@@ -125,22 +123,41 @@ def _package_exists(package):
 # load sub-packages, only if we are not installing the main package:
 # __INSTALLING_HSP is created in install.py during installation
 if not '__INSTALLING_HSP' in os.environ:
-    
-    # if _package_exists('template'):
-    #     import template
-    #     from template import *
+    # import the core heasoft tools
+    ## Temporary for Old compatibility ##
+    ## delete once fcn is removed      ##
+    from .fcn import *
+    if _package_exists('ixpe'):
+        from ._ixpe import *
+    ## ------------------------------- ##
+    from .heacore import *
 
-    # the following fixes any version discrepency between
-    # cfitsio used in pyxspec and cfitsio used in astropy
-    # which is needed by ixpe.
-    # If xspec is imported *after* heasoftpy, and there is a 
-    # cfitsio version discrepency, xspec may fail, but it appears
-    # to work fine when importe before heasoftpy (ixpe in this case)
+    # the following are not always installed
     try:
-        import xspec as pyxspec
+        from .ftools import *
     except ImportError:
         pass
-    
-    if _package_exists('ixpe'):
-        from . import ixpe
-        from .ixpe import *
+    try:
+        from .heagen import *
+    except ImportError:
+        pass
+    try:
+        from .heasim import *
+    except ImportError:
+        pass
+    try:
+        from .heasptools import *
+    except ImportError:
+        pass
+    try:
+        from .attitude import *
+    except ImportError:
+        pass
+    try:
+        from .Xspec import *
+    except ImportError:
+        pass
+    try:
+        from .heatools import *
+    except ImportError:
+        pass

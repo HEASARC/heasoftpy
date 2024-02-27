@@ -63,3 +63,33 @@ class TestUtils(unittest.TestCase):
             
         self.assertFalse(pDir in os.environ['PFILES'])
 
+def test_pfiles_list():
+    """Ensure pfiles_list.txt is up to date.
+    Because the develop version may have more tasks than
+    the released version, we ensure that syspfiles/pfiles_list.txt
+    is at least a subset of the checked file.
+    The checked file should contain the all possible tasks, including 
+    new ones, and possibly deleted ones too. For the deleted ones, they
+    can be removed once develop becomes a release.
+    """
+    our_f = 'pfiles_list.txt'
+    hea_f = f"{os.environ['HEADAS']}/syspfiles/pfiles_list.txt"
+    # do check only if hea_f is present
+    if not os.path.exists(hea_f):
+        return
+    our_m = {}
+    for line in open(our_f).readlines():
+        mod,task = line.split(':')
+        if not mod in our_m:
+            our_m[mod] = []
+        our_m[mod].append(task)
+    hea_m = {}
+    for line in open(hea_f).readlines():
+        mod,task = line.split(':')
+        if not mod in hea_m:
+            hea_m[mod] = []
+        hea_m[mod].append(task)
+    for k in hea_m.keys():
+        assert(k in our_m)
+        for task in hea_m[k]:
+            assert(task in our_m[k])
