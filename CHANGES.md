@@ -40,3 +40,6 @@
     - (1.4dev3) Switch from fcn.* to individual components. Using fcn.* will give a warning.
     - (1.4dev4) Add _ixpe.py temporarily to handle deprecate messages.
     - (1.4dev5) Add subpackages with separate imports instead all tasks being under one single large packages. The subpackage groups are obtained from the pfiles_list.txt.
+
+## 1.5 (TBD)
+- (1.5dev1) Fix a bug in reading files names with complex selection
