@@ -110,7 +110,13 @@ def _add_sub_packages():
         if os.path.exists(pth):
             logger.info(f'Found {subpackage} ...')
             if os.path.exists(f'heasoftpy/{subpackage}'):
-                os.system(f'cp -r {pth}/* heasoftpy/{subpackage}/')
+                lines1 = []
+                if os.path.exists(f'{pth}/__init__.py'):
+                    lines1 = open(f'{pth}/__init__.py').readlines()
+                lines2 = open(f'heasoftpy/{subpackage}/__init__.py').readlines()
+                os.system(f'cp -r -n {pth}/* heasoftpy/{subpackage}/')
+                with open(f'heasoftpy/{subpackage}/__init__.py', 'w') as fp:
+                    fp.write('\n'.join(lines2+lines1))
             else:
                 os.system(f'cp -r {pth} heasoftpy/')
             list_of_files += [lf for lf in
