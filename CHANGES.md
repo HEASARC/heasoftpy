@@ -44,3 +44,4 @@
 ## 1.5 (TBD)
 - (1.5dev1) Fix a bug in reading files names with complex selection
 - (1.5dev2) Fix the imports in heasoftpy.nicer.*
+- (1.4.1dev3) Speed-up installation and change version to minor in preparation for patch release.
