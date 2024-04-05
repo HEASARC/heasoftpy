@@ -72,6 +72,7 @@ class HSPTask:
         self.params = {}
         self.default_params = {pname:getattr(self, pname).value for pname in par_names}
         self.pfile = pfile
+        self._task_docs = None
         self.__doc__ = self._generate_fcn_docs(fhelp=True)
 
         
@@ -369,6 +370,9 @@ class HSPTask:
             str of documentation
         
         """
+        if self._task_docs is not None:
+            return self._task_docs
+
         name = self.taskname
         
         # call fhelp; assume HEADAS is defined #
@@ -394,7 +398,7 @@ class HSPTask:
             # add tab to the fhelp text
             fhelp = ''.join([line if line == '\n' else f'    {line}' for line in fhelp.splitlines(True)])
         # ------------------------------------- #
-
+        self._task_docs = fhelp
         return fhelp
     
     
@@ -485,7 +489,8 @@ class HSPTask:
                 val = defaults[par_name]
             
             # make any style changes to the values to be printed #
-            if par.type == 's' and isinstance(val, str) and (' ' in val or ',' in val or val == ''):
+            if (par.type in ['s', 'f', 'fr'] and isinstance(val, str) and 
+                    (' ' in val or ',' in val or val == '')):
                 val = f'"{val}"'
             
             # write #
