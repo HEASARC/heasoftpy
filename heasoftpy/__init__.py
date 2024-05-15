@@ -1,3 +1,4 @@
+# Copyright 2024, University of Maryland, All Rights Reserved
 """
 
 DESCRIPTION:

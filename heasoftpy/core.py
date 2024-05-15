@@ -1,3 +1,4 @@
+# Copyright 2024, University of Maryland, All Rights Reserved
 
 import subprocess
 import os
@@ -710,6 +711,7 @@ class HSPTask:
 
         # generate function text
         fcn = (
+            '# Copyright 2023, University of Maryland, All Rights Reserved\n\n'
             f'{depr_import}\n'
             'from ..core import HSPTask, HSPTaskException\n\n\n'
             f'{depr_text}\n'

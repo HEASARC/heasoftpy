@@ -1,3 +1,4 @@
+# Copyright 2024, University of Maryland, All Rights Reserved
 # A temporary file to add deprecation
 # warning to ixpe tasks when used from the
 # top level heasoftpy. 

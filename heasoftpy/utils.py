@@ -1,3 +1,5 @@
+# Copyright 2024, University of Maryland, All Rights Reserved
+
 import sys
 import os
 import subprocess
