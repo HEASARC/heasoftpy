@@ -381,9 +381,17 @@ class HSPTask:
             if isinstance(proc_err, bytes):
                 proc_err = proc_err.decode('ISO-8859-15')
         # ---------------------------------------------------- #
-
-        return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
-
+        
+        result = HSPResult(proc.returncode, proc_out, proc_err, usr_params)
+        
+        if (proc.returncode != 0):
+            if self._allowfailure == "warn":
+                warn(f"Nonzero Task Return Code: {proc.returncode}")
+            elif not self._allowfailure:
+                raise HSPTaskException("\n"+str(result))
+        return result
+    
+    
     def task_docs(self):
         """Print docstring help specific to this task
 
