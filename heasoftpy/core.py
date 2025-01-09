@@ -7,6 +7,7 @@ import sys
 import io
 import selectors
 import logging
+from warnings import warn
 
 
 if '__INSTALLING_HSP' not in os.environ:
@@ -152,6 +153,9 @@ class HSPTask:
 
         stderr: If True, make stderr separate from stdout. The default
             is False, so stderr is written to stdout.
+            
+        allowfailure: Whether to allow task failure with nonzero exit code.
+            The default is False.
 
         Returns:
             HSPResult instance.
@@ -225,6 +229,10 @@ class HSPTask:
             raise HSPTaskException(
                 'confusing verbose value. Allowed types are: bool, str or int')
         self._verbose = verbose
+        
+        # allowfailure?
+        allowfailure = user_pars.get("allowfailure", False)
+        self._allowfailure = allowfailure
         # ----------------------------- #
 
         # prepare the logger #
