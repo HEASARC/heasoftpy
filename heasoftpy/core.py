@@ -7,6 +7,7 @@ import sys
 import io
 import selectors
 import logging
+from warnings import warn
 
 
 if not '__INSTALLING_HSP' in os.environ:
@@ -145,6 +146,9 @@ class HSPTask:
 
         stderr: If True, make stderr separate from stdout. The default
             is False, so stderr is written to stdout.
+            
+        allowfailure: Whether to allow task failure with nonzero exit code.
+            The default is False.
 
         Returns:
             HSPResult instance.
@@ -213,6 +217,10 @@ class HSPTask:
         if not isinstance(verbose, int):
             raise HSPTaskException(f'confusing verbose value. Allowed types are: bool, str or int')
         self._verbose = verbose
+        
+        # allowfailure?
+        allowfailure = user_pars.get("allowfailure", False)
+        self._allowfailure = allowfailure
         # ----------------------------- #
         
         # prepare the logger #
@@ -355,7 +363,14 @@ class HSPTask:
             if isinstance(proc_err, bytes): proc_err = proc_err.decode('ISO-8859-15')
         # ---------------------------------------------------- #
         
-        return HSPResult(proc.returncode, proc_out, proc_err, usr_params)
+        result = HSPResult(proc.returncode, proc_out, proc_err, usr_params)
+        
+        if (proc.returncode != 0):
+            if self._allowfailure == "warn":
+                warn(f"Nonzero Task Return Code: {proc.returncode}")
+            elif not self._allowfailure:
+                raise HSPTaskException("\n"+str(result))
+        return result
     
     
     def task_docs(self):
@@ -738,13 +753,13 @@ class HSPResult:
             custom: a dict of any extra parameters.
         
         """
-        
+
         self.returncode = returncode
         self.stdout     = stdout
         self.stderr     = stderr
         self.params     = dict(params) if isinstance(params, dict) else params
         self.custom     = dict(custom) if isinstance(custom, dict) else custom
-        
+
     def __str__(self):
         """Print the result object in a clean way"""
         
