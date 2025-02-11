@@ -49,3 +49,4 @@
 ## 1.5 (TDB)
 - (1.5dev0) Add BSD license after formal approval from UMD.
 - (1.5dev1) Update pfiles_list.txt file to match that released with 6.34 (includes xrism software)
+- (1.5dev2) Further Update pfiles_list.txt (mxpipeline.par).
