@@ -55,3 +55,4 @@
 - (1.5dev5):
     - change the install to use get_source_files instead of editing SOURCES.txt directly
     - change the minimum python version to 3.8 to avoid pip<20 issues.
+- (1.5.dev6): remove fcn/ and replace it a single fcn.py that does the import at runtime.
