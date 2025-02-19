@@ -1,5 +1,5 @@
 # the build and test are simple, so we combine them
-# test against the relased version of heasoft first, then agains the develop version
+# test against the released version of heasoft first, then against the develop version
 stages:
   - heasoft_release_version
   - heasoft_develop_version
@@ -7,7 +7,7 @@ stages:
 # put common task here, and we call it later
 .build_and_test_heasoftpy:
   tags:
-    - heasoftpy-local-pulsar
+    - heasoftpy
   script:
     - export HEADAS=`ls -d /software/lheasoft/$VERSION/x86_64-pc-linux-gnu-libc$(ldd --version | grep ldd | sed 's:.*)[ ]*::')`
     - echo "\n*** Using heasoft in $HEADAS ***\n"
@@ -18,7 +18,7 @@ stages:
     - pip install pytest
     - pip install -r requirements.txt
     - python local-build.py
-    - python -m pytest
+    - python -m pytest -v
 
 
 # do the release version
@@ -27,6 +27,7 @@ build-test-local-release:
   variables:
     VERSION: release
   extends: .build_and_test_heasoftpy
+  when: always
 
 # do the develop version
 build-test-local-develop:
@@ -34,4 +35,5 @@ build-test-local-develop:
   variables:
     VERSION: develop
   extends: .build_and_test_heasoftpy
+  when: always
 

@@ -2,7 +2,7 @@
 
 
 ## 0.2 (12/17/2021):
-- Converted the functionality from the old code. Went throguh all the issues (up to #35) and issues and made sure all work in the new code, plus additional features.
+- Converted the functionality from the old code. Went through all the issues (up to #35) and issues and made sure all work in the new code, plus additional features.
 
 ## 0.2 (03/01/2022):
 - Added testing and installation tools, fixed bugs from ixpe integration. Completed IXPE integration.
@@ -28,7 +28,7 @@
 - Fix logging errors in ixpe tests.
 - Moved mode check from `HSPTask` to `HSPTask.read_pfile` + code style updates. 
 - Added HSPParams tests
-- Added explict ISO-8859-15 in the return of `subprocess.Popen`
+- Added explicit ISO-8859-15 in the return of `subprocess.Popen`
 
 ## 1.4 (02/21/2024)
 - Several maintenance updates:
@@ -50,3 +50,4 @@
 - (1.5dev0) Add BSD license after formal approval from UMD.
 - (1.5dev1) Update pfiles_list.txt file to match that released with 6.34 (includes xrism software)
 - (1.5dev2) Further Update pfiles_list.txt (mxpipeline.par).
+- (1.5dev3): Improve code style

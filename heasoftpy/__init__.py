@@ -4,8 +4,8 @@
 DESCRIPTION:
 -----------
 HEASoftpy is a Python package to wrap the HEASoft tools so that
-they can be called from python scripts, interactive ipython 
-sessions, or Jupyter Notebooks.  
+they can be called from python scripts, interactive ipython
+sessions, or Jupyter Notebooks.
 
 >>> import heasoftpy as hsp
 >>> help(hsp.fdump)
@@ -21,15 +21,15 @@ python (versions later than 3.7)
 astropy
 
 
-EXAMPLE USAGE:
+EXAMPLES:
 --------------
-Using tasks in heasoftpy offer flexibility in usage.
+Tasks in heasoftpy can be used in different ways.
 
-- Built-in tasks can be called directly (if installed in heasoftpy/fcn):
+- Built-in tasks can be called directly:
 >>> result = hsp.ftlist(infile='input.fits', option='T')
 
 
-- A task object can be created and called (even if not installed in heasoftpy/fcn):
+- A task object can be created and called (even if not installed in heasoftpy):
 >>> ftlist = hsp.HSPTask('ftlist')
 >>> result = ftlist(infile='input.fits', option='T')
 
@@ -43,7 +43,8 @@ The input to the functions is also flexible:
 >>> params = {'infile':'input.fits', 'option':'T'}
 >>> result = hsp.ftlist(params)
 
-- When using HSPTask, the task parameters can also be input inline as task attributes:
+- When using HSPTask, the task parameters can also be input inline as task
+attributes:
 >>> ftlist = hsp.HSPTask('ftlist')
 >>> ftlist.infile = 'input.fits'
 >>> ftlist.option = 'T'
@@ -52,18 +53,19 @@ The input to the functions is also flexible:
 
 All tasks take additional optional parameters:
 - verbose: This can take several values. In all cases, the text printed by the
-    task is captured, and returned in HSPResult.stdout/stderr. Addionally:
-    - 0 (also False or 'no'): Just return the text, no progress prining.
+    task is captured, and returned in HSPResult.stdout/stderr. Additionally:
+    - 0 (also False or 'no'): Just return the text, no progress printing.
     - 1 (also True or 'yes'): In addition to capturing and returning the text,
         task text will printed into the screen as the task runs.
     - 2: Similar to 1, but also prints the text to a log file.
-    - 20: In addition to capturing and returning the text, log it to a file, 
-        but not to the screen. 
-        In both cases of 2 and 20, the default log file name is {taskname}.log. 
-        A logfile parameter can be passed to the task to override the file name.
-- noprompt: Typically, HSPTask would check the input parameters and 
+    - 20: In addition to capturing and returning the text, log it to a file,
+        but not to the screen.
+        In both cases of 2 and 20, the default log file name is {taskname}.log.
+        A logfile parameter can be passed to the task to override the file
+        name.
+- noprompt: Typically, HSPTask would check the input parameters and
     queries any missing ones. Some tasks (e.g. pipelines) can run by using
-    default values. Setting noprompt=True, disables checking and querying 
+    default values. Setting noprompt=True, disables checking and querying
     the parameters. Default is False.
 - stderr: If True, make `stderr` separate from `stdout`. The default
     is False, so stderr is written to stdout.
@@ -105,14 +107,16 @@ installation of HEASoft is therefore required.
 
 """
 import os
-from .core import HSPTask, HSPTaskException, HSPResult, HSPParam, HSPLogger
-from . import utils
+from .core import HSPTask, HSPTaskException  # noqa 401
+from . import utils  # noqa 401
+
 
 # help function
 def help(): print(__doc__)
 
+
 # version
-from .version import __version__
+from .version import __version__  # noqa 401
 
 
 # a helper function to check a package exists
@@ -123,42 +127,42 @@ def _package_exists(package):
 
 # load sub-packages, only if we are not installing the main package:
 # __INSTALLING_HSP is created in install.py during installation
-if not '__INSTALLING_HSP' in os.environ:
+if '__INSTALLING_HSP' not in os.environ:
     # import the core heasoft tools
-    ## Temporary for Old compatibility ##
-    ## delete once fcn is removed      ##
-    from .fcn import *
+    # Temporary for Old compatibility ##
+    # delete once fcn is removed      ##
+    from .fcn import *  # noqa 401
     if _package_exists('ixpe'):
-        from ._ixpe import *
-    ## ------------------------------- ##
-    from .heacore import *
+        from ._ixpe import *  # noqa 401
+    # ------------------------------- ##
+    from .heacore import *  # noqa 401
 
     # the following are not always installed
     try:
-        from .ftools import *
+        from .ftools import *  # noqa 401
     except ImportError:
         pass
     try:
-        from .heagen import *
+        from .heagen import *  # noqa 401
     except ImportError:
         pass
     try:
-        from .heasim import *
+        from .heasim import *  # noqa 401
     except ImportError:
         pass
     try:
-        from .heasptools import *
+        from .heasptools import *  # noqa 401
     except ImportError:
         pass
     try:
-        from .attitude import *
+        from .attitude import *  # noqa 401
     except ImportError:
         pass
     try:
-        from .Xspec import *
+        from .Xspec import *  # noqa 401
     except ImportError:
         pass
     try:
-        from .heatools import *
+        from .heatools import *  # noqa 401
     except ImportError:
         pass
