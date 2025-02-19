@@ -44,6 +44,13 @@ class HSPInstallCommand(build_py):
         _do_install()
         super().run()
 
+    def get_source_files(self):
+        """Ensure generated files are included in source distribution."""
+        files = glob.glob('heasoftpy/**', recursive=True)
+        files = [file for file in files if '__pycache' not in file
+                 and file.endswith('.py')]
+        return files
+
 
 def _do_install():
     logger.info('-'*60)
@@ -73,12 +80,8 @@ def _create_py_wrappers():
     logger.info('-'*30)
     logger.info('Creating python wrappers ...')
     try:
-        list_of_files = generate_py_code()
-        # add the generated files to heasoftpy.egg-info so they are 
-        # installed correctly
-        with open(f'heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
-            fp.write('\n' + ('\n'.join(list_of_files)))
-    except:
+        generate_py_code()
+    except Exception:
         logger.error('Failed in generating python wrappers')
         raise
     logger.info('Python wrappers created successfully!')
@@ -105,13 +108,13 @@ def _add_sub_packages():
     # loop through subpackages
     logger.info('-'*30)
     logger.info('Looking for subpackages ...')
-    list_of_files = []
     for subpackage in SUBPACKAGES:
         pth = (f"{headas}/../{subpackage}/{inst_dir}/lib/python/"
                f"heasoftpy/{subpackage}")
         if os.path.exists(pth):
             logger.info(f'Found {subpackage} ...')
             if os.path.exists(f'heasoftpy/{subpackage}'):
+                # merge the two __init__.py files
                 lines1 = []
                 if os.path.exists(f'{pth}/__init__.py'):
                     lines1 = open(f'{pth}/__init__.py').readlines()
@@ -119,19 +122,11 @@ def _add_sub_packages():
                     f'heasoftpy/{subpackage}/__init__.py').readlines()
                 os.system(f'cp -r -n {pth}/* heasoftpy/{subpackage}/')
                 with open(f'heasoftpy/{subpackage}/__init__.py', 'w') as fp:
-                    fp.write('\n'.join(lines2+lines1))
+                    fp.write('\n'.join(lines2 + lines1))
             else:
                 os.system(f'cp -r {pth} heasoftpy/')
-            list_of_files += [lf for lf in
-                              glob.glob(f'heasoftpy/{subpackage}/**',
-                                        recursive=True)
-                              if lf[-3:] == '.py']
         else:
             logger.info(f'No {subpackage} subpackage, skipping ...')
-        # add the generated files to heasoftpy.egg-info so they are
-        # installed correctly
-        with open('heasoftpy.egg-info/SOURCES.txt', 'a') as fp:
-            fp.write('\n' + ('\n'.join(list_of_files)))
 
 
 if __name__ == '__main__':
