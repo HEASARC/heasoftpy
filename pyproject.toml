@@ -12,7 +12,7 @@ maintainers = [
 ]
 description = "Python interface for Heasoft"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 keywords = ["astronomy", "heasoft", "heasarc"]
 license = {text = "LICENSE"}
 dynamic = ["version", "dependencies"]

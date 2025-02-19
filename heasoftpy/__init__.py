@@ -17,7 +17,7 @@ sessions, or Jupyter Notebooks.
 
 REQUIREMENTS:
 --------------
-python (versions later than 3.7)
+python (versions later than 3.8)
 astropy
 
 
