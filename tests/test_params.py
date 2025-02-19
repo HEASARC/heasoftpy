@@ -469,6 +469,11 @@ class TestHSPParam(unittest.TestCase):
         hpar = HSPParam(line)
         self.assertEqual(hpar.default, 'no')
 
+    def test_HSPParam__extra_space_in_par_name(self):
+        line = 'infile  ,s,a,somefile,,,"Name of file'
+        hpar = HSPParam(line)
+        self.assertEqual(hpar.pname, 'infile')
+
     def test_HSPParam__set_value(self):
         line = 'infile,r,a,0.0,,,Name of file'
 
