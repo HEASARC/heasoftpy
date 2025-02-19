@@ -51,3 +51,4 @@
 - (1.5dev1) Update pfiles_list.txt file to match that released with 6.34 (includes xrism software)
 - (1.5dev2) Further Update pfiles_list.txt (mxpipeline.par).
 - (1.5dev3): Improve code style
+- (1.5dev4): Fix the bug of extra space in parameter names (e.g. xapipeline)
