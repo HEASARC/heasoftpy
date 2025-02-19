@@ -847,7 +847,7 @@ class HSPParam():
             info = info[:7]
 
         # extract information about the parameter
-        self.pname = info[0]
+        self.pname = info[0].strip()
         pkeys = ['type', 'mode', 'default', 'min', 'max', 'prompt']
         for ikey, key in enumerate(pkeys):
             setattr(self, key, info[ikey+1].strip().strip('"'))
