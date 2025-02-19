@@ -52,3 +52,4 @@
 - (1.5dev2) Further Update pfiles_list.txt (mxpipeline.par).
 - (1.5dev3): Improve code style
 - (1.5dev4): Fix the bug of extra space in parameter names (e.g. xapipeline)
+- (1.5dev5): change the install to use get_source_files instead of editing SOURCES.txt directly
