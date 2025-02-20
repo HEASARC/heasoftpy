@@ -29,16 +29,15 @@ Tasks in heasoftpy can be used in different ways.
 >>> result = hsp.ftlist(infile='input.fits', option='T')
 
 ** For version 1.4 and above **
-To avoid importing all (more than 800) tasks
-when you are only interested in a handful, the tasks
-have been grouped into modules separate modules.
+To avoid importing all tasks at once (more than 800), the tasks
+have been grouped into separate modules.
 Wrappers are still available in the heasoftpy.* namespace,
-which the import from the modules when the task is called.
+which import from the modules when the task is called.
 So you can do lazy (delayed) import with
 >>> import heasoftpy as hsp
 >>> hsp.ftlist
-or
->>> from heasoftpy.heatools import ftlist   # full import
+or full import with
+>>> from heasoftpy.heatools import ftlist
 
 To find the corresponding module for task you can use:
 >>> hsp.utils.find_module_name('ftlist')
