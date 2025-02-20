@@ -98,6 +98,15 @@ def generate_py_code(tasks=None):
         if not os.path.exists(f'{pfile_dir}/{task}.par'):
             logger.info(f'No par file found for task {task}')
             continue
+        # Make sure we have an executable
+        extensions = ['', '.py', '.sh']
+        if not any([
+            os.path.exists(f"{os.environ['HEADAS']}/bin/{task}{ext}")
+                for ext in extensions
+        ]):
+            logger.info(f'No executable for task {task}; skipping ..')
+            continue
+
         if module not in modules:
             modules[module] = []
         modules[module].append(task)
