@@ -5,9 +5,13 @@ import os
 import tempfile
 import logging
 import contextlib
+import pprint
 from .core import HSPTask, HSPTaskException
 
-__all__ = ['process_cmdLine', 'local_pfiles', 'local_pfiles_context']
+__all__ = [
+    'process_cmdLine', 'local_pfiles', 'local_pfiles_context',
+    'find_module_name'
+]
 
 
 def process_cmdLine(hspTask=None):
@@ -107,6 +111,8 @@ def generate_py_code(tasks=None):
     # wrapper creation loop
     it = 0
     files_list = []
+    fcn_text, fcn_list = '', []
+    installed_modules = {}
     for module, tasks in modules.items():
         logger.info(f'Installing {module} ...')
         outDir = os.path.join(os.path.dirname(__file__), module)
@@ -115,6 +121,27 @@ def generate_py_code(tasks=None):
             it += 1
             logger.info(f'.. {it}/{ntasks} install {module}/{task_name} ... ')
 
+            # task object used to generate the docs
+            hsp = HSPTask(task_name)
+
+            # --- do wrappers in fcn.py --- #
+            fcn_list.append(f"'{hsp.pytaskname}'")
+
+            fcn_docs = hsp._generate_fcn_docs(fhelp=True)
+
+            fcn_text += f'''
+def {hsp.pytaskname}(args=None, **kwargs):
+    r"""{fcn_docs}
+    """
+    from heasoftpy.{module} import {hsp.pytaskname}
+    return {hsp.pytaskname}(args, **kwargs)
+            '''
+            # ----------------------------- #
+
+            # --- do the exported task:module map --- #
+            installed_modules[hsp.pytaskname] = module
+            # --------------------------------------- #
+
             # skip python-only tools
             pytask = os.path.join(
                 os.environ['HEADAS'], 'bin', f'{task_name}.py')
@@ -122,7 +149,6 @@ def generate_py_code(tasks=None):
                 logger.info('.. skipping python tools ... ')
                 continue
 
-            hsp = HSPTask(task_name)
             fcn = hsp.generate_fcn_code()
 
             if not os.path.exists(outDir):
@@ -139,62 +165,15 @@ def generate_py_code(tasks=None):
                 fp.write(init_txt)
             files_list.append(f'heasoftpy/{module}/__init__.py')
         logger.info(f'Done installing {module} ...')
-
-    # --- TEMPORARY UNTIL FCN DEPRECATION -- #
-    logger.info('Installing deprecated fcn.* ...')
-    outDir = os.path.join(os.path.dirname(__file__), 'fcn')
-    if not os.path.exists(outDir):
-        os.mkdir(outDir)
-    core_modules = ['ftools', 'heacore', 'heagen', 'heasim', 'heasptools',
-                    'heatools', 'attitude', 'Xspec']
-    it = 0
-    init_txt = ''
-    for module, tasks in modules.items():
-        logger.info(f'Installing {module} ...')
-        for task_name in tasks:
-            it += 1
-            logger.info(f'.. {it}/{ntasks} install fcn/{task_name} ... ')
-
-            # skip python tool, skip
-            pytask = os.path.join(
-                os.environ['HEADAS'], 'bin', f'{task_name}.py')
-            if os.path.exists(pytask):
-                logger.info('.. skipping python tools ... ')
-                continue
-            hsp = HSPTask(task_name)
-
-            msg = f'message="heasoftpy.{hsp.pytaskname} is being '
-            if module in core_modules:
-                msg = f'message="heasoftpy.fcn.{hsp.pytaskname} is being '
-            alternative = (f'Use ``heasoftpy.{module}.{hsp.pytaskname}`` '
-                           'instead')
-            depr_text = (
-                '@deprecated(\n'
-                'since="1.4",\n'
-                f'{msg}'
-                f'deprecated and will be removed. {alternative}",\n'
-                f'alternative="{alternative}",\n'
-                f'warning_type=HSPDeprecationWarning'
-                ')')
-
-            fcn = hsp.generate_fcn_code(deprecate_text=depr_text)
-            # don't add core tasks to fcn.__init__, so that a deprecation
-            # warning is issed for `from heasoftpy.fcn.quzcif` but not
-            # `from heasofpy import quzcif`. The latter uses ftools.quzcif
-            if module not in core_modules:
-                init_txt += f'from .{hsp.pytaskname} import {hsp.pytaskname}\n'
-            files_list.append(f'heasoftpy/fcn/{hsp.pytaskname}.py')
-
-            with open(f'{outDir}/{hsp.pytaskname}.py', 'w') as fp:
-                fp.write(fcn)
-            logger.info(f'.. done with fcn/{hsp.pytaskname}')
-        logger.info(f'Done installing {module} ...')
-    if init_txt != '':
-        with open(f'{outDir}/__init__.py', 'w') as fp:
-            fp.write(init_txt)
-    files_list.append('heasoftpy/fcn/__init__.py')
-    logger.info('Done installing deprecated fcn.* ...')
-    # -------------------------------------- #
+    # write out fcn.py
+    outDir = os.path.join(os.path.dirname(__file__))
+    with open(f'{outDir}/fcn.py', 'w') as fp:
+        all = ',\n  '.join(fcn_list)
+        fp.write(f"__all__ = [\n  {all}\n]\n")
+        fp.write(fcn_text)
+    # write out the exported list of installed modules
+    with open(f'{outDir}/_modules.py', 'w') as fp:
+        fp.write(f"mapper = {pprint.pformat(installed_modules)}\n")
 
     return files_list
 
@@ -271,3 +250,23 @@ def local_pfiles_context(par_dir=None):
         os.environ['PFILES'] = old_pfiles
         if os.path.exists(pdir):
             os.system(f'rm -rf {pdir}')
+
+
+def find_module_name(task):
+    """Find the module name for some heasoftpy task
+
+    Parameters
+    ----------
+    task: str
+        The name of a task as a string
+    """
+    # We need HEADAS to be defined.
+    try:
+        from ._modules import mapper
+    except (ImportError, ModuleNotFoundError):
+        raise ImportError('No heasoftpy._modules')
+    if task in mapper.keys():
+        module = mapper[task]
+    else:
+        raise ValueError(f'Unknown task {task}.')
+    return module

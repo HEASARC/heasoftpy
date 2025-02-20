@@ -5,7 +5,7 @@ __pycache__
 build
 notebooks/*html
 notebooks/styles
-fcn*
+fcn.py
 heasoftpy/_modules.py
 heasoftpy/attitude
 heasoftpy/calet

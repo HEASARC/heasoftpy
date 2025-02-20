@@ -2,7 +2,9 @@
 from .context import heasoftpy
 
 import os
+import sys
 import unittest
+from unittest.mock import patch
 
 
 class TestUtils(unittest.TestCase):
@@ -63,6 +65,31 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(pDir in os.environ['PFILES'])
 
         self.assertFalse(pDir in os.environ['PFILES'])
+
+    def test_find_module_name__unknown(self):
+        with self.assertRaises(ValueError):
+            heasoftpy.utils.find_module_name('unknown')
+
+    def test_find_module_name(self):
+        self.assertTrue(
+            'ftools' == heasoftpy.utils.find_module_name('fdump')
+        )
+        self.assertTrue(
+            'heatools' == heasoftpy.utils.find_module_name('ftlist')
+        )
+        self.assertTrue(
+            'attitude' == heasoftpy.utils.find_module_name('attconvert')
+        )
+
+    def test_find_module_name__w_hsp_nokey(self):
+        with patch('heasoftpy._modules.mapper', {}):
+            with self.assertRaises(ValueError):
+                heasoftpy.utils.find_module_name('ftlist')
+
+    def test_find_module_name__w_hsp_importError(self):
+        with patch.dict(sys.modules, {"heasoftpy._modules": None}):
+            with self.assertRaises(ImportError):
+                heasoftpy.utils.find_module_name('fdump')
 
 
 # def test_pfiles_list():
