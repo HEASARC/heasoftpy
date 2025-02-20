@@ -19,6 +19,8 @@ stages:
     - pip install -r requirements.txt
     - python local-build.py
     - python -m pytest -v
+  when: always # run jobs release/develop jobs even if the other fails
+  interruptible: true  # Cancels previous job instances if a new commit is pushed
 
 
 # do the release version
@@ -27,7 +29,6 @@ build-test-local-release:
   variables:
     VERSION: release
   extends: .build_and_test_heasoftpy
-  when: always
 
 # do the develop version
 build-test-local-develop:
@@ -35,5 +36,4 @@ build-test-local-develop:
   variables:
     VERSION: develop
   extends: .build_and_test_heasoftpy
-  when: always
 
