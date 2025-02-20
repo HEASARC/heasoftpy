@@ -7,8 +7,9 @@ import sys
 
 def _do_clean():
     """Removes the wrappers in heasoftpy and temporary files"""
+    temp_py = ['fcn.py', '_modules.py']
     modules = [d for d in glob.glob('heasoftpy/*')
-               if os.path.isdir(d)]
+               if os.path.isdir(d) or os.path.basename(d) in temp_py]
     for module in modules:
         print(f'cleaning wrappers in {module}')
         os.system(f'rm -rf {module}')
