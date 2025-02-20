@@ -62,3 +62,4 @@
     - add utils.find_module_name
     - add doctstring to the functions in fcn.py
 - (1.5dev7): exclude par files with no executable from being installed (#70).
+- (1.5dev8): Update pfiles_list and its test
