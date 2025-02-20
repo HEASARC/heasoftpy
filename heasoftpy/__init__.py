@@ -7,11 +7,11 @@ HEASoftpy is a Python package to wrap the HEASoft tools so that
 they can be called from python scripts, interactive ipython
 sessions, or Jupyter Notebooks.
 
->>> from heasoftpy import ftools
->>> help(ftools.fdump)
+>>> import heasoftpy as hsp
+>>> help(hsp.fdump)
 ...
 
->>> result = ftools.ftlist(infile='input.fits', option='T')
+>>> result = hsp.ftlist(infile='input.fits', option='T')
 >>> print(result.stdout)
 ...
 
@@ -29,26 +29,19 @@ Tasks in heasoftpy can be used in different ways.
 >>> result = hsp.ftlist(infile='input.fits', option='T')
 
 ** For version 1.4 and above **
-To avoid importing all (more than 800) task
-when you are only interested in a handful, the task
-have moved being all under one module available under
-heasoftpy.*, to being available under separate modules.
+To avoid importing all (more than 800) tasks
+when you are only interested in a handful, the tasks
+have been grouped into modules separate modules.
 Wrappers are still available in the heasoftpy.* namespace,
-but it recommended to directly import
-the task from the corresponding module: e.g.
-instead of:
->>> from heasoftpy import ftlist
+which the import from the modules when the task is called.
+So you can do lazy (delayed) import with
+>>> import heasoftpy as hsp
+>>> hsp.ftlist
 or
->>> import heasoftpy; heasoftpy.ftlist
-you should use:
->>> from heasoftpy.heatools import ftlist
-The latter give you access to the docs for the task, so it can
-be accessed by: help(ftlist), or ftlist? in interactive sessions
+>>> from heasoftpy.heatools import ftlist   # full import
 
-To find the corresponding module name you can check:
->>> help(hsp.ftlist)
-or
->>> hsp.utils.hsp.utils.find_module_name('ftlist')
+To find the corresponding module for task you can use:
+>>> hsp.utils.find_module_name('ftlist')
 heatools
 
 

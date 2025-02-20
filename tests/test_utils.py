@@ -90,7 +90,6 @@ class TestUtils(unittest.TestCase):
             self.test_find_module_name()
 
 
-
 # def test_pfiles_list():
 #     """Ensure pfiles_list.txt is up to date.
 #     Because the develop version may have more tasks than

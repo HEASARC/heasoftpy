@@ -127,17 +127,12 @@ def generate_py_code(tasks=None):
             # --- do wrappers in fcn.py --- #
             fcn_list.append(f"'{hsp.pytaskname}'")
 
-            tab = ' '*7
-            fcn_docs = (
-                f'heasoftpy.{hsp.pytaskname} is provided for convenience.\n'
-                f'{tab}Please use heasoftpy.{module}.{hsp.pytaskname}.\n'
-                f'{tab}See heasoftpy.{module}.{hsp.pytaskname} for the\n'
-                f'{tab}documentation of this method, or use heasoftpy.fhelp'
-            )
+            fcn_docs = hsp._generate_fcn_docs(fhelp=True)
 
             fcn_text += f'''
 def {hsp.pytaskname}(args=None, **kwargs):
-    """{fcn_docs}"""
+    r"""{fcn_docs}
+    """
     from heasoftpy.{module} import {hsp.pytaskname}
     return {hsp.pytaskname}(args, **kwargs)
             '''
