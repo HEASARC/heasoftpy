@@ -263,13 +263,10 @@ def find_module_name(task):
     # We need HEADAS to be defined.
     try:
         from ._modules import mapper
+    except (ImportError, ModuleNotFoundError):
+        raise ImportError('No heasoftpy._modules')
+    if task in mapper.keys():
         module = mapper[task]
-    except (ImportError, ModuleNotFoundError, KeyError):
-        try:
-            import heasoftpy
-            htask = getattr(heasoftpy, task)
-            line = htask.__doc__.split('\n')[1]
-            module = line.split()[2].split('.')[1]
-        except Exception:
-            raise ValueError(f'Unknown task {task}.')
+    else:
+        raise ValueError(f'Unknown task {task}.')
     return module

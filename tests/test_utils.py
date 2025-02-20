@@ -83,11 +83,13 @@ class TestUtils(unittest.TestCase):
 
     def test_find_module_name__w_hsp_nokey(self):
         with patch('heasoftpy._modules.mapper', {}):
-            self.test_find_module_name()
+            with self.assertRaises(ValueError):
+                heasoftpy.utils.find_module_name('ftlist')
 
     def test_find_module_name__w_hsp_importError(self):
         with patch.dict(sys.modules, {"heasoftpy._modules": None}):
-            self.test_find_module_name()
+            with self.assertRaises(ImportError):
+                heasoftpy.utils.find_module_name('fdump')
 
 
 # def test_pfiles_list():
