@@ -8,7 +8,10 @@ import contextlib
 import pprint
 from .core import HSPTask, HSPTaskException
 
-__all__ = ['process_cmdLine', 'local_pfiles', 'local_pfiles_context']
+__all__ = [
+    'process_cmdLine', 'local_pfiles', 'local_pfiles_context',
+    'find_module_name'
+]
 
 
 def process_cmdLine(hspTask=None):
@@ -252,3 +255,26 @@ def local_pfiles_context(par_dir=None):
         os.environ['PFILES'] = old_pfiles
         if os.path.exists(pdir):
             os.system(f'rm -rf {pdir}')
+
+
+def find_module_name(task):
+    """Find the module name for some heasoftpy task
+
+    Parameters
+    ----------
+    task: str
+        The name of a task as a string
+    """
+    # We need HEADAS to be defined.
+    try:
+        from ._modules import mapper
+        module = mapper[task]
+    except (ImportError, ModuleNotFoundError, KeyError):
+        try:
+            import heasoftpy
+            htask = getattr(heasoftpy, task)
+            line = htask.__doc__.split('\n')[1]
+            module = line.split()[2].split('.')[1]
+        except Exception:
+            raise ValueError(f'Unknown task {task}.')
+    return module
