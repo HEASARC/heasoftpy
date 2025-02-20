@@ -5,6 +5,7 @@ import os
 import sys
 import unittest
 from unittest.mock import patch
+from warnings import warn
 
 
 class TestUtils(unittest.TestCase):
@@ -92,33 +93,48 @@ class TestUtils(unittest.TestCase):
                 heasoftpy.utils.find_module_name('fdump')
 
 
-# def test_pfiles_list():
-#     """Ensure pfiles_list.txt is up to date.
-#     Because the develop version may have more tasks than
-#     the released version, we ensure that syspfiles/pfiles_list.txt
-#     is at least a subset of the checked file.
-#     The checked file should contain the all possible tasks, including
-#     new ones, and possibly deleted ones too. For the deleted ones, they
-#     can be removed once develop becomes a release.
-#     """
-#     our_f = 'pfiles_list.txt'
-#     hea_f = f"{os.environ['HEADAS']}/syspfiles/pfiles_list.txt"
-#     # do check only if hea_f is present
-#     if not os.path.exists(hea_f):
-#         return
-#     our_m = {}
-#     for line in open(our_f).readlines():
-#         mod, task = line.strip().split(':')
-#         if mod not in our_m:
-#             our_m[mod] = []
-#         our_m[mod].append(task)
-#     hea_m = {}
-#     for line in open(hea_f).readlines():
-#         mod, task = line.strip().split(':')
-#         if mod not in hea_m:
-#             hea_m[mod] = []
-#         hea_m[mod].append(task)
-#     for k in hea_m.keys():
-#         assert k in our_m
-#         for task in hea_m[k]:
-#             assert task in our_m[k]
+def test_pfiles_list():
+    """Ensure pfiles_list.txt is up to date.
+    Because the develop version may have more tasks than
+    the released version, we ensure that syspfiles/pfiles_list.txt
+    is at least a subset of the checked file.
+    The checked file should contain the all possible tasks, including
+    new ones, and possibly deleted ones too. For the deleted ones, they
+    can be removed once develop becomes a release.
+    Is some task changed module, a warning is given
+    """
+    our_f = 'pfiles_list.txt'
+    hea_f = f"{os.environ['HEADAS']}/syspfiles/pfiles_list.txt"
+    # do check only if hea_f is present
+    if not os.path.exists(hea_f):
+        return
+    our_m = {}
+    for line in open(our_f).readlines():
+        mod, task = line.strip().split(':')
+        if mod not in our_m:
+            our_m[mod] = []
+        our_m[mod].append(task)
+    hea_m = {}
+    for line in open(hea_f).readlines():
+        mod, task = line.strip().split(':')
+        if mod not in hea_m:
+            hea_m[mod] = []
+        hea_m[mod].append(task)
+    for k in hea_m.keys():
+        if k not in our_m:
+            raise ValueError(
+                f'Module {k} not found in the checked pfiles_list.txt. '
+                'Please update it'
+            )
+        for task in hea_m[k]:
+            if task not in our_m[k]:
+                # check if it moved
+                if any([task in mod for mod in our_m.values()]):
+                    warn((f'{task} appear to have changed location. '
+                          'Check pfiles_list'))
+                else:
+                    raise ValueError(
+                        f'Task {k}:{task} not found in the checked '
+                        'pfiles_list.txt. Please update it'
+                    )
+
