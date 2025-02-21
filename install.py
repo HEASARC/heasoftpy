@@ -120,11 +120,11 @@ def _add_sub_packages():
                 lines2 = open(
                     f'heasoftpy/{subpackage}/__init__.py').readlines()
                 lines2 = [line.strip().strip('\n') for line in lines2]
-                os.system(f'cp -r -n {pth}/* heasoftpy/{subpackage}/')
+                os.system(f'cp -r -n -L {pth}/* heasoftpy/{subpackage}/')
                 with open(f'heasoftpy/{subpackage}/__init__.py', 'w') as fp:
                     fp.write('\n'.join(lines2 + lines1))
             else:
-                os.system(f'cp -r {pth} heasoftpy/')
+                os.system(f'cp -r -L {pth} heasoftpy/')
         else:
             logger.info(f'No {subpackage} subpackage, skipping ...')
 
