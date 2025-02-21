@@ -103,14 +103,12 @@ def _add_sub_packages():
 
     # find installation folder name
     headas = os.environ['HEADAS']
-    inst_dir = os.path.basename(headas)
 
     # loop through subpackages
     logger.info('-'*30)
     logger.info('Looking for subpackages ...')
     for subpackage in SUBPACKAGES:
-        pth = (f"{headas}/../{subpackage}/{inst_dir}/lib/python/"
-               f"heasoftpy/{subpackage}")
+        pth = (f"{headas}/lib/python/heasoftpy/{subpackage}")
         if os.path.exists(pth):
             logger.info(f'Found {subpackage} ...')
             if os.path.exists(f'heasoftpy/{subpackage}'):
@@ -118,8 +116,10 @@ def _add_sub_packages():
                 lines1 = []
                 if os.path.exists(f'{pth}/__init__.py'):
                     lines1 = open(f'{pth}/__init__.py').readlines()
+                lines1 = [line.strip().strip('\n') for line in lines1]
                 lines2 = open(
                     f'heasoftpy/{subpackage}/__init__.py').readlines()
+                lines2 = [line.strip().strip('\n') for line in lines2]
                 os.system(f'cp -r -n {pth}/* heasoftpy/{subpackage}/')
                 with open(f'heasoftpy/{subpackage}/__init__.py', 'w') as fp:
                     fp.write('\n'.join(lines2 + lines1))
