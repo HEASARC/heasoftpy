@@ -154,7 +154,7 @@ class HSPTask:
         stderr: If True, make stderr separate from stdout. The default
             is False, so stderr is written to stdout.
             
-        allowfailure: Whether to allow task failure with nonzero exit code.
+        allow_failure: Whether to allow task failure with nonzero exit code.
             The default is False.
 
         Returns:
@@ -230,9 +230,10 @@ class HSPTask:
                 'confusing verbose value. Allowed types are: bool, str or int')
         self._verbose = verbose
         
-        # allowfailure?
-        allowfailure = user_pars.get("allowfailure", False)
-        self._allowfailure = allowfailure
+        # allow task to fail without raising an exception (True/False),
+        # or warn the user of a failure ("warn")?
+        allow_failure = user_pars.get("allow_failure", False)
+        self._allow_failure = allow_failure
         # ----------------------------- #
 
         # prepare the logger #
@@ -385,9 +386,9 @@ class HSPTask:
         result = HSPResult(proc.returncode, proc_out, proc_err, usr_params)
         
         if (proc.returncode != 0):
-            if self._allowfailure == "warn":
+            if self._allow_failure == "warn":
                 warn(f"Nonzero Task Return Code: {proc.returncode}")
-            elif not self._allowfailure:
+            elif not self._allow_failure:
                 raise HSPTaskException("\n"+str(result))
         return result
     
