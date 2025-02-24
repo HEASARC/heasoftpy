@@ -4,6 +4,7 @@ __pycache__
 *egg*
 build
 notebooks/*html
+!notebooks/template.html
 notebooks/styles
 fcn.py
 heasoftpy/_modules.py
