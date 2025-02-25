@@ -785,10 +785,10 @@ class HSPResult:
         """
 
         self.returncode = returncode
-        self.stdout = stdout
-        self.stderr = stderr
-        self.params = dict(params) if isinstance(params, dict) else params
-        self.custom = dict(custom) if isinstance(custom, dict) else custom
+        self.stdout     = stdout
+        self.stderr     = stderr
+        self.params     = dict(params) if isinstance(params, dict) else params
+        self.custom     = dict(custom) if isinstance(custom, dict) else custom
 
     def __str__(self):
         """Print the result object in a clean way"""
