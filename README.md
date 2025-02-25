@@ -67,7 +67,7 @@ The `.py` extension is generally optional.
 
 <hr style="border: 2px solid #fadbac" />
 
-**For version 1.4 and above**
+**For version 1.4 and above**:
 To avoid importing all tasks at once (more than 800), the tasks
 have been grouped into separate modules.
 Wrappers are still available in the heasoftpy.* namespace,
@@ -165,6 +165,13 @@ There are a few parameters that are common between all tasks:
     the parameters. Default is `False`.
 - `stderr`: If `True`, make `stderr` separate from `stdout`. The default
     is `False`, so `stderr` is written to `stdout`.
+- `allow_failure`: **For version 1.5 and above**, this parameter controls how task
+    failure is handled. If `True`, the task will continue without raising any
+    errors or warnings and the status can be found in the result output.
+    If `False` (default), the task will raise an `Exception` and terminate.
+    If `"warn"`, the task will raise a warning and continue excecution. The
+    behavior for versions 1.4 and below is equivalent to `allow_failure=True`,
+    no exception or warning is issued and the status can be found in the result.
 
 ### 2.3.1 Special cases
 If the `heasoftpy` task being called has an input parameter with a name `verbose`, `noprompt`
