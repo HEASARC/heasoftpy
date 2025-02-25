@@ -123,12 +123,15 @@ class TestPyTasks(unittest.TestCase):
         os.system('rm _tmp.fits >/dev/null')
         self.assertEqual(out.returncode, 0)
 
-def test__tasks__flistT_fails():
-    task = heasoftpy.HSPTask('ftlist')
-    try:
-        _ = task(infile='tests/dne.fits', option='T', allowfailure=False)
-    except heasoftpy.HSPTaskException as e:
-        assert "Return Code: 33" in repr(e)
-    
-    result = task(infile='tests/dne.fits', option='T', allowfailure=True)
-    assert "Return Code: 33" in repr(result)
+    def test__tasks__fails(self):
+        task = heasoftpy.HSPTask('ftlist')
+        with self.assertRaises(heasoftpy.HSPTaskException) as cm:
+            _ = task(infile='tests/dne.fits', option='T', allow_failure=False)
+        assert "Return Code: 33" in repr(cm.exception)
+
+        result = task(infile='tests/dne.fits', option='T', allow_failure=True)
+        assert "Return Code: 33" in repr(result)
+
+        with self.assertWarns(Warning) as cm:
+            _ = task(infile='tests/dne.fits', option='T', allow_failure="warn")
+        assert "Nonzero Task Return Code:" in repr(cm.warning)
