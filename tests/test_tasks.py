@@ -135,3 +135,7 @@ class TestPyTasks(unittest.TestCase):
         with self.assertWarns(Warning) as cm:
             _ = task(infile='tests/dne.fits', option='T', allow_failure="warn")
         assert "Nonzero Task Return Code:" in repr(cm.warning)
+        
+        with self.assertWarns(heasoftpy.core.HSPDeprecationWarning) as cm:
+            _ = task(infile='tests/dne.fits', option='T')
+        assert "Parameter `allow_failure` not set" in repr(cm.warning)

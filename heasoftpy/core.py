@@ -232,8 +232,17 @@ class HSPTask:
         
         # allow task to fail without raising an exception (True/False),
         # or warn the user of a failure ("warn")?
-        allow_failure = user_pars.get("allow_failure", True)
-        self._allow_failure = allow_failure
+        if "allow_failure" in user_pars:        
+            allow_failure = user_pars.get("allow_failure")
+            self._allow_failure = allow_failure
+        else:
+            warn(
+                HSPDeprecationWarning(
+                    """
+                    Parameter `allow_failure` not set, defaulting to `True`.
+                    Default will be changed to `False` in a future update,
+                    set `allow_failure=True` explicitly to maintain current behavior.
+                    """))
         # ----------------------------- #
 
         # prepare the logger #
