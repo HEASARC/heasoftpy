@@ -155,7 +155,7 @@ class HSPTask:
             is False, so stderr is written to stdout.
             
         allow_failure: Whether to allow task failure with nonzero exit code.
-            The default is False.
+            The default is True, will be changed to False in a future update.
 
         Returns:
             HSPResult instance.
@@ -232,7 +232,7 @@ class HSPTask:
         
         # allow task to fail without raising an exception (True/False),
         # or warn the user of a failure ("warn")?
-        allow_failure = user_pars.get("allow_failure", False)
+        allow_failure = user_pars.get("allow_failure", True)
         self._allow_failure = allow_failure
         # ----------------------------- #
 
