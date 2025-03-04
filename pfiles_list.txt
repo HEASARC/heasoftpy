@@ -126,6 +126,7 @@ heatools:fverify.par
 heagen:arftable.par
 heagen:barycen.par
 heagen:barycorr.par
+heagen:burstbkgevt.par
 heagen:burstfinder.par
 heagen:dustmodeleffarea.par
 heagen:dustyarfmod.par
