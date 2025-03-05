@@ -46,7 +46,7 @@
 - (1.5dev2) Fix the imports in heasoftpy.nicer.*
 - (1.4.1dev3) Speed-up installation and change version to minor in preparation for patch release.
 
-## 1.5 (TDB)
+## 1.5 (03/20/2025)
 - (1.5dev0) Add BSD license after formal approval from UMD.
 - (1.5dev1) Update pfiles_list.txt file to match that released with 6.34 (includes xrism software)
 - (1.5dev2) Further Update pfiles_list.txt (mxpipeline.par).
