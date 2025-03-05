@@ -66,3 +66,6 @@
 - (1.5dev9):
     - Update the docs to match the recent fcn changes.
     - Switch from ipynb to markdown, and use pandoc to generate the html.
+- (1.5dev10):
+    - Update tasks with `allow_failure` keyword. When a task fails, it may raise
+      an exception (`False`, default), a warning (`"warn"`), or continue (`True`)

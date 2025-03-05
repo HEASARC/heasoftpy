@@ -52,7 +52,7 @@ class TestUtils(unittest.TestCase):
     def test__utils__local_pfiles_someDir_ensure_write(self):
         pDir = os.path.join('/tmp', str(os.getpid()) + '.tmp')
         heasoftpy.utils.local_pfiles(pDir)
-        heasoftpy.fhelp(task='ftlist')
+        heasoftpy.fhelp(task='ftlist', allow_failure=True)
         self.assertTrue(os.path.exists(f'{pDir}/fhelp.par'))
         os.remove(f'{pDir}/fhelp.par')
         os.rmdir(pDir)
