@@ -153,7 +153,7 @@ class HSPTask:
 
         stderr: If True, make stderr separate from stdout. The default
             is False, so stderr is written to stdout.
-            
+
         allow_failure: Whether to allow task failure with nonzero exit code.
             The default is True, will be changed to False in a future update.
 
@@ -229,10 +229,10 @@ class HSPTask:
             raise HSPTaskException(
                 'confusing verbose value. Allowed types are: bool, str or int')
         self._verbose = verbose
-        
+
         # allow task to fail without raising an exception (True/False),
         # or warn the user of a failure ("warn")?
-        if "allow_failure" in user_pars:        
+        if "allow_failure" in user_pars:
             allow_failure = user_pars.get("allow_failure")
             self._allow_failure = allow_failure
         else:
@@ -241,7 +241,8 @@ class HSPTask:
                     """
                     Parameter `allow_failure` not set, defaulting to `True`.
                     Default will be changed to `False` in a future update,
-                    set `allow_failure=True` explicitly to maintain current behavior.
+                    set `allow_failure=True` explicitly to maintain current
+                    behavior.
                     """))
         # ----------------------------- #
 
@@ -391,17 +392,16 @@ class HSPTask:
             if isinstance(proc_err, bytes):
                 proc_err = proc_err.decode('ISO-8859-15')
         # ---------------------------------------------------- #
-        
+
         result = HSPResult(proc.returncode, proc_out, proc_err, usr_params)
-        
+
         if (proc.returncode != 0):
             if self._allow_failure == "warn":
                 warn(f"Nonzero Task Return Code: {proc.returncode}")
             elif not self._allow_failure:
                 raise HSPTaskException("\n"+str(result))
         return result
-    
-    
+
     def task_docs(self):
         """Print docstring help specific to this task
 
@@ -794,10 +794,10 @@ class HSPResult:
         """
 
         self.returncode = returncode
-        self.stdout     = stdout
-        self.stderr     = stderr
-        self.params     = dict(params) if isinstance(params, dict) else params
-        self.custom     = dict(custom) if isinstance(custom, dict) else custom
+        self.stdout = stdout
+        self.stderr = stderr
+        self.params = dict(params) if isinstance(params, dict) else params
+        self.custom = dict(custom) if isinstance(custom, dict) else custom
 
     def __str__(self):
         """Print the result object in a clean way"""
