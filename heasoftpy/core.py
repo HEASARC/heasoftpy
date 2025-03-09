@@ -8,6 +8,7 @@ import io
 import selectors
 import logging
 from warnings import warn
+from .config import Config
 
 
 if '__INSTALLING_HSP' not in os.environ:
@@ -233,17 +234,20 @@ class HSPTask:
         # allow task to fail without raising an exception (True/False),
         # or warn the user of a failure ("warn")?
         if "allow_failure" in user_pars:
-            allow_failure = user_pars.get("allow_failure")
-            self._allow_failure = allow_failure
+            self._allow_failure = user_pars.get("allow_failure")
+        elif Config.allow_failure is not None:
+            self._allow_failure = Config.allow_failure
         else:
             warn(
                 HSPDeprecationWarning(
                     """
                     Parameter `allow_failure` not set, defaulting to `True`.
                     Default will be changed to `False` in a future update,
-                    set `allow_failure=True` explicitly to maintain current
+                    pass `allow_failure = True`, or set it globally with
+                    `heasoftpy.Config.allow_failure = True` to maintain current
                     behavior.
                     """))
+            self._allow_failure = True
         # ----------------------------- #
 
         # prepare the logger #

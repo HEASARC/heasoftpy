@@ -197,7 +197,7 @@ class TestWritePFile(unittest.TestCase):
 
         hsp = heasoftpy.HSPTask(taskname)
         hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500,
-            do_exec=False, allow_failure=True)
+            do_exec=False)
         tmpfile = f'{taskname}.2.par'
         hsp.write_pfile(tmpfile)
         newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
@@ -240,7 +240,7 @@ class TestWritePFile(unittest.TestCase):
 
         hsp = heasoftpy.HSPTask(taskname)
         hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500,
-            do_exec=False, allow_failure=True)
+            do_exec=False)
         tmpfile = f'{taskname}.2.par'
         hsp.write_pfile(tmpfile)
         newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
@@ -283,7 +283,7 @@ class TestWritePFile(unittest.TestCase):
 
         hsp = heasoftpy.HSPTask(taskname)
         hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500,
-            do_exec=False, allow_failure=True)
+            do_exec=False)
         tmpfile = f'{taskname}.2.par'
         hsp.write_pfile(tmpfile)
         newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
@@ -326,7 +326,7 @@ class TestWritePFile(unittest.TestCase):
 
         hsp = heasoftpy.HSPTask(taskname)
         hsp(par1='IN_FILE', par2=200, par3=300, par4=400, par5=500,
-            do_exec=False, allow_failure=True)
+            do_exec=False)
         tmpfile = f'{taskname}.2.par'
         hsp.write_pfile(tmpfile)
         newpars = heasoftpy.HSPTask.read_pfile(tmpfile)
@@ -361,7 +361,7 @@ class TestParamExtra(unittest.TestCase):
     def test__comma_list_inside_quotes(self):
         task = heasoftpy.HSPTask('fdump')
         res1 = task(infile='tests/test.fits', outfile='STDOUT',
-                    columns='"TIME,RATE"', rows='-', more='no', prhead='no', allow_failure=True)
+                    columns='"TIME,RATE"', rows='-', more='no', prhead='no')
         self.assertEqual(res1.returncode, 0)
 
 

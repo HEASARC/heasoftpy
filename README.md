@@ -167,11 +167,14 @@ There are a few parameters that are common between all tasks:
     is `False`, so `stderr` is written to `stdout`.
 - `allow_failure`: **For version 1.5 and above**, this parameter controls how task
     failure is handled. If `True` (default), the task will continue without raising any
-    errors or warnings and the status can be found in the result output.
-    If `False`, the task will raise an `Exception` and terminate.
-    If `"warn"`, the task will raise a warning and continue excecution. The
-    behavior for versions 1.4 and below is equivalent to `allow_failure=True`,
-    no exception or warning is issued and the status can be found in the result.
+    errors or warnings and the status can be found by checking the returncode of the 
+    returned `HSPResult`.
+    If `False`, the task will raise an `HSPTaskException` and terminate.
+    If `"warn"`, the task will raise a warning without terminating. The behavior for
+    versions 1.4 and below is equivalent to `allow_failure=True`,
+    no exception or warning is issued and the status can be found in the result object.
+    This parameter can be set when calling individual tasks, or it can be set globally
+    by setting `heasoftpy.Config.allow_failure`: e.g. `heasoftpy.Config.allow_failure = True`
 
 ### 2.3.1 Special cases
 If the `heasoftpy` task being called has an input parameter with a name `verbose`, `noprompt`

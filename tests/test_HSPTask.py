@@ -36,22 +36,22 @@ class TestHSPTask(unittest.TestCase):
     # case: initialize by kwargs
     def test__init_HSPTask__kwargs(self):
         hsp = heasoftpy.HSPTask(self.taskname)
-        hsp(infile='IN_FILE', number=4, do_exec=False, allow_failure=True)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
         self.assertEqual(hsp.params['infile'], 'IN_FILE')
         self.assertEqual(hsp.params['number'], 4)
 
     # case: initialize by another HSPTask object
     def test__init_HSPTask__anotherHSPTask(self):
         hsp = heasoftpy.HSPTask(self.taskname)
-        hsp(infile='IN_FILE', number=4, do_exec=False, allow_failure=True)
+        hsp(infile='IN_FILE', number=4, do_exec=False)
         hsp2 = heasoftpy.HSPTask(self.taskname)
-        hsp2(hsp, do_exec=False, allow_failure=True)
+        hsp2(hsp, do_exec=False)
         self.assertEqual(hsp.params, hsp2.params)
 
     # case: initialize by dict
     def test__init_HSPTask__dict(self):
         hsp = heasoftpy.HSPTask(self.taskname)
-        hsp({'number': 4, 'infile': 'IN_FILE'}, do_exec=False, allow_failure=True)
+        hsp({'number': 4, 'infile': 'IN_FILE'}, do_exec=False)
         self.assertEqual(hsp.params['infile'], 'IN_FILE')
         self.assertEqual(hsp.params['number'], 4)
 
@@ -61,7 +61,7 @@ class TestHSPTask(unittest.TestCase):
         orig_input_f = __builtins__['input']
         __builtins__['input'] = lambda _: 5.0
         hsp = heasoftpy.HSPTask(self.taskname)
-        hsp(infile='IN_FILE', do_exec=False, allow_failure=True)
+        hsp(infile='IN_FILE', do_exec=False)
         self.assertEqual(hsp.params['infile'], 'IN_FILE')
         self.assertEqual(hsp.params['number'], 5.0)
         __builtins__['input'] = orig_input_f
@@ -74,7 +74,7 @@ class TestHSPTask(unittest.TestCase):
             def dummyf(_): raise ValueError
             __builtins__['input'] = dummyf
             hsp = heasoftpy.HSPTask(self.taskname)
-            hsp(infile='IN_FILE', do_exec=False, allow_failure=True)
+            hsp(infile='IN_FILE', do_exec=False)
         __builtins__['input'] = orig_input_f
 
     # case: fill params by hand
@@ -100,7 +100,7 @@ class TestHSPTask(unittest.TestCase):
     def test__init_HSPTask__keyword_priority(self):
         hsp = heasoftpy.HSPTask(self.taskname)
         hsp.infile = 'infile-1'
-        hsp(infile='infile-2', number=4, do_exec=False, allow_failure=True)
+        hsp(infile='infile-2', number=4, do_exec=False)
         self.assertEqual(hsp.params['infile'], 'infile-2')
 
     # raise error if HSPTask given the wrong name
@@ -127,21 +127,21 @@ class TestHSPTask(unittest.TestCase):
         hsp = heasoftpy.HSPTask(taskname)
 
         # no verbose, so logfile for python is ignored
-        hsp(par1='IN_FILE', logfile=f'{taskname}.log', do_exec=False, allow_failure=True)
+        hsp(par1='IN_FILE', logfile=f'{taskname}.log', do_exec=False)
         self.assertEqual(hsp.logfile, f'{taskname}.log')
         self.assertIsNone(hsp._logfile)
 
         # verbose=20 (i.e. request python logging), no py_logfile,
         # we should have {taskname}
         hsp(par1='IN_FILE', logfile=f'{taskname}.log',
-            verbose=20, do_exec=False, allow_failure=True)
+            verbose=20, do_exec=False)
         self.assertEqual(hsp.logfile, f'{taskname}.log')
         self.assertEqual(hsp._logfile, f'{taskname}.log')
 
         # verbose=20 (i.e. request python logging), with py_logfile, we should
         # have py_logfile
         hsp(par1='IN_FILE', logfile=f'{taskname}.log',
-            py_logfile='somelog.log', verbose=20, do_exec=False, allow_failure=True)
+            py_logfile='somelog.log', verbose=20, do_exec=False)
         self.assertEqual(hsp.logfile, f'{taskname}.log')
         self.assertEqual(hsp._logfile, 'somelog.log')
 

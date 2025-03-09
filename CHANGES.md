@@ -69,3 +69,5 @@
 - (1.5dev10):
     - Update tasks with `allow_failure` keyword. When a task fails, it may raise
       an exception (`False`, default), a warning (`"warn"`), or continue (`True`)
+- (1.5):
+    - Add a global config object that sets the default `allow_failure`.

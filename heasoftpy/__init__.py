@@ -103,6 +103,7 @@ installation of HEASoft is therefore required.
 import os
 from .core import HSPTask, HSPTaskException  # noqa 401
 from . import utils  # noqa 401
+from .config import Config  # noqa 401
 
 
 # help function
