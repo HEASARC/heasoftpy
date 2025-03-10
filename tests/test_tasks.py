@@ -10,7 +10,7 @@ class TestPyTasks(unittest.TestCase):
 
     def test__tasks__fhelp(self):
         task = heasoftpy.HSPTask('fhelp')
-        result = task(task='ftlist', allow_failure=True)
+        result = task(task='ftlist')
         out = result.stdout.split('\n')
         self.assertEqual(out[0], 'NAME')
         self.assertEqual(out[2], ('   ftlist - List the contents of the '
@@ -19,14 +19,14 @@ class TestPyTasks(unittest.TestCase):
 
     def test__tasks__flistH(self):
         task = heasoftpy.HSPTask('ftlist')
-        result = task(infile='tests/test.fits', option='H', outfile='-', allow_failure=True)
+        result = task(infile='tests/test.fits', option='H', outfile='-')
         out = result.stdout.split('\n')
         self.assertEqual(out[4], ('HDU 2   RATE               BinTable     '
                                   '3 cols x 10 rows            '))
 
     def test__tasks__flistC(self):
         task = heasoftpy.HSPTask('ftlist')
-        result = task(infile='tests/test.fits', option='C', outfile='-', allow_failure=True)
+        result = task(infile='tests/test.fits', option='C', outfile='-')
         out = result.stdout.split('\n')
         self.assertEqual(out[3], ('    1 TIME               D [d]       '
                                   '         label for field   1'))
@@ -38,7 +38,7 @@ class TestPyTasks(unittest.TestCase):
     def test__tasks__flistT(self):
         task = heasoftpy.HSPTask('ftlist')
         result = task(infile='tests/test.fits', option='T', colheader='no',
-                      rownum='no', separator=" ", outfile='-', allow_failure=True)
+                      rownum='no', separator=" ", outfile='-')
         out = result.stdout.split('\n')
         self.assertEqual(out[0], ('       1164.29445392592        18.2019'
                                   '        1.22564'))
@@ -50,7 +50,7 @@ class TestPyTasks(unittest.TestCase):
     def test__tasks__fdump(self):
         task = heasoftpy.HSPTask('fdump')
         result = task(infile='tests/test.fits', outfile='STDOUT', columns='-',
-                      rows='-', more='no', prhead='yes', allow_failure=True)
+                      rows='-', more='no', prhead='yes')
         out = result.stdout.split('\n')
         self.assertEqual(out[0], ('SIMPLE  =                    T / '
                                   'file does conform to FITS standard'))
@@ -62,39 +62,39 @@ class TestPyTasks(unittest.TestCase):
     def test__tasks__fdump2runs(self):
         task = heasoftpy.HSPTask('fdump')
         res1 = task(infile='tests/test.fits', outfile='STDOUT', columns='-',
-                    rows='-', more='no', prhead='yes', allow_failure=True)
+                    rows='-', more='no', prhead='yes')
         res2 = task(infile='tests/test.fits', outfile='STDOUT', columns='-',
-                    rows='-', more='no', prhead='yes', allow_failure=True)
+                    rows='-', more='no', prhead='yes')
         self.assertEqual(res1.params, res2.params)
 
     # re-read pfile after a task is run
     def test__write_pfile__fstruct_rereadPfile(self):
         task = heasoftpy.HSPTask('fstruct')
         # we force isfits=no, which should be updated after running the task
-        task(infile='tests/test.fits', isfits='no', allow_failure=True)
+        task(infile='tests/test.fits', isfits='no')
         self.assertEqual(task.isfits.value, 'yes')
 
     # re-read pfile, HSPResult.params should return the user input
     def test__write_pfile__fstruct_rereadPfile_updateHSPResult(self):
         task = heasoftpy.HSPTask('fstruct')
         # we force isfits=no, which should be updated after running the task
-        res = task(infile='tests/test.fits', isfits='no', allow_failure=True)
+        res = task(infile='tests/test.fits', isfits='no')
         self.assertEqual(res.params['isfits'], 'no')
 
     # make sure returncode is not None when verbose=True
     def test__tasks__returncode_w_verbose(self):
         task = heasoftpy.HSPTask('ftlist')
         result = task(infile='tests/test.fits', option='C', outfile='-',
-                      verbose=True, allow_failure=True)
+                      verbose=True)
         self.assertIsNotNone(result.returncode)
 
     # ensure True/False are converted to yes/not in bool params
     def test__tasks__boolParam_conversion(self):
         task = heasoftpy.HSPTask('ftlist')
         res1 = task(infile='tests/test.fits', option='T', colheader=False,
-                    rownum=True, separator=" ", outfile='-', allow_failure=True)
+                    rownum=True, separator=" ", outfile='-')
         res2 = task(infile='tests/test.fits', option='T', colheader='no',
-                    rownum='yes', separator=" ", outfile='-', allow_failure=True)
+                    rownum='yes', separator=" ", outfile='-')
         self.assertEqual(res1.stdout, res2.stdout)
 
     # if page=no, do no query for more (in fdump and similar tasks)
@@ -107,10 +107,10 @@ class TestPyTasks(unittest.TestCase):
         hsp = heasoftpy.HSPTask('fdump')
         with self.assertRaises(ValueError):
             hsp(infile='tests/test.fits', outfile='STDOUT', columns='-',
-                rows='-', page='yes', allow_failure=True)
+                rows='-', page='yes')
         # should not raise
         hsp(infile='tests/test.fits', outfile='STDOUT', columns='-',
-            rows='-', page='no', allow_failure=True)
+            rows='-', page='no')
 
         __builtins__['input'] = orig_input_f
 
@@ -119,7 +119,7 @@ class TestPyTasks(unittest.TestCase):
         task = heasoftpy.HSPTask('fthedit')
         os.system('cp tests/test.fits _tmp.fits')
         out = task(infile='_tmp.fits+1', keyword='_EXTNAM',
-                   operation='add', value='TEST2', allow_failure=True)
+                   operation='add', value='TEST2')
         os.system('rm _tmp.fits >/dev/null')
         self.assertEqual(out.returncode, 0)
 
@@ -135,7 +135,10 @@ class TestPyTasks(unittest.TestCase):
         with self.assertWarns(Warning) as cm:
             _ = task(infile='tests/dne.fits', option='T', allow_failure="warn")
         assert "Nonzero Task Return Code:" in repr(cm.warning)
-        
+
+        saved = heasoftpy.Config.allow_failure
+        heasoftpy.Config.allow_failure = None
         with self.assertWarns(heasoftpy.core.HSPDeprecationWarning) as cm:
             _ = task(infile='tests/dne.fits', option='T')
+        heasoftpy.Config.allow_failure = saved
         assert "Parameter `allow_failure` not set" in repr(cm.warning)
